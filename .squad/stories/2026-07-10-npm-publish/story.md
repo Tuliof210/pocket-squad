@@ -1,7 +1,7 @@
 ---
 title: Make Pocket Squad publishable to npm
 complexity: S
-status: draft
+status: done
 cost: 5   # sum of task tiers (junior=1, pleno=2, senior=3): 01 junior=1 + 02 pleno=2 + 03 qa/pleno=2
 ---
 
@@ -42,3 +42,17 @@ needed and none will be added. npm always includes `LICENSE`, `package.json`, an
   `README.md`, `LICENSE`, `package.json` and EXCLUDES `HANDOFF.md`, `.squad/`, `.claude/`,
   and any scratch files.
 - No new runtime or dev dependency is added (zero-dep invariant preserved).
+
+## Completion summary (2026-07-10)
+All 3 tasks done, each verified by an unbiased gate (never the implementer):
+- **01** (devops/junior) — added root `LICENSE` (MIT, "Copyright (c) 2026 Tulio Ferreira")
+  and `repository`/`homepage`/`bugs` to `package.json`. Gate: reviewer-pleno → APPROVE.
+- **02** (devops/pleno) — added zero-dep `test/smoke.js` (temp-dir install→status assert)
+  and `scripts.test` + `scripts.prepublishOnly`. Gate: qa-pleno ran it + fault-injection → APPROVE.
+- **03** (qa/pleno) — `npm publish --dry-run` gate: all 6 checks pass. Tarball = 26 entries,
+  includes bin/ + all 22 templates/ + README + LICENSE + package.json; excludes HANDOFF.md,
+  .squad/, .claude/, test/, *.new. Zero-dep invariant intact.
+
+**Result:** repo is publish-ready. Remaining human step (not automated by the squad):
+`npm publish` with an authenticated npm account. Defaults were taken as stated (MIT, unscoped
+`pocket-squad`, version `0.1.0`, smoke-only prepublish guard).

@@ -4,7 +4,11 @@
   "description": "A full dev squad for Claude Code, in your pocket. Installs agents, skills and commands (.claude/) plus a story/task workflow (.squad/) into any project.",
   "bin": { "pocket-squad": "bin/pocket-squad.js" },
   "files": ["bin", "templates", "README.md"],
+  "scripts": { "test": "node test/smoke.js", "prepublishOnly": "node test/smoke.js" },
   "engines": { "node": ">=18" },
   "keywords": ["claude", "claude-code", "agents", "squad", "ai"],
-  "license": "MIT"
+  "license": "MIT",
+  "repository": { "type": "git", "url": "git+https://github.com/Tuliof210/pocket-squad.git" },
+  "homepage": "https://github.com/Tuliof210/pocket-squad#readme",
+  "bugs": { "url": "https://github.com/Tuliof210/pocket-squad/issues" }
 }
