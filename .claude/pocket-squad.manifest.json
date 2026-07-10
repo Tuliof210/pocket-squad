@@ -1,0 +1,28 @@
+{
+  "version": "0.1.0",
+  "installedAt": "2026-07-10T16:58:53.963Z",
+  "files": {
+    "claude/agents/backend-junior.md": "7f325b9a42ebe122a86581264d67e71f9f2cbe79ca8c130284cffea4159366de",
+    "claude/agents/backend-pleno.md": "b4dbce874a15e0e212aec98f631b26ad6678752678b5e8012e144cb8a9fb3335",
+    "claude/agents/backend-senior.md": "f51737f04e1588c5b7d50504b57e2400e601aa03125bd849a075649bc66b32b3",
+    "claude/agents/designer.md": "6ff8b63e6d3832133be89646ab196112ec8984160ee1f2b6596a328e3fc49fe9",
+    "claude/agents/devops-junior.md": "e420a80b1f5cccc95b318773a7248c67d8050960d9eee9091af34ca86155ad86",
+    "claude/agents/devops-pleno.md": "0d3052023280ea0fa594c37fad91e132f3a37bd17ad7226b301af1c11d871266",
+    "claude/agents/devops-senior.md": "90ffeabd90c6feabee803c20879fc6f3701f06eb9e3c12e0eaf99c2ce2abff55",
+    "claude/agents/frontend-junior.md": "10d3443655f8954aafde34fe38ad26bb05fbc52c8cd5045c7c6e530f014b8808",
+    "claude/agents/frontend-pleno.md": "4cf12f6d78564f5b2ed39d017d9e5a46ae58e5621bcde8622567e45c55335d8f",
+    "claude/agents/frontend-senior.md": "5b9b8088a809e19ff10a5c5d47223db99b9502496eb5de4a96cc4e173f279edb",
+    "claude/agents/qa-pleno.md": "82728fa879d4357a6bc2a8e2303f4ddefd2a7562111237a75279594f7605c93d",
+    "claude/agents/qa-senior.md": "220cb65cd19b329c7d5b9dc2b4824a7ede5697c958b3c2773e25937c0e65c84c",
+    "claude/agents/reviewer-pleno.md": "ac5653f33b55b0a9e89b996c09d3a50363712aa9d6a38459d54cc78689a133ef",
+    "claude/agents/reviewer-senior.md": "4efcb29e843872cd991a5b0e2f80319e063be4a5488032a69a0f88fe8457880d",
+    "claude/agents/techlead.md": "079224b9effa02a134553da7ad1f4fc4d59466224c8fc4912666a6226a1d52d9",
+    "claude/commands/approve.md": "24713346b7572bd96d8637727f85fa87135584b0e1c987e3f15bbef72b25bee6",
+    "claude/commands/run.md": "1e7259b5ee82c62af8f384d830613a8e610ca05232a8d2ec27dfa22fecdb50c2",
+    "claude/commands/status.md": "e357dd2ca588236062cc82d54ab44e3856bc298dee6c3f2c094fc35921afc246",
+    "claude/commands/story.md": "1070210e955921ae7ee1693c6b707fb5cafd4f3697caba2bd3a4838b4934b0a2",
+    "squad/learnings.md": "4da8562093d6f821783e85e1471f41f1a09d28aa35135271b358738cf080fe50",
+    "squad/project-context.md": "82e536dfc70cba17b9f9d7ddbb00aa639f22d59539cbce08d3b4bc8b8c0f4a9b",
+    "squad/stories/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}
