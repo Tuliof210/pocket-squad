@@ -1,0 +1,10 @@
+{
+  "name": "pocket-squad",
+  "version": "0.1.0",
+  "description": "A full dev squad for Claude Code, in your pocket. Installs agents, skills and commands (.claude/) plus a story/task workflow (.squad/) into any project.",
+  "bin": { "pocket-squad": "bin/pocket-squad.js" },
+  "files": ["bin", "templates", "README.md"],
+  "engines": { "node": ">=18" },
+  "keywords": ["claude", "claude-code", "agents", "squad", "ai"],
+  "license": "MIT"
+}
