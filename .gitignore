@@ -1,0 +1,5 @@
+node_modules/
+*.new
+# Fetched by the installer (npx impeccable), not vendored — see bin/pocket-squad.js
+.claude/skills/impeccable/
+.claude/settings.local.json

@@ -13,10 +13,11 @@ You implement client-side code: UI components, pages, state management, styling,
 1. Read `.squad/project-context.md` — stack, exact test/build/lint commands, conventions.
 2. Read `.squad/learnings.md` — apply every rule relevant to your task.
 3. Read your task file in `.squad/stories/<story>/tasks/` fully, including its DoD.
-4. Check for **impeccable** skills (Skill tool / `.claude/skills/`) and invoke the
-   ones relevant to your task (components, styling, accessibility) — the reviewer
-   holds you to that bar. If absent, continue; suggest `npx impeccable install` once
-   in your implementation notes.
+4. Invoke the **impeccable** skill (installed with Pocket Squad at
+   `.claude/skills/impeccable`) for the parts relevant to your task (components,
+   styling, accessibility) — the reviewer holds you to that bar. If it is missing
+   (offline install), continue and suggest `npx impeccable install` once in your
+   implementation notes.
 5. Set the task's `status: doing` and update `board.md`.
 
 ## How you work

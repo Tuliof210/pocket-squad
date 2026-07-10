@@ -14,9 +14,12 @@ const CLI = path.join(REPO_ROOT, "bin", "pocket-squad.js");
 
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), "pocket-squad-"));
 
+// Keep the test offline and fast: skip the network fetch of impeccable.
+const env = { ...process.env, POCKET_SQUAD_SKIP_IMPECCABLE: "1" };
+
 try {
   // execFileSync throws (and this test crashes) on a non-zero exit code — that's the "exits 0" assertion.
-  execFileSync("node", [CLI, "install"], { cwd: dir });
+  execFileSync("node", [CLI, "install"], { cwd: dir, env });
 
   assert.ok(
     fs.existsSync(path.join(dir, ".claude", "pocket-squad.manifest.json")),
@@ -39,12 +42,19 @@ try {
     "the removed /approve command must not ship"
   );
 
+  for (const skill of ["ponytail-review", "ps-backend-api", "ps-backend-data", "ps-backend-security"]) {
+    assert.ok(
+      fs.existsSync(path.join(dir, ".claude", "skills", skill, "SKILL.md")),
+      `install should bundle the ${skill} skill`
+    );
+  }
+
   assert.ok(
     fs.existsSync(path.join(dir, ".squad", "project-context.md")),
     "install should create .squad/project-context.md"
   );
 
-  const statusOutput = execFileSync("node", [CLI, "status"], { cwd: dir }).toString();
+  const statusOutput = execFileSync("node", [CLI, "status"], { cwd: dir, env }).toString();
   assert.ok(statusOutput.includes("managed"), "status output should contain 'managed'");
 
   console.log("smoke test passed");

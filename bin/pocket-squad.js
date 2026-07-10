@@ -10,6 +10,7 @@
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
+const { execFileSync } = require("child_process");
 
 const PKG_ROOT = path.resolve(__dirname, "..");
 const TEMPLATES = path.join(PKG_ROOT, "templates");
@@ -18,6 +19,29 @@ const CWD = process.cwd();
 const MANIFEST_PATH = path.join(CWD, ".claude", "pocket-squad.manifest.json");
 
 const sha = (buf) => crypto.createHash("sha256").update(buf).digest("hex");
+
+// Pinned on purpose: skills run with access to the user's code (supply chain).
+const IMPECCABLE_VERSION = "3.2.1";
+
+/** Best-effort: fetch the impeccable frontend skills into this project.
+ *  Needs network; skippable via POCKET_SQUAD_SKIP_IMPECCABLE=1. Never fails the install. */
+function installImpeccable() {
+  if (process.env.POCKET_SQUAD_SKIP_IMPECCABLE) return;
+  if (fs.existsSync(path.join(CWD, ".claude", "skills", "impeccable", "SKILL.md"))) return;
+  console.log(`\nFetching impeccable@${IMPECCABLE_VERSION} frontend skills (npx)...`);
+  try {
+    execFileSync(
+      "npx",
+      ["-y", `impeccable@${IMPECCABLE_VERSION}`, "install", "--project", "--providers=claude", "--yes"],
+      { cwd: CWD, stdio: "inherit", timeout: 120000 }
+    );
+  } catch {
+    console.warn(
+      "  ! impeccable install failed (offline?). The squad works without it;\n" +
+      "    run `npx impeccable install` later to add the frontend skills."
+    );
+  }
+}
 
 function walk(dir, base = dir, out = []) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -79,6 +103,7 @@ function install() {
 
   // Preserve knowledge files across reinstalls: only record hashes for files we own.
   saveManifest(hashes);
+  installImpeccable();
   console.log(`\nPocket Squad v${VERSION} installed.`);
   console.log(`  ${created} created, ${kept} unchanged, ${skipped} pre-existing (untouched).`);
   console.log(`\nNext steps:`);
@@ -145,6 +170,7 @@ function update() {
   }
 
   saveManifest(hashes);
+  installImpeccable();
   console.log(`\nUpdate to v${VERSION} done: ${updated} updated, ${added} added, ${removed} removed, ${unchanged} unchanged, ${conflicted} customized (see *.new files).`);
 }
 

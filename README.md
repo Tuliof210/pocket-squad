@@ -59,8 +59,18 @@ Everything lives in markdown for audit, editing and agent context:
   stories/…
 .claude/
   agents/  commands/ps/
+  skills/
+    ponytail-review/     # vendored (MIT) — reviewers' over-engineering pass
+    ps-backend-api/      # Pocket Squad backend skills: contracts,
+    ps-backend-data/     #   queries/migrations,
+    ps-backend-security/ #   trust boundaries
+    impeccable/          # fetched at install (pinned) — designer/frontend craft
   pocket-squad.manifest.json   # hashes for non-destructive updates
 ```
+
+The install also fetches the [impeccable](https://impeccable.style) frontend skills
+(pinned version, project scope, Claude only) — needs network; skip with
+`POCKET_SQUAD_SKIP_IMPECCABLE=1` and run `npx impeccable install` yourself later.
 
 ## Updating safely
 
@@ -71,8 +81,8 @@ to them as `*.new` for manual merge. `install` never overwrites anything that ex
 ## Extending
 
 Add your own agents/skills to `.claude/` freely — anything not in the manifest is
-yours and will never be touched. The squad already looks for third-party skills:
-reviewers invoke the **ponytail** over-engineering review when installed, designer
-and frontend tiers invoke **impeccable** skills (`npx impeccable install`), and
-backend tiers pick up any backend-relevant skills in `.claude/skills/`. Pin versions —
-skills run with access to your code, treat them as supply chain.
+yours and will never be touched. The squad ships its skills batteries-included:
+reviewers invoke the bundled **ponytail-review** over-engineering pass, designer and
+frontend tiers invoke **impeccable**, and backend tiers invoke the **ps-backend-***
+skills (plus anything else you drop in `.claude/skills/`). Pin versions on anything
+you add — skills run with access to your code, treat them as supply chain.

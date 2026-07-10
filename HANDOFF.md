@@ -57,9 +57,12 @@ squash-merged na branch de origem.
     seções (título / descrição / consideração final), squash-merge e
     `git pull --rebase` local. Histórias críticas (migração destrutiva, segurança,
     quebra de contrato público) deixam a PR aberta para merge manual.
-15. **Skills de terceiros ensinadas aos agentes:** reviewers → ponytail-review;
-    designer/frontend → impeccable (`npx impeccable install`); backend → skills de
-    backend em `.claude/skills/`. Sempre com fallback quando ausentes.
+15. **Skills empacotadas (batteries included):** reviewers → `ponytail-review`
+    (vendorizada, MIT, com LICENSE ao lado); designer/frontend → `impeccable`
+    (buscada no install via `npx impeccable@<pinned> install --project
+    --providers=claude --yes`, best-effort, opt-out `POCKET_SQUAD_SKIP_IMPECCABLE=1`);
+    backend → skills proprietárias `ps-backend-api|data|security` em
+    `templates/claude/skills/`. Sempre com fallback quando ausentes.
 
 ## Estado atual (v0.1.0 — gerado e testado)
 
@@ -76,8 +79,12 @@ pocket-squad/
     │   │   ├── qa-{pleno,senior}.md            (gates sem viés)
     │   │   ├── reviewer-{pleno,senior}.md
     │   │   └── designer.md                     (sonnet — specs, não código)
-    │   └── commands/ps/
-    │       ├── story.md  run.md  status.md   # → /ps:story /ps:run /ps:status
+    │   ├── commands/ps/
+    │   │   ├── story.md  run.md  status.md   # → /ps:story /ps:run /ps:status
+    │   └── skills/
+    │       ├── ponytail-review/              # vendorizada (MIT + LICENSE)
+    │       └── ps-backend-{api,data,security}/  # proprietárias
+    │       # impeccable/ não é vendorizada: o installer busca via npx (pinned)
     └── squad/
         ├── project-context.md    # template de briefing 1 página
         ├── learnings.md          # formato rígido documentado

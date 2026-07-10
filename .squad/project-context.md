@@ -8,7 +8,7 @@
 - **Language/runtime:** Node.js, `engines.node >= 18`. Plain CommonJS (`require`), no build step.
 - **Dependencies:** ZERO runtime and ZERO dev dependencies by design. Uses only Node built-ins (`fs`, `path`, `crypto`). Adding a dependency is a design decision — escalate, don't do it casually.
 - **Distribution:** an `npx`-installable CLI. `bin.pocket-squad -> bin/pocket-squad.js`.
-- **Content shipped:** markdown templates under `templates/` (Claude Code agents + commands, and the `.squad` workflow scaffold) copied into a target project.
+- **Content shipped:** markdown templates under `templates/` (Claude Code agents + commands + skills, and the `.squad` workflow scaffold) copied into a target project. The installer additionally fetches the `impeccable` skills via `npx` (pinned version, best-effort, `POCKET_SQUAD_SKIP_IMPECCABLE=1` to skip).
 
 ## Commands (exact, copy-pasteable)
 - install (deps): none — zero-dependency project, nothing to install.
