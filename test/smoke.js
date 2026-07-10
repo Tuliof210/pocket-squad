@@ -14,8 +14,8 @@ const CLI = path.join(REPO_ROOT, "bin", "pocket-squad.js");
 
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), "pocket-squad-"));
 
-// Keep the test offline and fast: skip the network fetch of impeccable.
-const env = { ...process.env, POCKET_SQUAD_SKIP_IMPECCABLE: "1" };
+// Keep the test offline and fast: skip the ensure-step that fetches impeccable/ponytail.
+const env = { ...process.env, POCKET_SQUAD_SKIP_SKILLS: "1" };
 
 try {
   // execFileSync throws (and this test crashes) on a non-zero exit code — that's the "exits 0" assertion.
@@ -42,10 +42,19 @@ try {
     "the removed /approve command must not ship"
   );
 
-  for (const skill of ["ponytail-review", "ps-backend-api", "ps-backend-data", "ps-backend-security"]) {
+  for (const skill of ["ps-backend-api", "ps-backend-data", "ps-backend-security"]) {
     assert.ok(
       fs.existsSync(path.join(dir, ".claude", "skills", skill, "SKILL.md")),
       `install should bundle the ${skill} skill`
+    );
+  }
+
+  // impeccable and ponytail are NOT part of the package — only fetched by the
+  // ensure-step (skipped here), so a bundled copy would be a packaging bug.
+  for (const skill of ["impeccable", "ponytail-review"]) {
+    assert.ok(
+      !fs.existsSync(path.join(dir, ".claude", "skills", skill)),
+      `${skill} must not ship inside the package`
     );
   }
 

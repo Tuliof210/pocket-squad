@@ -60,17 +60,19 @@ Everything lives in markdown for audit, editing and agent context:
 .claude/
   agents/  commands/ps/
   skills/
-    ponytail-review/     # vendored (MIT) — reviewers' over-engineering pass
     ps-backend-api/      # Pocket Squad backend skills: contracts,
     ps-backend-data/     #   queries/migrations,
     ps-backend-security/ #   trust boundaries
-    impeccable/          # fetched at install (pinned) — designer/frontend craft
   pocket-squad.manifest.json   # hashes for non-destructive updates
 ```
 
-The install also fetches the [impeccable](https://impeccable.style) frontend skills
-(pinned version, project scope, Claude only) — needs network; skip with
-`POCKET_SQUAD_SKIP_IMPECCABLE=1` and run `npx impeccable install` yourself later.
+Two third-party skills the squad relies on — [impeccable](https://impeccable.style)
+(designer/frontend craft) and [ponytail](https://github.com/DietrichGebert/ponytail)'s
+`ponytail-review` (reviewers' over-engineering pass) — are NOT bundled. The install
+checks whether they already exist on your machine (project or global, plugin included)
+and only when absent fetches a pinned version into the project's `.claude/skills/`.
+Needs network; skip with `POCKET_SQUAD_SKIP_SKILLS=1` and install them yourself later
+(`npx impeccable install` / the ponytail plugin).
 
 ## Updating safely
 
@@ -81,8 +83,9 @@ to them as `*.new` for manual merge. `install` never overwrites anything that ex
 ## Extending
 
 Add your own agents/skills to `.claude/` freely — anything not in the manifest is
-yours and will never be touched. The squad ships its skills batteries-included:
-reviewers invoke the bundled **ponytail-review** over-engineering pass, designer and
-frontend tiers invoke **impeccable**, and backend tiers invoke the **ps-backend-***
-skills (plus anything else you drop in `.claude/skills/`). Pin versions on anything
-you add — skills run with access to your code, treat them as supply chain.
+yours and will never be touched. The squad's agents already know their tools:
+reviewers invoke **ponytail-review**, designer and frontend tiers invoke
+**impeccable** (both ensured at install, see above), and backend tiers invoke the
+bundled **ps-backend-*** skills (plus anything else you drop in `.claude/skills/`).
+Pin versions on anything you add — skills run with access to your code, treat them
+as supply chain.

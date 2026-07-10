@@ -57,12 +57,15 @@ squash-merged na branch de origem.
     seções (título / descrição / consideração final), squash-merge e
     `git pull --rebase` local. Histórias críticas (migração destrutiva, segurança,
     quebra de contrato público) deixam a PR aberta para merge manual.
-15. **Skills empacotadas (batteries included):** reviewers → `ponytail-review`
-    (vendorizada, MIT, com LICENSE ao lado); designer/frontend → `impeccable`
-    (buscada no install via `npx impeccable@<pinned> install --project
-    --providers=claude --yes`, best-effort, opt-out `POCKET_SQUAD_SKIP_IMPECCABLE=1`);
-    backend → skills proprietárias `ps-backend-api|data|security` em
-    `templates/claude/skills/`. Sempre com fallback quando ausentes.
+15. **Skills de terceiros NÃO são empacotadas** (decisão do dono): impeccable e
+    ponytail não fazem parte do pacote. O install valida se existem na máquina
+    (`.claude/skills/` do projeto, `~/.claude/skills/` global, ou o plugin ponytail
+    em `~/.claude/plugins/cache/`) e só quando ausentes busca versão PINADA
+    localmente no projeto: impeccable via `npx impeccable@<pin> install --project
+    --providers=claude --yes`; ponytail-review via `npm pack
+    @dietrichgebert/ponytail@<pin>` + extração da skill (MIT, LICENSE junto).
+    Best-effort (offline → aviso), opt-out `POCKET_SQUAD_SKIP_SKILLS=1`. As únicas
+    skills empacotadas são as proprietárias `ps-backend-api|data|security`.
 
 ## Estado atual (v0.1.0 — gerado e testado)
 
@@ -82,9 +85,9 @@ pocket-squad/
     │   ├── commands/ps/
     │   │   ├── story.md  run.md  status.md   # → /ps:story /ps:run /ps:status
     │   └── skills/
-    │       ├── ponytail-review/              # vendorizada (MIT + LICENSE)
-    │       └── ps-backend-{api,data,security}/  # proprietárias
-    │       # impeccable/ não é vendorizada: o installer busca via npx (pinned)
+    │       └── ps-backend-{api,data,security}/  # proprietárias (únicas empacotadas)
+    │       # impeccable e ponytail-review NÃO são empacotadas: o install checa a
+    │       # máquina e, se ausentes, busca versão pinada para .claude/skills/ local
     └── squad/
         ├── project-context.md    # template de briefing 1 página
         ├── learnings.md          # formato rígido documentado

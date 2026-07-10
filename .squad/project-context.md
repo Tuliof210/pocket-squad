@@ -8,7 +8,7 @@
 - **Language/runtime:** Node.js, `engines.node >= 18`. Plain CommonJS (`require`), no build step.
 - **Dependencies:** ZERO runtime and ZERO dev dependencies by design. Uses only Node built-ins (`fs`, `path`, `crypto`). Adding a dependency is a design decision — escalate, don't do it casually.
 - **Distribution:** an `npx`-installable CLI. `bin.pocket-squad -> bin/pocket-squad.js`.
-- **Content shipped:** markdown templates under `templates/` (Claude Code agents + commands + skills, and the `.squad` workflow scaffold) copied into a target project. The installer additionally fetches the `impeccable` skills via `npx` (pinned version, best-effort, `POCKET_SQUAD_SKIP_IMPECCABLE=1` to skip).
+- **Content shipped:** markdown templates under `templates/` (Claude Code agents + commands + the proprietary `ps-backend-*` skills, plus the `.squad` workflow scaffold) copied into a target project. `impeccable` and `ponytail-review` are NOT bundled: the installer checks the machine (project/global skills, ponytail plugin) and, only when absent, fetches pinned versions into the project's `.claude/skills/` (best-effort, `POCKET_SQUAD_SKIP_SKILLS=1` to skip).
 
 ## Commands (exact, copy-pasteable)
 - install (deps): none — zero-dependency project, nothing to install.
