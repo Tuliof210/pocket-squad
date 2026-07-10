@@ -13,7 +13,7 @@
 ## Commands (exact, copy-pasteable)
 - install (deps): none — zero-dependency project, nothing to install.
 - dev: none — no build/watch step; edit and run the file directly.
-- test: **none yet** — no test framework, no `scripts.test` in `package.json`.
+- test: `npm test` — zero-dep smoke test (`node test/smoke.js`), also runs on `prepublishOnly`.
 - lint: **none yet** — no linter configured.
 - build: **none yet** — pure JS, nothing to compile.
 - **Manual smoke test** (the real DoD check today), run from a throwaway dir so it writes `.claude/`/`.squad/` there, NOT into this repo:
@@ -43,7 +43,8 @@ plus the `.squad` story/task workflow scaffold.
 - **Story/Task files are written in English**; owner conversation is in the owner's language.
 - **Squad content is markdown** under `templates/claude/agents`, `templates/claude/commands`,
   `templates/squad`. Exemplar agent: `templates/claude/agents/techlead.md`. Exemplar
-  command: `templates/claude/commands/story.md`.
+  command: `templates/claude/commands/ps/run.md` (commands live under `ps/` so they
+  surface as namespaced `/ps:*` slash commands).
 - **`files` allowlist in `package.json` is the packaging contract** — only what's listed
   ships to npm. Prefer extending it over adding an `.npmignore`.
 

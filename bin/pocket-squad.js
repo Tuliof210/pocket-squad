@@ -83,8 +83,8 @@ function install() {
   console.log(`  ${created} created, ${kept} unchanged, ${skipped} pre-existing (untouched).`);
   console.log(`\nNext steps:`);
   console.log(`  1. Open Claude Code in this project.`);
-  console.log(`  2. Run /story "your feature idea" to start refining with the Tech Lead.`);
-  console.log(`  3. Review .squad/stories/<story>/, then /approve and /run.`);
+  console.log(`  2. Run /ps:story "your feature idea" to start refining with the Tech Lead.`);
+  console.log(`  3. Review/edit .squad/stories/<story>/, then /ps:run (it validates and executes).`);
   if (manifest) console.log(`\n(Previous manifest found — this was a re-install. Use "update" to upgrade managed files.)`);
 }
 
@@ -128,8 +128,24 @@ function update() {
     }
   }
 
+  // Files we managed that no longer ship (e.g. renamed commands): delete if untouched.
+  let removed = 0;
+  const shipped = new Set(rels);
+  for (const [rel, oldHash] of Object.entries(manifest.files)) {
+    if (shipped.has(rel)) continue;
+    const dst = destFor(rel);
+    if (!fs.existsSync(dst)) continue;
+    if (sha(fs.readFileSync(dst)) === oldHash) {
+      fs.unlinkSync(dst);
+      removed++;
+      console.log(`  - removed      ${path.relative(CWD, dst)} (no longer shipped)`);
+    } else {
+      console.log(`  ! obsolete     ${path.relative(CWD, dst)} (customized — no longer shipped, delete manually)`);
+    }
+  }
+
   saveManifest(hashes);
-  console.log(`\nUpdate to v${VERSION} done: ${updated} updated, ${added} added, ${unchanged} unchanged, ${conflicted} customized (see *.new files).`);
+  console.log(`\nUpdate to v${VERSION} done: ${updated} updated, ${added} added, ${removed} removed, ${unchanged} unchanged, ${conflicted} customized (see *.new files).`);
 }
 
 function status() {

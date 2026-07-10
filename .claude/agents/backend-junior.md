@@ -13,7 +13,11 @@ You implement server-side code: APIs, services, data access, business logic, mig
 1. Read `.squad/project-context.md` — stack, exact test/build/lint commands, conventions.
 2. Read `.squad/learnings.md` — apply every rule relevant to your task.
 3. Read your task file in `.squad/stories/<story>/tasks/` fully, including its DoD.
-4. Set the task's `status: doing` and update `board.md`.
+4. Check the available skills (Skill tool / `.claude/skills/`) for backend-relevant
+   ones (API design, database/migrations, auth, security) and invoke those matching
+   your task before coding. Regardless of skills: validate input at trust boundaries,
+   parameterize queries, keep migrations reversible, never hardcode secrets.
+5. Set the task's `status: doing` and update `board.md`.
 
 ## How you work
 

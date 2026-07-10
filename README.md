@@ -26,20 +26,28 @@ auto-escalate the task to the tier above.
 
 ## The workflow
 
+All commands are namespaced under `ps:` to avoid clashing with other tooling.
+
 ```
-/story "create a social login screen"
-   └─ techlead refines with you → .squad/stories/<date>-<slug>/
-        story.md            title, description, complexity, DoD, cost estimate
+/ps:story "create a social login screen"
+   └─ techlead refines with you → one or MORE .squad/stories/<date>-<slug>/
+      (big requests split into multiple Stories, ordered by story-level depends_on)
+        story.md            title, description, complexity, DoD, cost, depends_on
         tasks/NN-*.md       specialty, tier + justification, DoD, depends_on, parallel, status
         board.md            todo / doing / done
 
-(you edit anything you want — your edits are law)
+(you edit anything you want — your edits are law; no approval ceremony)
 
-/approve      validates the plan, shows cost summary, marks approved
-/run          executes: waves by depends_on/parallel, unbiased QA+review per task,
-              escalation on double failure, board updated at every step.
-              Resumable — if the run dies, /run again picks up where it stopped.
-/status       compact report of every story
+/ps:run [slug]  validates the plan (the old /approve, folded in), then executes.
+                No slug = ALL runnable stories, one full cycle each:
+                branch squad/<slug> from the current branch → waves by
+                depends_on/parallel, unbiased QA+review per task, escalation on
+                double failure → PR with a 3-section ADR (title / description /
+                final consideration) → squash-merge + git pull --rebase.
+                Critical stories (destructive migration, security, contract break)
+                leave the PR open for manual merge.
+                Resumable — if the run dies, /ps:run picks up where it stopped.
+/ps:status      compact report of every story
 ```
 
 Everything lives in markdown for audit, editing and agent context:
@@ -50,7 +58,7 @@ Everything lives in markdown for audit, editing and agent context:
   learnings.md         # strict-format rules: error → cause → rule
   stories/…
 .claude/
-  agents/  commands/
+  agents/  commands/ps/
   pocket-squad.manifest.json   # hashes for non-destructive updates
 ```
 
@@ -63,6 +71,8 @@ to them as `*.new` for manual merge. `install` never overwrites anything that ex
 ## Extending
 
 Add your own agents/skills to `.claude/` freely — anything not in the manifest is
-yours and will never be touched. Recommended: drop third-party skills (frontend
-craft, code-review rubrics, etc.) into `.claude/skills/` and pin their versions —
-they run with access to your code, treat them as supply chain.
+yours and will never be touched. The squad already looks for third-party skills:
+reviewers invoke the **ponytail** over-engineering review when installed, designer
+and frontend tiers invoke **impeccable** skills (`npx impeccable install`), and
+backend tiers pick up any backend-relevant skills in `.claude/skills/`. Pin versions —
+skills run with access to your code, treat them as supply chain.

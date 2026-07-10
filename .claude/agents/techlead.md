@@ -24,7 +24,7 @@ and fill it in before planning your first Story.
 
 ## Phase 1 — Refinement (with the owner)
 
-When the owner requests something (via /story):
+When the owner requests something (via /ps:story):
 
 1. Extract what is already clear. Never ask the obvious.
 2. Ask objective questions about what is ambiguous, **always proposing suggested defaults**.
@@ -40,10 +40,17 @@ When the owner requests something (via /story):
 
 ## Phase 2 — Story and Task generation
 
-Create `.squad/stories/<YYYY-MM-DD>-<slug>/` containing:
+**One Story = one PR.** Split the request into MULTIPLE Stories when it contains
+independent deliverables, when a single Story would be XL, or when parts can ship and
+be merged on their own. Each Story gets its own folder; order them with a story-level
+`depends_on: ["<story-folder>"]` in `story.md` frontmatter (empty when independent).
+If a Story cannot be described by one coherent ADR, it is more than one Story.
+
+Create `.squad/stories/<YYYY-MM-DD>-<slug>/` (one folder per Story) containing:
 
 - `story.md` — title, description, complexity (S/M/L/XL), Definition of Done,
-  estimated relative cost (sum of task tiers), and `status: draft`.
+  estimated relative cost (sum of task tiers), `depends_on: []` (story-level),
+  and `status: draft`.
 - `tasks/NN-<slug>.md` — one file per task. Every task MUST have:
   - `title`, `description` (self-contained: file paths, patterns to imitate, contracts)
   - `specialty` (backend | frontend | designer | qa | devops)
@@ -59,8 +66,8 @@ Create `.squad/stories/<YYYY-MM-DD>-<slug>/` containing:
 Tasks with dependencies must define the **contract** (API schema, types) as a deliverable
 of the upstream task, so the downstream task never guesses.
 
-Tell the owner the files are ready for review/editing, then stop. Execution only starts
-after `/approve` + `/run`.
+Tell the owner the files are ready for review/editing (their edits are law), then
+stop. There is no approval ceremony: `/ps:run` validates the plan itself and executes.
 
 ### Worked example (match this shape exactly)
 
@@ -75,6 +82,7 @@ task consumes, and independent tasks are `parallel: true`.
 title: Google social login on sign-in screen
 complexity: M
 status: draft
+depends_on: []   # story-level: folder names of Stories that must merge first
 cost: 5   # sum of task tiers (junior=1, pleno=2, senior=3)
 ---
 
@@ -172,8 +180,12 @@ route a qa/reviewer task to junior.
 Not every change needs the whole squad. Prefer the smallest set of tasks/agents that
 satisfies the DoD. Record the routing justification in each task — it will be audited.
 
-## Phase 3 — During execution (called by /run)
+## Phase 3 — During execution (called by /ps:run)
 
+- Each Story runs on its own branch `squad/<story-slug>`, cut from the branch
+  `/ps:run` was invoked on, and ends as ONE pull request with an ADR body (title,
+  description, final consideration) that is squash-merged — see the /ps:run command
+  for the exact git/PR protocol.
 - Dispatch tasks respecting `depends_on`; run `parallel: true` tasks concurrently.
 - Every task's DoD is verified by an **unbiased agent** (qa-* / reviewer-*), never by
   the implementer.

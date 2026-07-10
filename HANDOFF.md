@@ -9,9 +9,11 @@
 Claude Code em qualquer projeto. Ao rodar `npx pocket-squad`, o projeto recebe
 `.claude/` (agents + commands) e `.squad/` (workflow de Histórias/Tarefas em MD).
 
-O dono do projeto (humano) pede algo via `/story`; o TechLead refina, gera História e
-Tarefas em markdown editáveis; o dono revisa/edita, dá `/approve` e `/run`; agentes
-especialistas executam com gates de QA/review sem viés.
+O dono do projeto (humano) pede algo via `/ps:story`; o TechLead refina, gera uma ou
+MAIS Histórias (com Tarefas) em markdown editáveis; o dono revisa/edita e dá `/ps:run`
+(que valida e executa — o antigo `/approve` foi removido); agentes especialistas
+executam com gates de QA/review sem viés, e cada História vira uma PR com ADR,
+squash-merged na branch de origem.
 
 ## Decisões de design já tomadas (não rediscutir sem motivo)
 
@@ -44,8 +46,20 @@ especialistas executam com gates de QA/review sem viés.
 11. **Idiomas:** conversa com o dono no idioma dele; arquivos de Story/Task em inglês
     (mais robusto para modelos menores — convenção herdada das skills squad-plan/run
     do usuário, que serviram de referência).
-12. Custo visível antes de executar: `/approve` mostra custo relativo estimado
-    (soma complexidade × tier) e exige confirmação explícita.
+12. ~~Custo visível via `/approve`~~ **Revisado:** `/approve` foi removido (gargalo
+    que só queimava tokens). A validação do plano (depends_on, contratos, DoD) vive
+    no passo 0 do `/ps:run`; a revisão do dono é editar os arquivos antes de rodar.
+13. **Comandos namespaced** (`/ps:story`, `/ps:run`, `/ps:status`) via subpasta
+    `commands/ps/` para não colidir com commands de nível mais alto.
+14. **1 História = 1 PR.** `/ps:run` sem argumento executa TODAS as histórias
+    executáveis em ordem de `depends_on`; cada uma roda em branch `squad/<slug>`
+    (cortada da branch onde o comando foi evocado), termina em PR com ADR de 3
+    seções (título / descrição / consideração final), squash-merge e
+    `git pull --rebase` local. Histórias críticas (migração destrutiva, segurança,
+    quebra de contrato público) deixam a PR aberta para merge manual.
+15. **Skills de terceiros ensinadas aos agentes:** reviewers → ponytail-review;
+    designer/frontend → impeccable (`npx impeccable install`); backend → skills de
+    backend em `.claude/skills/`. Sempre com fallback quando ausentes.
 
 ## Estado atual (v0.1.0 — gerado e testado)
 
@@ -62,8 +76,8 @@ pocket-squad/
     │   │   ├── qa-{pleno,senior}.md            (gates sem viés)
     │   │   ├── reviewer-{pleno,senior}.md
     │   │   └── designer.md                     (sonnet — specs, não código)
-    │   └── commands/
-    │       ├── story.md  approve.md  run.md  status.md
+    │   └── commands/ps/
+    │       ├── story.md  run.md  status.md   # → /ps:story /ps:run /ps:status
     └── squad/
         ├── project-context.md    # template de briefing 1 página
         ├── learnings.md          # formato rígido documentado
@@ -77,10 +91,11 @@ atualizado in place; customizado preservado + `.new`) → status. Tudo passou.
 
 ## Fluxo instalado no projeto alvo
 
-`/story "pedido"` → techlead refina → gera `.squad/stories/<data>-<slug>/{story.md,
-tasks/NN-*.md, board.md}` (status: draft) → dono edita (edições são lei) →
-`/approve` (valida depends_on, contratos, mostra custo) → `/run` (ondas paralelas,
-gates, escalação, board atualizado, learnings ao final) → `/status` a qualquer momento.
+`/ps:story "pedido"` → techlead refina → gera 1..N `.squad/stories/<data>-<slug>/
+{story.md, tasks/NN-*.md, board.md}` (status: draft) → dono edita (edições são lei) →
+`/ps:run` (valida o plano, depois: branch por história, ondas paralelas, gates,
+escalação, PR com ADR, squash-merge + rebase, learnings ao final) → `/ps:status` a
+qualquer momento.
 
 ## Backlog priorizado (próximos passos)
 

@@ -26,6 +26,11 @@ task passing — a false "approved" is the worst outcome you can produce.
 - Review the diff for: correctness, consistency with neighboring code, contract
   violations, security issues (injection, authz gaps, secrets), and complexity that a
   simpler existing pattern would avoid.
+- **Over-engineering pass (ponytail):** if the ponytail plugin is installed (a
+  `ponytail-review` skill is available via the Skill tool), invoke it on the diff and
+  merge its findings into your verdict. Without it, apply the same bar manually:
+  reinvented stdlib, speculative abstractions, unneeded dependencies, dead
+  flexibility — each is a finding.
 
 ## Your verdict (appended to the task file under `## Review`)
 

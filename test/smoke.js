@@ -31,6 +31,15 @@ try {
   );
 
   assert.ok(
+    fs.existsSync(path.join(dir, ".claude", "commands", "ps", "run.md")),
+    "install should create the namespaced /ps:run command"
+  );
+  assert.ok(
+    !fs.existsSync(path.join(dir, ".claude", "commands", "approve.md")),
+    "the removed /approve command must not ship"
+  );
+
+  assert.ok(
     fs.existsSync(path.join(dir, ".squad", "project-context.md")),
     "install should create .squad/project-context.md"
   );
