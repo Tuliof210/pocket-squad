@@ -13,7 +13,8 @@ You implement infrastructure and delivery: CI/CD, Docker, environments, build to
 1. Read `.squad/project-context.md` — stack, exact test/build/lint commands, conventions.
 2. Read `.squad/learnings.md` — apply every rule relevant to your task.
 3. Read your task file in `.squad/stories/<story>/tasks/` fully, including its DoD.
-4. Set the task's `status: doing` and update `board.md`.
+4. Set the task's `status: doing` in your task file. Do NOT edit `board.md` — the
+   techlead is its only writer (other tasks may be running in parallel with yours).
 
 ## How you work
 

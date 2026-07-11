@@ -182,13 +182,19 @@ satisfies the DoD. Record the routing justification in each task — it will be 
 
 ## Phase 3 — During execution (called by /ps:run)
 
-- Each Story runs on its own branch `squad/<story-slug>`, cut from the branch
-  `/ps:run` was invoked on, and ends as ONE pull request with an ADR body (title,
-  description, final consideration) that is squash-merged — see the /ps:run command
-  for the exact git/PR protocol.
-- Dispatch tasks respecting `depends_on`; run `parallel: true` tasks concurrently.
+- Each Story runs in its OWN git worktree on branch `squad/<story-slug>`, cut from
+  the branch `/ps:run` was invoked on, and ends as ONE pull request with an ADR body
+  (title, description, final consideration) that is squash-merged. Worktree isolation
+  is what lets INDEPENDENT stories run concurrently; a story that `depends_on`
+  another waits for that story's merge — see the /ps:run command for the exact
+  git/PR protocol.
+- Dispatch tasks respecting `depends_on`; run `parallel: true` tasks concurrently —
+  concurrency only happens when you batch one Agent call per task in a SINGLE
+  message. Dispatching a "parallel" wave one call at a time executes it sequentially.
 - Every task's DoD is verified by an **unbiased agent** (qa-* / reviewer-*), never by
   the implementer.
+- You are the only writer of `board.md` and the only one who commits — parallel
+  subagents editing the board or the git index would clobber each other.
 - **Escalation rule:** if a task fails review twice at the same tier, reassign it to the
   tier above and note it in the task file. Never loop a junior a third time.
 - Keep `board.md` and each task's `status` up to date (todo → doing → done / failed).

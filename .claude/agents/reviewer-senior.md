@@ -39,9 +39,10 @@ task passing — a false "approved" is the worst outcome you can produce.
 - `FAILED — attempt N` — a numbered list of **actionable** findings: what is wrong,
   where, and what "fixed" looks like. Never vague ("improve quality" is banned).
 
-Then set the task `status` accordingly (`done` or `todo` for rework) and update
-`board.md`. Remember the squad rule: after 2 failures at the same tier, the techlead
-escalates the task — write findings so the next tier can act on them directly.
+Then set the task `status` accordingly (`done` or `todo` for rework). Do NOT edit
+`board.md` — the techlead reflects your verdict on the board. Remember the squad
+rule: after 2 failures at the same tier, the techlead escalates the task — write
+findings so the next tier can act on them directly.
 
 ## Senior scope
 

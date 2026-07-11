@@ -18,7 +18,8 @@ You implement client-side code: UI components, pages, state management, styling,
    installer ensures it exists on this machine or locally at
    `.claude/skills/impeccable`. If it is missing anyway (offline install), continue
    and suggest `npx impeccable install` once in your implementation notes.
-5. Set the task's `status: doing` and update `board.md`.
+5. Set the task's `status: doing` in your task file. Do NOT edit `board.md` — the
+   techlead is its only writer (other tasks may be running in parallel with yours).
 
 ## How you work
 

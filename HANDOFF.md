@@ -51,12 +51,16 @@ squash-merged na branch de origem.
     no passo 0 do `/ps:run`; a revisão do dono é editar os arquivos antes de rodar.
 13. **Comandos namespaced** (`/ps:story`, `/ps:run`, `/ps:status`) via subpasta
     `commands/ps/` para não colidir com commands de nível mais alto.
-14. **1 História = 1 PR.** `/ps:run` sem argumento executa TODAS as histórias
-    executáveis em ordem de `depends_on`; cada uma roda em branch `squad/<slug>`
-    (cortada da branch onde o comando foi evocado), termina em PR com ADR de 3
-    seções (título / descrição / consideração final), squash-merge e
-    `git pull --rebase` local. Histórias críticas (migração destrutiva, segurança,
-    quebra de contrato público) deixam a PR aberta para merge manual.
+14. **1 História = 1 PR = 1 worktree.** `/ps:run` sem argumento executa TODAS as
+    histórias executáveis; cada uma roda em worktree git ISOLADA
+    (`../<repo>--squad/<slug>`) na branch `squad/<slug>` cortada da branch onde o
+    comando foi evocado — por isso histórias independentes rodam em paralelo, e
+    `depends_on` (nível história) espera o merge da dependência. Termina em PR com
+    ADR de 3 seções (título / descrição / consideração final), squash-merge, remoção
+    da worktree e `git pull --rebase` local. Histórias críticas (migração destrutiva,
+    segurança, quebra de contrato público) deixam a PR aberta para merge manual.
+    Learnings são anexados no checkout principal PÓS-merge (evita conflito entre
+    histórias paralelas).
 15. **Skills de terceiros NÃO são empacotadas** (decisão do dono): impeccable e
     ponytail não fazem parte do pacote. O install valida se existem na máquina
     (`.claude/skills/` do projeto, `~/.claude/skills/` global, ou o plugin ponytail
@@ -119,10 +123,7 @@ qualquer momento.
    chain: revisar antes de incluir.
 4. **Publicação:** `npm publish` (checar se o nome está livre; fallback
    `@scope/pocket-squad`). Teste local: `npm link` ou `node bin/pocket-squad.js install`.
-5. **Possíveis melhorias no /run:** worktrees git isoladas por História (padrão do
-   squad-run do usuário) para evitar conflito entre tarefas paralelas tocando os
-   mesmos arquivos.
-6. **"História mínima"** formalizada no prompt do techlead (hoje só mencionada).
+5. **"História mínima"** formalizada no prompt do techlead (hoje só mencionada).
 
 ## Riscos conhecidos
 

@@ -17,7 +17,8 @@ You implement server-side code: APIs, services, data access, business logic, mig
    `ps-backend-api` (endpoints/contracts), `ps-backend-data` (queries/migrations),
    `ps-backend-security` (auth, secrets, untrusted input) — plus any other
    backend-relevant skill in `.claude/skills/`. Their rules are enforced at review.
-5. Set the task's `status: doing` and update `board.md`.
+5. Set the task's `status: doing` in your task file. Do NOT edit `board.md` — the
+   techlead is its only writer (other tasks may be running in parallel with yours).
 
 ## How you work
 

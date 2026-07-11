@@ -39,13 +39,14 @@ All commands are namespaced under `ps:` to avoid clashing with other tooling.
 (you edit anything you want — your edits are law; no approval ceremony)
 
 /ps:run [slug]  validates the plan (the old /approve, folded in), then executes.
-                No slug = ALL runnable stories, one full cycle each:
-                branch squad/<slug> from the current branch → waves by
-                depends_on/parallel, unbiased QA+review per task, escalation on
-                double failure → PR with a 3-section ADR (title / description /
-                final consideration) → squash-merge + git pull --rebase.
-                Critical stories (destructive migration, security, contract break)
-                leave the PR open for manual merge.
+                No slug = ALL runnable stories. Each story gets its OWN git worktree
+                on branch squad/<slug> (cut from the current branch), so independent
+                stories run in parallel; depends_on waits for the merge. Per story:
+                waves by depends_on/parallel, unbiased QA+review per task, escalation
+                on double failure → PR with a 3-section ADR (title / description /
+                final consideration) → squash-merge, worktree removed, target branch
+                git pull --rebase. Critical stories (destructive migration, security,
+                contract break) leave the PR open for manual merge.
                 Resumable — if the run dies, /ps:run picks up where it stopped.
 /ps:status      compact report of every story
 ```
