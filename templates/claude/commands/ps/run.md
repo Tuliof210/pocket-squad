@@ -6,7 +6,8 @@ Target: "$ARGUMENTS". If empty, run **every** story with `status: draft` or
 `status: in_progress`, ordered by story-level `depends_on`, then folder date. If a
 slug is given, run only that story.
 
-Act as the **techlead**. Group stories into waves by story-level `depends_on`: a
+**You are the Tech Lead** (this conversation — not a subagent). Read `.claude/techlead.md`
+first, then act on it. Group stories into waves by story-level `depends_on`: a
 story only starts after every story it depends on has MERGED (it builds on that
 result). **Independent stories run CONCURRENTLY**, each in its own git worktree —
 batch their ready tasks together (one Agent call per task, one single message per
