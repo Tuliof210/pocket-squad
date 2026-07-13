@@ -17,8 +17,12 @@ batch), regardless of which story each task belongs to.
 
 Re-read `story.md` and every task file — the owner may have edited them; their edits
 are law. Check: no dangling `depends_on`, every task has specialty + tier +
-justification + verifiable DoD, contracts consumed downstream are deliverables
-upstream. If validation fails: print the findings, skip this story, continue with the
+justification + verifiable DoD + a `## Context` section (self-contained: exact
+commands, files to imitate), contracts consumed downstream are deliverables upstream.
+**Audit `express: true`**: it only stands if every task is junior + S, with no
+contract deliverables and no auth/security/migration/public-contract surface —
+otherwise strip the flag and run the story through the full gates, noting why.
+If validation fails: print the findings, skip this story, continue with the
 next. A valid story runs without asking for confirmation.
 
 ## 1. Worktree (one per story)
@@ -45,10 +49,14 @@ merges back with the PR.
   calls are batched in a SINGLE message — dispatch every task of the wave as one
   message with one Agent call per task. Dispatching one task, waiting, then the next
   is a bug, not a wave.
-- After each implementation, dispatch the unbiased gates: **reviewer-<tier>** (diff)
-  and **qa-<tier>** (behavior); minimum pleno gate for junior tasks — batched in one
-  message too (and gates of different finished tasks batch together). The implementer
-  NEVER verifies their own DoD.
+- After each implementation, dispatch the unbiased gates — batched in one message
+  (and gates of different finished tasks batch together). The implementer NEVER
+  verifies their own DoD. The gates split, they do not triple:
+  - **Full story:** **reviewer-<tier>** (diff + executable DoD: runs lint/test/build
+    itself) and **qa-<tier>** (behavior only: exercises each acceptance criterion,
+    does not re-run what the reviewer evidences); minimum pleno gate for junior tasks.
+  - **Express story (`express: true`):** ONE gate — **reviewer-pleno**, who also
+    exercises the behavior (absorbs QA). No separate qa dispatch.
 - **Escalation:** 2nd FAILED verdict at the same tier → reassign one tier up (note it
   in the task file). Never a 3rd attempt at the same tier.
 - `status: blocked` tasks come back to you: decide, amend the task file, re-dispatch —

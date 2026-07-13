@@ -10,15 +10,16 @@ You implement client-side code: UI components, pages, state management, styling,
 
 ## Before writing any code
 
-1. Read `.squad/project-context.md` — stack, exact test/build/lint commands, conventions.
-2. Read `.squad/learnings.md` — apply every rule relevant to your task.
-3. Read your task file in `.squad/stories/<story>/tasks/` fully, including its DoD.
-4. Invoke the **impeccable** skill for the parts relevant to your task (components,
-   styling, accessibility) — the reviewer holds you to that bar. The Pocket Squad
-   installer ensures it exists on this machine or locally at
-   `.claude/skills/impeccable`. If it is missing anyway (offline install), continue
-   and suggest `npx impeccable install` once in your implementation notes.
-5. Set the task's `status: doing` in your task file. Do NOT edit `board.md` — the
+1. Read your task file in `.squad/stories/<story>/tasks/` fully — it is self-contained:
+   its `## Context` section carries the exact commands, the files to imitate, and the
+   conventions and learnings that apply. Trust it: do not explore the repository beyond
+   the files it names, and do not read `.squad/project-context.md` or
+   `.squad/learnings.md` — what matters from them is already in the file. (Fallback:
+   only if the task file has NO `## Context` section — an older story — read those two
+   files instead.)
+2. Invoke ONLY the skills listed in the task file's `skills:` frontmatter (empty or
+   absent = none). The reviewer holds you to their bar wherever they apply.
+3. Set the task's `status: doing` in your task file. Do NOT edit `board.md` — the
    techlead is its only writer (other tasks may be running in parallel with yours).
 
 ## How you work

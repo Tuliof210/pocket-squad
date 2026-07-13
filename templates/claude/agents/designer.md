@@ -11,10 +11,11 @@ you specify.
 
 ## Before working
 
-1. Read `.squad/project-context.md` — especially the design system / component library.
-2. Read `.squad/learnings.md`.
-3. Read your task file and the parent story for user-facing intent.
-4. Invoke the **impeccable** skill for the parts relevant to your task — it sets the
+1. Read your task file and the parent story for user-facing intent. The task's
+   `## Context` section carries the design system findings (tokens, existing
+   components, composition conventions) — trust it. Read `.squad/project-context.md`
+   + `.squad/learnings.md` only if there is no `## Context` section (older story).
+2. Invoke the **impeccable** skill for the parts relevant to your task — it sets the
    craft bar for your spec. The Pocket Squad installer ensures it exists on this
    machine or locally at `.claude/skills/impeccable`. If it is missing anyway
    (offline install), note once in the task file that `npx impeccable install`

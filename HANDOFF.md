@@ -25,12 +25,17 @@ squash-merged na branch de origem.
    devolve ao techlead. Escalar é sucesso no tier dele.
 3. **Escalação automática:** 2 reprovações no mesmo tier → techlead reatribui ao tier
    acima (nunca 3ª tentativa no mesmo tier).
-4. **DoD verificado por terceiro:** QA/reviewer (pleno/senior) executam os checks eles
-   mesmos; implementador nunca se auto-aprova. DoD preferencialmente executável
-   (testes/lint/build passam).
-5. **Sem "modo rápido" que fure o histórico** (decisão explícita do dono). Alternativa
-   permitida: TechLead pode gerar "História mínima" (1 tarefa, 1 pergunta) para
-   trivialidades — registro sempre mantido.
+4. **DoD verificado por terceiro** — implementador nunca se auto-aprova.
+   **Revisado (2026-07-13):** os gates dividem em vez de triplicar: reviewer é dono
+   do diff + DoD executável (roda lint/test/build ele mesmo); QA é dono do
+   comportamento (exercita critérios de aceite) e não repete a suíte. A suíte roda
+   2x (implementador + reviewer), não 3x.
+5. **Sem "modo rápido" que fure o histórico** (decisão explícita do dono).
+   **Revisado (2026-07-13):** existe a **express lane** (`express: true` na story;
+   critérios: todas as tarefas junior+S, sem contrato, sem superfície de
+   auth/segurança/migração — auditado pelo `/ps:run`, que derruba a flag se
+   violada). Ela NÃO fura o histórico — story/tasks/board/PR/ADR continuam —
+   só colapsa o gate duplo em um (reviewer-pleno absorve o QA comportamental).
 6. **`project-context.md` é gerenciado pela squad**, destilado do CLAUDE.md/AGENTS.md
    no install ou por investigação do techlead. Fonte previsível e enxuta para agentes.
 7. **`learnings.md` com formato rígido** (erro → causa → regra → escopo/data/story).
@@ -70,6 +75,18 @@ squash-merged na branch de origem.
     @dietrichgebert/ponytail@<pin>` + extração da skill (MIT, LICENSE junto).
     Best-effort (offline → aviso), opt-out `POCKET_SQUAD_SKIP_SKILLS=1`. As únicas
     skills empacotadas são as proprietárias `ps-backend-api|data|security`.
+16. **Task files auto-contidos + skills sob demanda (2026-07-13, inspirado na skill
+    `/squad` do dono):** a inteligência mora no plan-time. O techlead investiga o
+    repo na Fase 1.5 (Explores paralelos read-only: mapa do código, comandos de
+    verificação, riscos, design system) e destila tudo na seção `## Context` de cada
+    task file — obrigatória. Especialistas leem SÓ o task file (zero re-exploração;
+    fallback para project-context/learnings apenas em stories antigas sem
+    `## Context`) e carregam SÓ as skills listadas no frontmatter `skills: []` do
+    task (default vazio; techlead lista `impeccable`/`ps-backend-*` só quando
+    aplicam materialmente). Reviewer aplica a barra ponytail inline e só invoca a
+    skill `ponytail-review` em diffs grandes. Designer mantém `impeccable` sempre
+    (é a barra de craft dele). Motivo: 3 subagentes frios relendo contexto +
+    carregando skills pesadas + suíte 3x fazia uma story trivial custar ~40min.
 
 ## Estado atual (v0.1.0 — gerado e testado)
 

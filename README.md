@@ -30,10 +30,14 @@ All commands are namespaced under `ps:` to avoid clashing with other tooling.
 
 ```
 /ps:story "create a social login screen"
-   └─ techlead refines with you → one or MORE .squad/stories/<date>-<slug>/
+   └─ techlead refines with you, investigates the repo with parallel read-only
+      subagents, then writes one or MORE .squad/stories/<date>-<slug>/
       (big requests split into multiple Stories, ordered by story-level depends_on)
-        story.md            title, description, complexity, DoD, cost, depends_on
-        tasks/NN-*.md       specialty, tier + justification, DoD, depends_on, parallel, status
+        story.md            title, description, complexity, DoD, cost, depends_on,
+                            express (trivial story → single-gate fast path)
+        tasks/NN-*.md       specialty, tier + justification, DoD, skills (on demand),
+                            depends_on, parallel, status + pre-investigated ## Context
+                            (specialists read ONLY their task file — zero re-exploration)
         board.md            todo / doing / done
 
 (you edit anything you want — your edits are law; no approval ceremony)
@@ -42,7 +46,9 @@ All commands are namespaced under `ps:` to avoid clashing with other tooling.
                 No slug = ALL runnable stories. Each story gets its OWN git worktree
                 on branch squad/<slug> (cut from the current branch), so independent
                 stories run in parallel; depends_on waits for the merge. Per story:
-                waves by depends_on/parallel, unbiased QA+review per task, escalation
+                waves by depends_on/parallel; unbiased gates per task — reviewer
+                owns diff + executable DoD, QA owns behavior (no triple test
+                runs), express stories get ONE reviewer gate — escalation
                 on double failure → PR with a 3-section ADR (title / description /
                 final consideration) → squash-merge, worktree removed, target branch
                 git pull --rebase. Critical stories (destructive migration, security,
@@ -55,7 +61,7 @@ Everything lives in markdown for audit, editing and agent context:
 
 ```
 .squad/
-  project-context.md   # 1-page briefing all agents read first (seeded from CLAUDE.md)
+  project-context.md   # 1-page briefing the techlead reads and distills into task files
   learnings.md         # strict-format rules: error → cause → rule
   stories/…
 .claude/
@@ -84,9 +90,11 @@ to them as `*.new` for manual merge. `install` never overwrites anything that ex
 ## Extending
 
 Add your own agents/skills to `.claude/` freely — anything not in the manifest is
-yours and will never be touched. The squad's agents already know their tools:
-reviewers invoke **ponytail-review**, designer and frontend tiers invoke
-**impeccable** (both ensured at install, see above), and backend tiers invoke the
-bundled **ps-backend-*** skills (plus anything else you drop in `.claude/skills/`).
-Pin versions on anything you add — skills run with access to your code, treat them
-as supply chain.
+yours and will never be touched. Skills are loaded **on demand**: the techlead lists
+in each task's `skills:` frontmatter only what materially applies (e.g. **impeccable**
+for a new UI surface, **ps-backend-security** when touching auth), and the specialist
+loads nothing else — mechanical tasks run skill-free. The designer always uses
+**impeccable** (it is their craft bar), and reviewers apply the ponytail
+over-engineering bar inline, invoking **ponytail-review** only on large diffs.
+Anything you drop in `.claude/skills/` becomes routable the same way. Pin versions on
+anything you add — skills run with access to your code, treat them as supply chain.

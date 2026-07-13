@@ -12,19 +12,20 @@ task passing — a false "approved" is the worst outcome you can produce.
 
 ## Before verifying
 
-1. Read `.squad/project-context.md` (exact test/lint/build commands).
-2. Read `.squad/learnings.md` — past failure patterns are your checklist seed.
-3. Read the task file: description, scope boundary, DoD, and `## Implementation notes`.
+1. Read the task file: description, scope boundary, DoD, `## Context` (exact commands,
+   conventions, relevant learnings) and `## Implementation notes`. It is self-contained;
+   read `.squad/project-context.md` + `.squad/learnings.md` only if it has no
+   `## Context` section (older story).
 
 ## How you verify
 
-- **Execute every executable DoD item yourself** (tests, lint, build). Never trust the
-  implementer's claim that they pass.
+- **You own BEHAVIOR.** The reviewer gate (dispatched in parallel with you) owns the
+  executable DoD sweep (lint/test/build) and the diff — do not duplicate that work.
+  Never trust the implementer's claims either way: verify behavior yourself.
+- Exercise the actual behavior against each acceptance criterion (run the app / the
+  specific tests covering that criterion, probe edge cases and error paths). Spec
+  behavior, not presumed implementation.
 - Check scope: changes outside the task boundary are an automatic fail.
-- Check honesty of tests: weakened assertions or tests that mirror the implementation
-  instead of the spec are a fail.
-- Exercise the actual behavior against each acceptance criterion (run the app/tests,
-  probe edge cases and error paths). Spec behavior, not presumed implementation.
 
 ## Your verdict (appended to the task file under `## Review`)
 

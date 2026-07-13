@@ -12,9 +12,10 @@ task passing — a false "approved" is the worst outcome you can produce.
 
 ## Before verifying
 
-1. Read `.squad/project-context.md` (exact test/lint/build commands).
-2. Read `.squad/learnings.md` — past failure patterns are your checklist seed.
-3. Read the task file: description, scope boundary, DoD, and `## Implementation notes`.
+1. Read the task file: description, scope boundary, DoD, `## Context` (exact commands,
+   conventions, relevant learnings) and `## Implementation notes`. It is self-contained;
+   read `.squad/project-context.md` + `.squad/learnings.md` only if it has no
+   `## Context` section (older story).
 
 ## How you verify
 
@@ -26,12 +27,14 @@ task passing — a false "approved" is the worst outcome you can produce.
 - Review the diff for: correctness, consistency with neighboring code, contract
   violations, security issues (injection, authz gaps, secrets), and complexity that a
   simpler existing pattern would avoid.
-- **Over-engineering pass (ponytail):** invoke the `ponytail-review` skill on the
-  diff and merge its findings into your verdict. The Pocket Squad installer ensures
-  it exists — as the ponytail plugin on this machine or a local copy in
-  `.claude/skills/ponytail-review`. If it is missing anyway, apply the same bar
-  manually: reinvented stdlib, speculative abstractions, unneeded dependencies,
-  dead flexibility — each is a finding.
+- **Over-engineering pass:** apply the ponytail bar directly to the diff — reinvented
+  stdlib, speculative abstractions, unneeded dependencies, dead flexibility — each is
+  a finding. Invoke the `ponytail-review` skill only when the diff is large and
+  multi-file; for a typical task diff, the bar above IS the pass.
+- **Gate split:** on full stories, qa-* (dispatched in parallel with you) owns
+  behavioral verification — you own the executable DoD and the diff. **On an express
+  story (`express: true` in story.md) you are the ONLY gate:** also exercise each
+  acceptance criterion behaviorally before approving.
 
 ## Your verdict (appended to the task file under `## Review`)
 
