@@ -1,30 +1,11 @@
 {
-  "version": "0.1.0",
-  "installedAt": "2026-07-11T01:23:41.680Z",
+  "version": "0.2.0",
+  "installedAt": "2026-07-15T01:19:53.640Z",
   "files": {
-    "claude/agents/backend-junior.md": "7e7490474fdd2daaf71d5e5b9487974438ba2b763d1dc17cfd003ecd388eaac3",
-    "claude/agents/backend-pleno.md": "01f6647d58ccc9819c2aa3696ba51dbb615102b9bd23a4b8bb4c87f7d89d879d",
-    "claude/agents/backend-senior.md": "1fda2e394faa425111f045aa1c263d834f4b6d9feed8971f1c4f08279be02dc0",
-    "claude/agents/designer.md": "2d2dbb00d74703fd6f345fe1b983a5205806ee1a0b1aefc1e3ae456f6607d076",
-    "claude/agents/devops-junior.md": "d6308873251e8cbba3dcc51753634eeee9cf2711fe8e759173a241bc15021162",
-    "claude/agents/devops-pleno.md": "b0f3339157fc86f7b088ce85d1cbbb1d29cce55f2e6c1f9520600f114199dd8b",
-    "claude/agents/devops-senior.md": "9cacd87cef2a450f2f5be5c1808c6492cdc19cc6099058b591fcd4be83a89943",
-    "claude/agents/frontend-junior.md": "fe3b763e6be55f0c400026bcbbdd42b952375fd54962b48a7f555822ae7eaa80",
-    "claude/agents/frontend-pleno.md": "239229a1d6782228826101fc5f3b961dc8a1f0631348634d414c039128553a3c",
-    "claude/agents/frontend-senior.md": "fe340ea0b58d264d92da1412a4b39f78cf9a7d0bd231b419b2adda12b7f90367",
-    "claude/agents/qa-pleno.md": "090abcb86d64c860d38cdc6939daab6d8f055cbd5bfbe9e7f436aaf757a551ca",
-    "claude/agents/qa-senior.md": "a71e57f1ae89489e58e51c1f6e0f08a172240dafd51143e0b07b09fbd3039b7a",
-    "claude/agents/reviewer-pleno.md": "8efa477b9bc4c0ac63d5782989efae927b4684bd90c4eead45dceb2d2c9ecea1",
-    "claude/agents/reviewer-senior.md": "d84082a4f5d0c1cdca4021b593d587982b0564cc104d3b019b3fea49c9c97c4c",
-    "claude/techlead.md": "01316a63e0fba66d4c354abff84a401d0e71d3c8d1522dee73099e90bf8af9d7",
-    "claude/commands/ps/run.md": "7ff22141e9869cc322ea8fc06068df62fd6b1a5e08fe062afc8be93815d3a3e7",
-    "claude/commands/ps/status.md": "b8245b1bee326b0022e416b0ed208464ffe9f2cfb438cd526ea42adcf90f5424",
-    "claude/commands/ps/story.md": "8031885ff230bc6d845d18bd38276c74b1bd539278c7cd6e8d6a15d32c747871",
-    "claude/skills/ps-backend-api/SKILL.md": "31a872c56f74465d91c454105f52158111641068a8bddb1c84318f297b8cd6af",
-    "claude/skills/ps-backend-data/SKILL.md": "bf3a88ab887921e4f0c8d24cfdd821b40259e4695b8436cb3b18f3290b5e6432",
-    "claude/skills/ps-backend-security/SKILL.md": "0506a5f54b67d51e72dbda92777947d8b67b611a40c17f689fcfc3a27b289d31",
-    "squad/learnings.md": "4da8562093d6f821783e85e1471f41f1a09d28aa35135271b358738cf080fe50",
-    "squad/project-context.md": "82e536dfc70cba17b9f9d7ddbb00aa639f22d59539cbce08d3b4bc8b8c0f4a9b",
-    "squad/stories/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    "claude/commands/ps/init.md": "2120044ae2feafa36fdc6af366304697fec8a149d8efd2844374510bda1193a1",
+    "claude/commands/ps/publish.md": "666b1a0609acf7dc61b9029fafdd81c0241fe46db00579df9903d957da0fbf38",
+    "claude/commands/ps/review.md": "50ad7bef59f80869773895e6b042b7e49d05442408b3d64c8494ad075faff4e8",
+    "claude/commands/ps/story.md": "3a32c4fb2b1cd414b938b06bc4f483751739c4a0de89a93a34715767b948f1cc",
+    "squad/learnings.md": "78926fe7741cfa5013320fdc6108210d1f57d5c475915b4da91ffc5c18c69967"
   }
 }

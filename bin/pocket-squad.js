@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Pocket Squad — a full dev squad for Claude Code, in your pocket.
+ * Pocket Squad — a lean Claude Code workflow, in your pocket.
  *
  * Usage:
  *   npx pocket-squad            # install into the current project
@@ -8,10 +8,8 @@
  *   npx pocket-squad status     # show managed vs customized files
  */
 const fs = require("fs");
-const os = require("os");
 const path = require("path");
 const crypto = require("crypto");
-const { execFileSync } = require("child_process");
 
 const PKG_ROOT = path.resolve(__dirname, "..");
 const TEMPLATES = path.join(PKG_ROOT, "templates");
@@ -20,59 +18,6 @@ const CWD = process.cwd();
 const MANIFEST_PATH = path.join(CWD, ".claude", "pocket-squad.manifest.json");
 
 const sha = (buf) => crypto.createHash("sha256").update(buf).digest("hex");
-
-// impeccable and ponytail are NOT bundled with pocket-squad. The install checks
-// whether they already exist on this machine (project or global) and, only when
-// absent, fetches a pinned version into the project's .claude/skills/.
-// Best-effort: needs network, never fails the install. POCKET_SQUAD_SKIP_SKILLS=1 skips.
-// Pinned on purpose: skills run with access to the user's code (supply chain).
-const IMPECCABLE_VERSION = "3.2.1";
-const PONYTAIL_VERSION = "4.8.4";
-const HOME = os.homedir();
-
-const hasSkill = (name) =>
-  fs.existsSync(path.join(CWD, ".claude", "skills", name, "SKILL.md")) ||
-  fs.existsSync(path.join(HOME, ".claude", "skills", name, "SKILL.md"));
-
-function ensureSkills() {
-  if (process.env.POCKET_SQUAD_SKIP_SKILLS) return;
-  ensureImpeccable();
-  ensurePonytail();
-}
-
-function ensureImpeccable() {
-  if (hasSkill("impeccable")) return;
-  console.log(`\nimpeccable not found on this machine — installing impeccable@${IMPECCABLE_VERSION} into the project...`);
-  try {
-    execFileSync(
-      "npx",
-      ["-y", `impeccable@${IMPECCABLE_VERSION}`, "install", "--project", "--providers=claude", "--yes"],
-      { cwd: CWD, stdio: "inherit", timeout: 120000 }
-    );
-  } catch {
-    console.warn("  ! impeccable install failed (offline?). The squad works without it; run `npx impeccable install` later.");
-  }
-}
-
-function ensurePonytail() {
-  // The ponytail Claude plugin counts as present — its skills are machine-wide.
-  if (hasSkill("ponytail-review") || fs.existsSync(path.join(HOME, ".claude", "plugins", "cache", "ponytail"))) return;
-  console.log(`\nponytail not found on this machine — installing the ponytail-review skill (@dietrichgebert/ponytail@${PONYTAIL_VERSION}, MIT) into the project...`);
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "pocket-squad-"));
-  try {
-    execFileSync("npm", ["pack", `@dietrichgebert/ponytail@${PONYTAIL_VERSION}`, "--pack-destination", tmp], { stdio: "ignore", timeout: 120000 });
-    const tgz = fs.readdirSync(tmp).find((f) => f.endsWith(".tgz"));
-    execFileSync("tar", ["-xzf", path.join(tmp, tgz), "-C", tmp], { timeout: 60000 });
-    const dst = path.join(CWD, ".claude", "skills", "ponytail-review");
-    fs.cpSync(path.join(tmp, "package", "skills", "ponytail-review"), dst, { recursive: true });
-    fs.copyFileSync(path.join(tmp, "package", "LICENSE"), path.join(dst, "LICENSE"));
-    console.log("  + created      .claude/skills/ponytail-review");
-  } catch {
-    console.warn("  ! ponytail fetch failed (offline?). The squad works without it; install the plugin later (/plugin marketplace add DietrichGebert/ponytail).");
-  } finally {
-    fs.rmSync(tmp, { recursive: true, force: true });
-  }
-}
 
 function walk(dir, base = dir, out = []) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -134,13 +79,13 @@ function install() {
 
   // Preserve knowledge files across reinstalls: only record hashes for files we own.
   saveManifest(hashes);
-  ensureSkills();
   console.log(`\nPocket Squad v${VERSION} installed.`);
   console.log(`  ${created} created, ${kept} unchanged, ${skipped} pre-existing (untouched).`);
   console.log(`\nNext steps:`);
   console.log(`  1. Open Claude Code in this project.`);
-  console.log(`  2. Run /ps:story "your feature idea" to start refining with the Tech Lead.`);
-  console.log(`  3. Review/edit .squad/stories/<story>/, then /ps:run (it validates and executes).`);
+  console.log(`  2. Run /ps:init once to create the project's CLAUDE.md.`);
+  console.log(`  3. Run /ps:story "your idea" — refine in plan mode, approve, get a PR.`);
+  console.log(`  4. Then /ps:review (fresh-eyes review) and /ps:publish (merge + cleanup).`);
   if (manifest) console.log(`\n(Previous manifest found — this was a re-install. Use "update" to upgrade managed files.)`);
 }
 
@@ -176,6 +121,10 @@ function update() {
       fs.writeFileSync(dst, content);
       updated++;
       console.log(`  ^ updated      ${path.relative(CWD, dst)}`);
+    } else if (rel.startsWith("squad" + path.sep)) {
+      // Knowledge files (.squad/) diverge by design — learnings accumulate. Never nag with .new.
+      unchanged++;
+      console.log(`  ~ kept         ${path.relative(CWD, dst)} (knowledge file)`);
     } else {
       // User customized it — never overwrite. Ship the new version alongside.
       fs.writeFileSync(dst + ".new", content);
@@ -193,7 +142,10 @@ function update() {
     if (!fs.existsSync(dst)) continue;
     if (sha(fs.readFileSync(dst)) === oldHash) {
       fs.unlinkSync(dst);
-      try { fs.rmdirSync(path.dirname(dst)); } catch {} // only removes now-empty dirs
+      // Climb up removing now-empty dirs (rmdir throws on non-empty — safe stop).
+      for (let dir = path.dirname(dst); dir !== CWD; dir = path.dirname(dir)) {
+        try { fs.rmdirSync(dir); } catch { break; }
+      }
       removed++;
       console.log(`  - removed      ${path.relative(CWD, dst)} (no longer shipped)`);
     } else {
@@ -202,7 +154,6 @@ function update() {
   }
 
   saveManifest(hashes);
-  ensureSkills();
   console.log(`\nUpdate to v${VERSION} done: ${updated} updated, ${added} added, ${removed} removed, ${unchanged} unchanged, ${conflicted} customized (see *.new files).`);
 }
 

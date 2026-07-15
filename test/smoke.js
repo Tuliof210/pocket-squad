@@ -4,6 +4,7 @@
  * No test framework — node:assert only, per project convention.
  */
 const assert = require("node:assert");
+const crypto = require("node:crypto");
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
@@ -11,60 +12,67 @@ const { execFileSync } = require("node:child_process");
 
 const REPO_ROOT = path.resolve(__dirname, "..");
 const CLI = path.join(REPO_ROOT, "bin", "pocket-squad.js");
+const sha = (buf) => crypto.createHash("sha256").update(buf).digest("hex");
 
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), "pocket-squad-"));
 
-// Keep the test offline and fast: skip the ensure-step that fetches impeccable/ponytail.
-const env = { ...process.env, POCKET_SQUAD_SKIP_SKILLS: "1" };
-
 try {
   // execFileSync throws (and this test crashes) on a non-zero exit code — that's the "exits 0" assertion.
-  execFileSync("node", [CLI, "install"], { cwd: dir, env });
+  execFileSync("node", [CLI, "install"], { cwd: dir });
 
-  assert.ok(
-    fs.existsSync(path.join(dir, ".claude", "pocket-squad.manifest.json")),
-    "install should create .claude/pocket-squad.manifest.json"
-  );
+  const MANIFEST = path.join(dir, ".claude", "pocket-squad.manifest.json");
+  assert.ok(fs.existsSync(MANIFEST), "install should create .claude/pocket-squad.manifest.json");
 
-  const agentsDir = path.join(dir, ".claude", "agents");
-  assert.ok(fs.existsSync(agentsDir), "install should create .claude/agents/");
-  assert.ok(
-    fs.readdirSync(agentsDir).length > 0,
-    "install should create at least one file under .claude/agents/"
-  );
-
-  assert.ok(
-    fs.existsSync(path.join(dir, ".claude", "commands", "ps", "run.md")),
-    "install should create the namespaced /ps:run command"
-  );
-  assert.ok(
-    !fs.existsSync(path.join(dir, ".claude", "commands", "approve.md")),
-    "the removed /approve command must not ship"
-  );
-
-  for (const skill of ["ps-backend-api", "ps-backend-data", "ps-backend-security"]) {
+  for (const cmd of ["story", "review", "publish", "init"]) {
     assert.ok(
-      fs.existsSync(path.join(dir, ".claude", "skills", skill, "SKILL.md")),
-      `install should bundle the ${skill} skill`
+      fs.existsSync(path.join(dir, ".claude", "commands", "ps", `${cmd}.md`)),
+      `install should create the namespaced /ps:${cmd} command`
     );
   }
 
-  // impeccable and ponytail are NOT part of the package — only fetched by the
-  // ensure-step (skipped here), so a bundled copy would be a packaging bug.
-  for (const skill of ["impeccable", "ponytail-review"]) {
-    assert.ok(
-      !fs.existsSync(path.join(dir, ".claude", "skills", skill)),
-      `${skill} must not ship inside the package`
-    );
+  // The v0.1 squad (agents, skills, techlead, run/status, project-context) must not ship.
+  for (const gone of [
+    path.join(".claude", "agents"),
+    path.join(".claude", "skills"),
+    path.join(".claude", "techlead.md"),
+    path.join(".claude", "commands", "ps", "run.md"),
+    path.join(".claude", "commands", "ps", "status.md"),
+    path.join(".squad", "project-context.md"),
+    path.join(".squad", "stories"),
+  ]) {
+    assert.ok(!fs.existsSync(path.join(dir, gone)), `${gone} must not ship`);
   }
 
   assert.ok(
-    fs.existsSync(path.join(dir, ".squad", "project-context.md")),
-    "install should create .squad/project-context.md"
+    fs.existsSync(path.join(dir, ".squad", "learnings.md")),
+    "install should create .squad/learnings.md"
   );
 
-  const statusOutput = execFileSync("node", [CLI, "status"], { cwd: dir, env }).toString();
+  const statusOutput = execFileSync("node", [CLI, "status"], { cwd: dir }).toString();
   assert.ok(statusOutput.includes("managed"), "status output should contain 'managed'");
+
+  // Orphan migration: a manifest-managed file that no longer ships (v0.1 leftovers)
+  // is deleted by `update` when untouched, and no empty dirs are left behind.
+  const orphan = path.join(dir, ".claude", "agents", "backend-junior.md");
+  fs.mkdirSync(path.dirname(orphan), { recursive: true });
+  fs.writeFileSync(orphan, "old agent\n");
+  const manifest = JSON.parse(fs.readFileSync(MANIFEST, "utf8"));
+  manifest.files["claude/agents/backend-junior.md"] = sha(fs.readFileSync(orphan));
+  fs.writeFileSync(MANIFEST, JSON.stringify(manifest, null, 2));
+  execFileSync("node", [CLI, "update"], { cwd: dir });
+  assert.ok(!fs.existsSync(orphan), "update should delete untouched orphaned files");
+  assert.ok(
+    !fs.existsSync(path.join(dir, ".claude", "agents")),
+    "update should remove the emptied directory tree of an orphan"
+  );
+
+  // Knowledge files never get nagging .new copies: customize learnings, update again.
+  fs.appendFileSync(path.join(dir, ".squad", "learnings.md"), "- [all] test rule (added 2026-07-14)\n");
+  execFileSync("node", [CLI, "update"], { cwd: dir });
+  assert.ok(
+    !fs.existsSync(path.join(dir, ".squad", "learnings.md.new")),
+    "update must not write .new for knowledge files (.squad/)"
+  );
 
   console.log("smoke test passed");
 } finally {

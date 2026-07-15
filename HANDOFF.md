@@ -3,6 +3,40 @@
 > Contexto para continuar o desenvolvimento no Claude Code, com o projeto aberto.
 > Origem: conversa de concepção e geração da v0.1.0 (2026-07-10).
 
+## v0.2.0 (2026-07-14) — Reformulação lean
+
+A v0.1 estava lenta: techlead.md (265 linhas) injetado no chat a cada comando,
+run.md duplicando o protocolo de execução, 14 agentes quase-clones com cold start,
+e o instalador baixando skills externas. Decisões do dono nesta reformulação:
+
+1. **Execução no chat principal.** Após aprovar o plano, o próprio chat (já quente
+   com o contexto do refinamento) implementa. Todos os agentes morreram, techlead.md
+   morreu. Cold start só onde é feature: o review roda num subagente frio.
+2. **Nada em disco como registro de story.** `.squad/stories` morreu; o plan file do
+   plan mode + a descrição da PR são o registro. `project-context.md` morreu —
+   substituído pelo `CLAUDE.md` do projeto (carregado automaticamente), criado pelo
+   novo `/ps:init`.
+3. **4 comandos:** `/ps:story` (plan mode → entrevista exaustiva com defaults →
+   aprovação → worktree isolada → PR; DoD do comando = PR criada), `/ps:review`
+   (subagente general-purpose de contexto frio; o prompt de despacho não carrega
+   resumo das mudanças — é isso que sustenta o não-viés), `/ps:publish`
+   (squash-merge + `git pull --rebase` + remoção só da worktree daquela story +
+   learnings) e `/ps:init`. `ps:run` e `ps:status` morreram.
+4. **Skills cortadas por completo.** Sem fetch de impeccable/ponytail, sem
+   `ps-backend-*`. Convenções vivem no CLAUDE.md do projeto.
+5. **Learnings enxuto.** Uma linha por regra (`- [scope] regra (added YYYY-MM-DD)`),
+   cap 30, escrito pelo `/ps:publish` pós-merge, lido pelo `/ps:story`. No `update`,
+   arquivos `.squad/` nunca geram `.new` (divergem por design).
+
+O instalador ganhou: remoção de órfãos que sobe diretórios vazios, e o guard de
+knowledge files. O smoke test cobre a migração v0.1→v0.2 (órfão intocado deletado,
+sem dirs vazios, learnings sem `.new`).
+
+> Tudo abaixo desta linha descreve a v0.1 — mantido como registro histórico.
+> As decisões 1–16 e a estrutura listada NÃO refletem mais o estado atual.
+
+---
+
 ## O que é o projeto
 
 **Pocket Squad**: pacote npx que instala uma squad de desenvolvimento completa para

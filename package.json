@@ -1,7 +1,7 @@
 {
   "name": "pocket-squad",
-  "version": "0.1.0",
-  "description": "A full dev squad for Claude Code, in your pocket. Installs agents, skills and commands (.claude/) plus a story/task workflow (.squad/) into any project.",
+  "version": "0.2.0",
+  "description": "A lean Claude Code workflow in your pocket: /ps:init, /ps:story (plan mode → worktree → PR), /ps:review (fresh eyes), /ps:publish (squash-merge + cleanup).",
   "bin": { "pocket-squad": "bin/pocket-squad.js" },
   "files": ["bin", "templates", "README.md"],
   "scripts": { "test": "node test/smoke.js", "prepublishOnly": "node test/smoke.js" },

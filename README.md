@@ -1,7 +1,7 @@
 # Pocket Squad
 
-A full dev squad for Claude Code, in your pocket. One `npx` installs agents, commands
-and a story/task workflow into any project.
+A lean Claude Code workflow, in your pocket. One `npx` installs four slash commands
+that take an idea from refinement to a merged PR — no agents, no cold starts.
 
 ```bash
 npx pocket-squad            # install into the current project
@@ -9,92 +9,58 @@ npx pocket-squad update     # upgrade managed files (never clobbers your edits)
 npx pocket-squad status     # managed vs customized files
 ```
 
-## The squad
-
-| Role | Tiers → model |
-|---|---|
-| techlead (owner's single interface) | opus |
-| backend / frontend / devops | junior → haiku · pleno → sonnet · senior → opus |
-| qa / reviewer (unbiased gates) | pleno → sonnet · senior → opus |
-| designer | sonnet |
-
-The techlead routes each task by a written rubric (junior = mechanical & fully
-specified; pleno = feature within existing patterns; senior = new module / contract
-change / hard debugging) and records the justification for audit. Juniors are
-forbidden to improvise — they block and escalate. Two failed reviews at the same tier
-auto-escalate the task to the tier above.
-
 ## The workflow
 
-All commands are namespaced under `ps:` to avoid clashing with other tooling.
-
 ```
-/ps:story "create a social login screen"
-   └─ techlead refines with you, investigates the repo with parallel read-only
-      subagents, then writes one or MORE .squad/stories/<date>-<slug>/
-      (big requests split into multiple Stories, ordered by story-level depends_on)
-        story.md            title, description, complexity, DoD, cost, depends_on,
-                            express (trivial story → single-gate fast path)
-        tasks/NN-*.md       specialty, tier + justification, DoD, skills (on demand),
-                            depends_on, parallel, status + pre-investigated ## Context
-                            (specialists read ONLY their task file — zero re-exploration)
-        board.md            todo / doing / done
+/ps:init                 once per project — investigates the repo and writes CLAUDE.md
+                         (stack, exact commands, architecture, conventions). Claude Code
+                         loads it automatically in every session. No-op when complete.
 
-(you edit anything you want — your edits are law; no approval ceremony)
+/ps:story "your idea"    the entrypoint. Enters plan mode and interviews you — every
+                         ambiguity becomes a question with suggested defaults — until
+                         the story is round. Approve the plan (with auto-accept for a
+                         hands-off run) and the SAME chat implements it in an isolated
+                         git worktree and opens a PR. The PR body is the story's
+                         record: what/why, decisions, DoD and how it was verified.
 
-/ps:run [slug]  validates the plan (the old /approve, folded in), then executes.
-                No slug = ALL runnable stories. Each story gets its OWN git worktree
-                on branch squad/<slug> (cut from the current branch), so independent
-                stories run in parallel; depends_on waits for the merge. Per story:
-                waves by depends_on/parallel; unbiased gates per task — reviewer
-                owns diff + executable DoD, QA owns behavior (no triple test
-                runs), express stories get ONE reviewer gate — escalation
-                on double failure → PR with a 3-section ADR (title / description /
-                final consideration) → squash-merge, worktree removed, target branch
-                git pull --rebase. Critical stories (destructive migration, security,
-                contract break) leave the PR open for manual merge.
-                Resumable — if the run dies, /ps:run picks up where it stopped.
-/ps:status      compact report of every story
+/ps:review [pr]          unbiased review. Dispatches ONE fresh-context subagent that
+                         fetches the PR itself (view + diff), re-runs the DoD checks,
+                         and returns APPROVED or numbered findings with file:line and
+                         severity. The dispatch prompt carries no summary of the
+                         changes — fresh eyes by construction.
+
+/ps:publish [pr]         squash-merges the PR, returns to the base branch,
+                         git pull --rebase, removes that story's worktree (only that
+                         one), and distills one-line learnings into .squad/learnings.md.
 ```
 
-Everything lives in markdown for audit, editing and agent context:
+Why no agents? Implementation runs in the main chat, already warm with all the
+refinement context — zero cold starts. The only subagent left is the reviewer, where a
+cold start is exactly the point.
+
+## What gets installed
 
 ```
-.squad/
-  project-context.md   # 1-page briefing the techlead reads and distills into task files
-  learnings.md         # strict-format rules: error → cause → rule
-  stories/…
 .claude/
-  agents/  commands/ps/
-  skills/
-    ps-backend-api/      # Pocket Squad backend skills: contracts,
-    ps-backend-data/     #   queries/migrations,
-    ps-backend-security/ #   trust boundaries
+  commands/ps/                 story.md  review.md  publish.md  init.md
   pocket-squad.manifest.json   # hashes for non-destructive updates
+.squad/
+  learnings.md                 # one-line durable rules, cap 30 — written by
+                               # /ps:publish, read by /ps:story
 ```
-
-Two third-party skills the squad relies on — [impeccable](https://impeccable.style)
-(designer/frontend craft) and [ponytail](https://github.com/DietrichGebert/ponytail)'s
-`ponytail-review` (reviewers' over-engineering pass) — are NOT bundled. The install
-checks whether they already exist on your machine (project or global, plugin included)
-and only when absent fetches a pinned version into the project's `.claude/skills/`.
-Needs network; skip with `POCKET_SQUAD_SKIP_SKILLS=1` and install them yourself later
-(`npx impeccable install` / the ponytail plugin).
 
 ## Updating safely
 
 `update` compares each file against the hash recorded at install: untouched files are
 upgraded in place; files you customized are left alone and the new version lands next
-to them as `*.new` for manual merge. `install` never overwrites anything that exists.
+to them as `*.new` for manual merge. `.squad/` knowledge files are always kept as-is
+(learnings diverge by design). `install` never overwrites anything that exists.
 
-## Extending
+## Migrating from v0.1
 
-Add your own agents/skills to `.claude/` freely — anything not in the manifest is
-yours and will never be touched. Skills are loaded **on demand**: the techlead lists
-in each task's `skills:` frontmatter only what materially applies (e.g. **impeccable**
-for a new UI surface, **ps-backend-security** when touching auth), and the specialist
-loads nothing else — mechanical tasks run skill-free. The designer always uses
-**impeccable** (it is their craft bar), and reviewers apply the ponytail
-over-engineering bar inline, invoking **ponytail-review** only on large diffs.
-Anything you drop in `.claude/skills/` becomes routable the same way. Pin versions on
-anything you add — skills run with access to your code, treat them as supply chain.
+Run `npx pocket-squad update`. The old squad (agents, techlead, skills, `/ps:run`,
+`/ps:status`) is removed automatically wherever you never touched it; anything you
+customized is flagged `obsolete` for manual deletion. Move what you still want from
+`.squad/project-context.md` into your `CLAUDE.md` (or just run `/ps:init`), then
+delete it. v0.2 no longer fetches external skills (impeccable, ponytail) — install
+them yourself if you want them.

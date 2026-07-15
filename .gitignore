@@ -1,6 +1,3 @@
 node_modules/
 *.new
-# Fetched by the installer's ensure-step, not vendored — see bin/pocket-squad.js
-.claude/skills/impeccable/
-.claude/skills/ponytail-review/
 .claude/settings.local.json
