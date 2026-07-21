@@ -1,29 +1,48 @@
 ---
-description: Create the project's CLAUDE.md by investigating the repo (no-op when already complete). Usage - /ps:init
+description: Investigate the repo and (re)confirm the 3-file split — CLAUDE.md (operational essentials), .squad/PRODUCT.md (what/why), .squad/ARCHITECTURE.md (how it's built) — proposing findings and waiting for approval before writing. Usage - /ps:init
 ---
 
-## If CLAUDE.md exists at the repo root
+## The split
 
-Read it and compare against the structure below. Propose only what is missing —
-never rewrite what the owner wrote. Nothing missing → say so and change nothing.
+- **CLAUDE.md** — Stack, exact Commands, Do-not-touch: what Claude Code needs
+  loaded every session without opening another file. Ends with two pointer
+  lines: `Product: see .squad/PRODUCT.md` and `Architecture and conventions:
+  see .squad/ARCHITECTURE.md`.
+- **.squad/PRODUCT.md** — what the product is, who it's for, why it exists,
+  core domain concepts. No stack, no commands.
+- **.squad/ARCHITECTURE.md** — the Architecture paragraph and Conventions
+  (patterns to imitate, with exemplar file paths).
 
-## If it is missing
+Read all three first, if they exist. Never rewrite what the owner already
+wrote — propose only what's missing. If all three exist and look complete, say
+so and change nothing.
 
-Investigate the repo — inline for small repos, parallel `Explore` subagents for
-large ones: manifests (package.json / pyproject.toml / go.mod / ...), README, CI
-workflows, folder layout, test setup.
+## 1. Investigate (read-only)
 
-**Every command you write must exist verbatim** in the repo's scripts / Makefile /
-CI. When in doubt, confirm with `--help` or a dry run. Never invent one.
+Inline for small repos, parallel `Explore` subagents for large ones:
 
-Write `CLAUDE.md` (≤ ~60 lines):
+- Manifests (package.json / pyproject.toml / go.mod / ...), CI workflows,
+  folder layout, test setup → Stack / Commands / Do-not-touch / Architecture.
+- README intro, package/CHANGELOG description, docs → Product (what it does,
+  who for, why it exists).
 
-- **Stack** — language, runtime, framework, package manager.
-- **Commands** — install, dev, test, lint, build. Exact and copy-pasteable; omit
-  the ones that do not exist.
-- **Architecture** — ONE paragraph.
-- **Conventions** — patterns to imitate, with paths to exemplar files.
-- **Do-not-touch** — generated files, vendored code, fragile areas.
+**Every command you write must exist verbatim** in the repo's scripts /
+Makefile / CI — confirm with `--help` or a dry run, never invent one.
 
-Show the result and remind the owner that Claude Code loads CLAUDE.md automatically
-in every session.
+## 2. Propose — do not write yet
+
+List, file by file, exactly what you plan to write or add, quoting or closely
+paraphrasing what you found. Mark anything inferred (not found verbatim) and
+ask about it with a suggested default — never silently guess at intent.
+
+## 3. Iterate
+
+The owner will correct, add, or cut items. Keep looping on whatever stays
+doubtful until nothing material is open. Converse in the owner's language;
+file content in English (repo convention).
+
+## 4. Write — only after confirmation
+
+Write the three files (≤ ~60 lines each). Show the final result and remind the
+owner Claude Code loads CLAUDE.md automatically every session — PRODUCT.md and
+ARCHITECTURE.md are read on demand by `/ps:story` and `/ps:load`.

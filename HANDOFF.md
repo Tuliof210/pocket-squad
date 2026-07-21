@@ -32,6 +32,39 @@ O instalador ganhou: remoção de órfãos que sobe diretórios vazios, e o guar
 knowledge files. O smoke test cobre a migração v0.1→v0.2 (órfão intocado deletado,
 sem dirs vazios, learnings sem `.new`).
 
+## v0.3.0 (2026-07-21) — Split de conhecimento + story/task em disco + execução granular
+
+Decisões do dono nesta reformulação:
+
+1. **`/ps:init` vira split proposto-e-confirmado em 3 arquivos.** CLAUDE.md fica só
+   com o operacional (Stack/Commands/Do-not-touch — o que o Claude Code precisa em
+   toda sessão sem abrir outro arquivo) e ganha 2 linhas-ponteiro; `.squad/PRODUCT.md`
+   (o quê/pra quem/por quê) e `.squad/ARCHITECTURE.md` (Architecture + Conventions)
+   nascem novos. Nunca escreve sem antes listar o que achou/planeja e o dono
+   confirmar — igual ao "propose, don't interrogate" do `/ps:story`.
+2. **`/ps:story` volta a gravar em disco** (reverte a decisão v0.2 de "sem arquivos
+   de story") — mas sem plan mode. Vira só entrevista + investigação read-only;
+   grava `.squad/stories/<data>-<slug>/{story.md, tasks/NN-*.md}` e para por aí.
+   Não implementa, não abre PR.
+3. **Execução separada em 2 comandos novos:** `/ps:load <story>` carrega o contexto
+   da story e planeja a ordem das tarefas (a partir de `Depends on`/`Parallel-safe`
+   de cada task file); `/ps:run <task>` executa UMA tarefa — worktree a partir da
+   branch atual, implementa só com o contexto daquela task, PR de volta pra mesma
+   branch. Granularidade mais fina que o "1 história = 1 PR" da v0.2: agora é 1
+   tarefa = 1 worktree = 1 PR. O checkbox da tarefa em `story.md` é o marcador de
+   "done" — é marcado como último commit da PR da tarefa, então só reflete no branch
+   base quando aquela PR é mergeada (sem `board.md` separado).
+4. **`/ps:publish` ganha varredura de worktrees**, não só a da PR publicada: depois
+   do cleanup de sempre, varre toda worktree `ps/*` cuja PR já esteja merged/closed e
+   remove também; PR aberta ou sem PR (tarefa em andamento) fica intocada; nunca
+   `--force` no `git worktree remove` — deixa o git recusar se houver mudança não
+   commitada.
+5. **Templates novos em `.squad/templates/{story,task,pr}.md`** — fonte única da
+   forma de story/task/PR, tratados como knowledge file (nunca geram `.new`,
+   igual `learnings.md`).
+
+`/ps:review` não muda.
+
 > Tudo abaixo desta linha descreve a v0.1 — mantido como registro histórico.
 > As decisões 1–16 e a estrutura listada NÃO refletem mais o estado atual.
 

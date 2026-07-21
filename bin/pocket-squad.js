@@ -83,9 +83,10 @@ function install() {
   console.log(`  ${created} created, ${kept} unchanged, ${skipped} pre-existing (untouched).`);
   console.log(`\nNext steps:`);
   console.log(`  1. Open Claude Code in this project.`);
-  console.log(`  2. Run /ps:init once to create the project's CLAUDE.md.`);
-  console.log(`  3. Run /ps:story "your idea" — refine in plan mode, approve, get a PR.`);
-  console.log(`  4. Then /ps:review (fresh-eyes review) and /ps:publish (merge + cleanup).`);
+  console.log(`  2. Run /ps:init once — proposes CLAUDE.md + .squad/PRODUCT.md + .squad/ARCHITECTURE.md, writes after you confirm.`);
+  console.log(`  3. Run /ps:story "your idea" — interview only, saves a story + tasks under .squad/stories/.`);
+  console.log(`  4. Run /ps:load <story-slug>, then /ps:run <task> — worktree + PR, one per task.`);
+  console.log(`  5. Then /ps:review (fresh-eyes review) and /ps:publish (merge + worktree sweep + learnings).`);
   if (manifest) console.log(`\n(Previous manifest found — this was a re-install. Use "update" to upgrade managed files.)`);
 }
 

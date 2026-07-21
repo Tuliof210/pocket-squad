@@ -23,22 +23,20 @@ try {
   const MANIFEST = path.join(dir, ".claude", "pocket-squad.manifest.json");
   assert.ok(fs.existsSync(MANIFEST), "install should create .claude/pocket-squad.manifest.json");
 
-  for (const cmd of ["story", "review", "publish", "init"]) {
+  for (const cmd of ["story", "review", "publish", "init", "load", "run"]) {
     assert.ok(
       fs.existsSync(path.join(dir, ".claude", "commands", "ps", `${cmd}.md`)),
       `install should create the namespaced /ps:${cmd} command`
     );
   }
 
-  // The v0.1 squad (agents, skills, techlead, run/status, project-context) must not ship.
+  // The v0.1 squad (agents, skills, techlead, status, project-context) must not ship.
   for (const gone of [
     path.join(".claude", "agents"),
     path.join(".claude", "skills"),
     path.join(".claude", "techlead.md"),
-    path.join(".claude", "commands", "ps", "run.md"),
     path.join(".claude", "commands", "ps", "status.md"),
     path.join(".squad", "project-context.md"),
-    path.join(".squad", "stories"),
   ]) {
     assert.ok(!fs.existsSync(path.join(dir, gone)), `${gone} must not ship`);
   }
@@ -47,6 +45,13 @@ try {
     fs.existsSync(path.join(dir, ".squad", "learnings.md")),
     "install should create .squad/learnings.md"
   );
+
+  for (const tpl of ["story", "task", "pr"]) {
+    assert.ok(
+      fs.existsSync(path.join(dir, ".squad", "templates", `${tpl}.md`)),
+      `install should create .squad/templates/${tpl}.md`
+    );
+  }
 
   const statusOutput = execFileSync("node", [CLI, "status"], { cwd: dir }).toString();
   assert.ok(statusOutput.includes("managed"), "status output should contain 'managed'");

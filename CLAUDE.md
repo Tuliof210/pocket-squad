@@ -5,8 +5,9 @@
 - ZERO runtime and ZERO dev dependencies by design — Node built-ins only (`fs`,
   `path`, `crypto`). Adding a dependency is a design decision, never casual.
 - Distribution: an `npx`-installable CLI. `bin.pocket-squad -> bin/pocket-squad.js`.
-- Shipped content: markdown under `templates/` (4 `/ps:*` commands + the
-  `.squad/learnings.md` scaffold) copied into a target project.
+- Shipped content: markdown under `templates/` (6 `/ps:*` commands + the
+  `.squad/learnings.md` and `.squad/templates/{story,task,pr}.md` scaffolds)
+  copied into a target project.
 
 ## Commands
 - test: `npm test` — zero-dep smoke test (`node test/smoke.js`), also runs on
@@ -37,6 +38,9 @@ managed-but-no-longer-shipped files when untouched; `status` diffs hashes.
   `templates/squad/learnings.md` seeds `.squad/learnings.md` (which then diverges —
   it holds real learnings). After editing templates, run
   `node bin/pocket-squad.js update` at the repo root to re-sync the dogfood.
+- `.squad/PRODUCT.md`, `.squad/ARCHITECTURE.md` and `.squad/stories/` are never
+  shipped templates — `/ps:init` and `/ps:story` create them per-project at
+  runtime, same as a target project's own `CLAUDE.md`.
 - Console output: plain aligned text with leading glyphs (`+ created`, `^ updated`,
   `! customized`, `· managed`). Imitate when adding output lines.
 - `files` allowlist in `package.json` is the packaging contract — only what's listed

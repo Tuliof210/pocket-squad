@@ -1,7 +1,7 @@
 {
   "name": "pocket-squad",
-  "version": "0.2.0",
-  "description": "A lean Claude Code workflow in your pocket: /ps:init, /ps:story (plan mode → worktree → PR), /ps:review (fresh eyes), /ps:publish (squash-merge + cleanup).",
+  "version": "0.3.0",
+  "description": "A lean Claude Code workflow in your pocket: /ps:init (CLAUDE.md + PRODUCT.md + ARCHITECTURE.md), /ps:story (refine → .squad/stories), /ps:load + /ps:run (worktree + PR per task), /ps:review (fresh eyes), /ps:publish (squash-merge + worktree sweep).",
   "bin": { "pocket-squad": "bin/pocket-squad.js" },
   "files": ["bin", "templates", "README.md"],
   "scripts": { "test": "node test/smoke.js", "prepublishOnly": "node test/smoke.js" },
