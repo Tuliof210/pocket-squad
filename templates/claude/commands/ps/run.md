@@ -26,8 +26,13 @@ PR's base. Use `EnterWorktree` if available; otherwise:
 
 ## 2. Implement
 
-Use only the task's Description + How-to (plus the story's AC/DoD for
-grounding) — that's the point of the granular context, minimal rediscovery.
+Load the norms first — `.squad/ARCHITECTURE.md` (conventions, plus the exemplar
+file paths it names) and `.squad/learnings.md`. They bound *how* you write; the
+task's Description + How-to (plus the story's AC/DoD) bound *what* — that's the
+point of the granular context, minimal rediscovery. Imitate the exemplar instead
+of inventing: reuse what the repo already has, and keep the auth / validation /
+DS steps its neighbours have.
+
 Small commits. Run whatever verification the How-to specifies; if none is
 named, fall back to the repo's standard lint/test/build. Never weaken a check
 to make it pass.

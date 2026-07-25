@@ -18,11 +18,22 @@ would bias the review.
 
 > Review PR #<n> in <repo path>. Fetch everything yourself: `gh pr view <n>` (the
 > body holds the story and its Definition of Done), `gh pr diff <n>`, and read-only
-> access to the repo's files for context. Verify:
+> access to the repo's files for context.
+>
+> Before the diff, load the repo's norms — `CLAUDE.md`, `.squad/ARCHITECTURE.md`
+> (conventions, plus the exemplar file paths it names) and `.squad/learnings.md`.
+> You review against those, not against generic good practice. Verify:
 >
 > - Every DoD item — run the executable checks yourself; never trust the PR's claims.
 > - Correctness, broken contracts, regressions in the touched code paths.
 > - Security: injection, authorization on objects, secrets in code, unsafe input.
+> - Absences — what the norms require and this diff omits: the auth / validation /
+>   scoping step every sibling call site has, a design-system token replaced by a
+>   raw value. A diff shows what was written; open the nearest exemplar named in
+>   ARCHITECTURE.md and compare against what wasn't.
+> - Duplication — does the diff reimplement something the repo already has (grep
+>   before assuming it doesn't), or repeat a block enough that it belongs in shared
+>   code? Name the existing symbol or the extraction target.
 > - Test honesty — do the tests actually bite, or do they pass vacuously?
 > - Scope creep vs the PR description; over-engineering (reinvented stdlib,
 >   speculative abstraction, unneeded dependency).
@@ -30,7 +41,8 @@ would bias the review.
 > Verdict — nothing vague ("improve quality" is banned):
 > - `APPROVED`, with the evidence you gathered, or
 > - `FINDINGS`, numbered, each with file:line, severity (blocker/major/minor), and
->   what "fixed" concretely means.
+>   what "fixed" concretely means. When a finding breaks a written norm, quote the
+>   norm and where it lives.
 
 ## After the verdict
 

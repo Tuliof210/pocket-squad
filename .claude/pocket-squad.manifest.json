@@ -1,14 +1,14 @@
 {
   "version": "0.3.0",
-  "installedAt": "2026-07-21T16:10:51.194Z",
+  "installedAt": "2026-07-25T00:12:10.619Z",
   "files": {
-    "claude/commands/ps/init.md": "82ecd9ae4831f23924ced06ca521455e307e43339f90cf14790c47f4c869cbe9",
+    "claude/commands/ps/init.md": "5b6788ab6671628aa42f5d54953fee229228d02dfa3ad382fc428c896e07f584",
     "claude/commands/ps/load.md": "21b4827b53973c5d22bb6dc4e76c9fe0ea3d45fec6637f6bba970b097dea78ac",
     "claude/commands/ps/publish.md": "7474b44f567f7da67d83d30c0e9d29ec51507da78e34b205dc740c359ffcdce2",
-    "claude/commands/ps/review.md": "50ad7bef59f80869773895e6b042b7e49d05442408b3d64c8494ad075faff4e8",
-    "claude/commands/ps/run.md": "88c6f75742613c7c6303973be14676a917ff83ca609b6562f0f5b10f7d0b8926",
+    "claude/commands/ps/review.md": "55cc8068b650b7ae1ac64140e015933507f7cfcd5f2049189859f7a43c9ceb3b",
+    "claude/commands/ps/run.md": "98747f87e8b9af39b5ed36713336ed96544bc8e17d636196510e664b38d9be13",
     "claude/commands/ps/story.md": "164a8aa84d6bdf60ac49e3343818801f1430f5aec34428b1d08199346fa450c1",
-    "squad/learnings.md": "78926fe7741cfa5013320fdc6108210d1f57d5c475915b4da91ffc5c18c69967",
+    "squad/learnings.md": "e9f340c332d776f967e2409c5d3f6e4cf7e3dccec23306bd364c95bbf92ccbb9",
     "squad/templates/pr.md": "2db65469b1e6e65b6d43e10b422ebd59ae867b2c4eb8b18464ab2635c871c393",
     "squad/templates/story.md": "cee5fc39330533927612599eadb99ab2edc266f7fc766174d03a5c9af4eb4ca8",
     "squad/templates/task.md": "6f4e0bed8f68843d3641004632d0e26b516d8b862b3feaa643505a70d35485a9"

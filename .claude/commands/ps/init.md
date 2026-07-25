@@ -45,4 +45,6 @@ file content in English (repo convention).
 
 Write the three files (≤ ~60 lines each). Show the final result and remind the
 owner Claude Code loads CLAUDE.md automatically every session — PRODUCT.md and
-ARCHITECTURE.md are read on demand by `/ps:story` and `/ps:load`.
+ARCHITECTURE.md are read on demand by `/ps:story`, `/ps:load`, `/ps:run` and
+`/ps:review`. ARCHITECTURE.md is the norm the review checks against, so a
+convention that matters belongs there, with its exemplar path.
