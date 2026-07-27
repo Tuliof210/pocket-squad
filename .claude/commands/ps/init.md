@@ -21,10 +21,9 @@ so and change nothing.
 
 Inline for small repos, parallel `Explore` subagents for large ones:
 
-- Manifests (package.json / pyproject.toml / go.mod / ...), CI workflows,
-  folder layout, test setup → Stack / Commands / Do-not-touch / Architecture.
-- README intro, package/CHANGELOG description, docs → Product (what it does,
-  who for, why it exists).
+- Manifests (package.json / pyproject.toml / go.mod / ...), CI workflows, folder
+  layout, test setup → Stack / Commands / Do-not-touch / Architecture.
+- README intro, package/CHANGELOG description, docs → Product.
 
 **Every command you write must exist verbatim** in the repo's scripts /
 Makefile / CI — confirm with `--help` or a dry run, never invent one.
@@ -43,8 +42,7 @@ file content in English (repo convention).
 
 ## 4. Write — only after confirmation
 
-Write the three files (≤ ~60 lines each). Show the final result and remind the
-owner Claude Code loads CLAUDE.md automatically every session — PRODUCT.md and
-ARCHITECTURE.md are read on demand by `/ps:story`, `/ps:load`, `/ps:run` and
-`/ps:review`. ARCHITECTURE.md is the norm the review checks against, so a
-convention that matters belongs there, with its exemplar path.
+Write the three files (≤ ~60 lines each) and show the result. CLAUDE.md loads every
+session; PRODUCT.md and ARCHITECTURE.md are read on demand by the other commands.
+ARCHITECTURE.md is the norm `/ps:review` checks against, so a convention that matters
+belongs there, with its exemplar path.

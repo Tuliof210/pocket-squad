@@ -65,6 +65,51 @@ Decisões do dono nesta reformulação:
 
 `/ps:review` não muda.
 
+## v0.4.0 (2026-07-27) — Verificação mecânica vira código
+
+Quatro defeitos observados em uso prolongado (dezenas de PRs). O princípio que
+atravessa os quatro: **comando em markdown é instrução para um modelo — confiável
+para derivar, julgar e escrever; não confiável como executor de checklist mecânico
+repetido.** Ênfase no texto não conserta isso; já foi tentado e falhou.
+
+1. **`.claude/ps-check.sh`** (novo, único arquivo executável do pacote; POSIX sh, só
+   `git` + descoberta de `gh`/`glab`). `report` (default, read-only): janelas de
+   degradação abertas, tamanho do learnings, refs `ps/*` que o sweep removeria.
+   `sweep`: remove worktree de PR merged/closed, branch local e remota **só quando o
+   provedor confirma MERGED** (sem CLI de provedor não apaga nada e diz isso), e
+   fecha com `SUMMARY`. Nunca `--force`. Nasce de dois sintomas do mesmo mecanismo:
+   worktrees/branches órfãs acumuladas apesar do texto mandar limpar, e nada barrando
+   regressão planejada. Não é lido pelo modelo — só a saída entra em contexto.
+2. **Learnings ganham ciclo de vida** (defeito 1). Cap passa a ser **por bytes (6 KB)**
+   e não por contagem: limite por quantidade fazia a regra crescer por dentro
+   ("estendido em <data>") em vez de alguém deletar. `/ps:publish` ganha triagem de
+   entrada (só fato não-derivável entra; coberto por ferramenta → config; falta código
+   → task; passo de processo → descartado, nunca funcionou) e um passo de **promoção**:
+   toda regra tenta sair do arquivo virando código/config/task. Estado terminal =
+   deletada; o git log é o arquivo morto. Fonte de destilação passa a incluir as
+   threads de review da PR.
+3. **Story/task viram contrato** (defeito 2). `/ps:story` não "assa achados" mais:
+   grava o *endereço* do achado (caminho do exemplar, símbolo a reusar, comando a
+   rodar). Proibido código de implementação literal, número medido à mão e norma que
+   já vive em CLAUDE.md/ARCHITECTURE.md. Teto: story ≤ 40 linhas, task ≤ 60,
+   conferido com `wc -l` — estouro é erro de decomposição, volta pro passo 4.
+   Template de task reescrito: Outcome / Independently shippable / Scope / When to run
+   / Verify / Forbidden.
+4. **"Independentemente shippable" vira critério de decomposição** (defeito 3), no
+   mesmo nível de "revisável sozinha". Janela de degradação só existe com aval
+   explícito do dono e vira **campo** (`window: NN-slug — o que degrada`), não frase
+   solta; `/ps:publish` barra o merge enquanto a task que fecha não tiver PR, e
+   `/ps:load` reporta risco além de ordem.
+5. **`/ps:review` posta por default** (defeito 4b). Antes, "poste só se pedirem"
+   produziu zero review registrado numa série longa de PRs — os achados viraram
+   commits genéricos e o histórico do processo não existia. Agora postar é o padrão
+   (uma chamada, CLI descoberto), o re-review também posta, e o commit de correção
+   nomeia o achado. É esse histórico que alimenta o passo 2.
+
+Contabilidade de contexto: comandos 329 → 328 linhas (tudo que virou script saiu da
+prosa). Templates 35 → 51 — mas o task file *preenchido* cai de 300–400 linhas para
+≤ 60, que era o custo real.
+
 > Tudo abaixo desta linha descreve a v0.1 — mantido como registro histórico.
 > As decisões 1–16 e a estrutura listada NÃO refletem mais o estado atual.
 

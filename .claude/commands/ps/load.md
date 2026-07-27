@@ -13,22 +13,23 @@ the rest of the session works from. No project code edits here.
 
 ## 2. Status
 
-A task's checkbox in `story.md`'s Tasks list is the source of truth for done —
-it gets checked as part of that task's own PR, so it flips on merge.
-Optionally, if `gh` is available, cross-check `gh pr list` for open PRs on
-this story's branches (`ps/<slug>/*`) so you don't recommend re-running
+A task's checkbox in `story.md`'s Tasks list is the source of truth for done — it
+gets checked as part of that task's own PR, so it flips on merge. Then run
+`sh .claude/ps-check.sh`: its `WINDOWS` block names the pending tasks with a
+degradation window standing open against them. If `gh` is available, cross-check
+`gh pr list` for open PRs on `ps/<slug>/*` so you don't recommend re-running
 something already in flight.
 
 ## 3. Plan the order
 
-From each pending task's "When to run" section (Depends on / Parallel-safe
-with), build waves: tasks with no unmet dependency can run now (in parallel
-with each other if marked parallel-safe); the rest wait on their dependency's
-task being done.
+From each pending task's "When to run" section (Depends on / Parallel-safe with),
+build waves: tasks with no unmet dependency can run now (in parallel with each other
+if marked parallel-safe); the rest wait on their dependency being done. A task that
+closes someone's window isn't merely next — it's urgent, and the report says so.
 
 ## 4. Report
 
-Show the story title, path, and the ordered plan, e.g.:
+Order **and** risk, e.g.:
 
 ```
 Story: <title>  (.squad/stories/<slug>/)
@@ -36,10 +37,10 @@ Story: <title>  (.squad/stories/<slug>/)
 
 Next:
   1. tasks/03-*.md   (no dependency)
-  2. tasks/04-*.md   (no dependency — parallel-safe with 03)
+  2. tasks/04-*.md   (parallel-safe with 03) — closes the window opened by 02
   Then: tasks/05-*.md (depends on 03, 04)
 
-Run /ps:run 03 to start.
+Open windows: 02 left the export screen without its button until 04 merges.
 ```
 
 This command only loads context and plans — it never executes a task. That's

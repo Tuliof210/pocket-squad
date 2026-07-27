@@ -3,42 +3,44 @@ description: Squash-merge a PR, rebase the base branch, sweep pocket-squad workt
 ---
 
 Target: "$ARGUMENTS" is the PR number; if empty, the current branch's PR. Read
-`gh pr view <n> --json headRefName,baseRefName,mergeable,url`.
+`gh pr view <n> --json headRefName,baseRefName,mergeable,url` (or the equivalent).
 
 ## Preflight
 
-- The PR must be open and mergeable. `gh pr checks <n>` must be green when checks exist.
-- Main checkout dirty → warn the owner and stop. Never force.
+- The PR must be open and mergeable, checks green where they exist, and the main
+  checkout clean — dirty → warn the owner and stop. Never force.
+- Run `sh .claude/ps-check.sh`. If this PR's task shows an **OPEN WINDOW**, the task
+  that closes it has no PR yet: merging now ships the degradation and nothing
+  guarantees the sequel. Stop, show the line, merge only if the owner says so.
 
-## Merge
+## Merge, then home
 
-`gh pr merge <n> --squash --delete-branch`
+`gh pr merge <n> --squash --delete-branch`. If you are inside the story's worktree,
+leave it (`ExitWorktree`, or run the rest from the main checkout's path); in the main
+checkout, `git checkout <baseRefName>` then `git pull --rebase`.
 
-## Back home
+## Cleanup
 
-If you are inside the story's worktree, leave it first (`ExitWorktree`, or run the
-rest from the main checkout's path). In the main checkout:
-`git checkout <baseRefName>`, then `git pull --rebase`.
-
-## Cleanup — this PR's worktree, then a sweep
-
-Find the worktree whose branch matches `headRefName` via
-`git worktree list --porcelain`, `git worktree remove` that one, `git worktree prune`,
-and delete the local branch if it survived.
-
-Then sweep every other pocket-squad worktree (branch prefix `ps/`): check each one's
-PR state (`gh pr list --head <branch> --json state`). MERGED or CLOSED → remove it the
-same way. OPEN, or no PR yet (mid-task, not pushed) → leave it untouched. Never pass
-`--force` to `git worktree remove` — if one has uncommitted changes, let git refuse and
-tell the owner instead of overriding it.
+`sh .claude/ps-check.sh sweep` — it removes the worktrees, local branches and remote
+branches of merged PRs and reports what it could not. Quote its `SUMMARY` line
+verbatim; a non-zero count is a fact the owner needs, not something to smooth over.
 
 ## Learnings
 
-Distill durable rules from this PR into `.squad/learnings.md` (create it from the
-template if missing): one line per rule, following the file's format, only rules that
-change future behavior. Cap: 30 rules — when adding past the cap, delete the weakest.
-Commit as `chore(squad): learnings from PR #<n>` and push best-effort (protected
-branch → leave the commit local and tell the owner).
+Sources, best first: the review threads on the PR, the commits that answered them,
+then the diff. Route every candidate — only the first row reaches the file:
 
-Close with a report: PR merged, base branch updated, worktrees swept (N removed),
-learnings added.
+- Non-derivable fact about this repo/tool that no tool would catch → `.squad/learnings.md`
+- A linter/type-checker/test could catch it → change that config now, or file a task
+- Missing shared code → a task, not a rule
+- Process step, reminder, "always remember to" → nowhere; it has never worked
+- Already in ARCHITECTURE.md, or already enforced → nowhere
+
+Then retire one existing rule: has it become code, config, or dead weight? Delete it
+in this same commit — leaving the file is what a rule is *for*, and the git log is its
+archive. `ps-check.sh` must show learnings under cap; over it, compress or drop the
+weakest, never grow a line in place.
+
+Commit as `chore(squad): learnings from PR #<n>` and push best-effort (protected
+branch → leave the commit local and tell the owner). Close with a report: PR merged,
+base branch updated, the sweep's SUMMARY line, learnings added and retired.

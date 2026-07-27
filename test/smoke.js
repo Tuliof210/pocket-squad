@@ -46,6 +46,12 @@ try {
     "install should create .squad/learnings.md"
   );
 
+  // The mechanical checks the commands delegate to. A syntax error here would fail
+  // silently mid-publish, which is the exact failure the script exists to prevent.
+  const check = path.join(dir, ".claude", "ps-check.sh");
+  assert.ok(fs.existsSync(check), "install should create .claude/ps-check.sh");
+  execFileSync("sh", ["-n", check]);
+
   for (const tpl of ["story", "task", "pr"]) {
     assert.ok(
       fs.existsSync(path.join(dir, ".squad", "templates", `${tpl}.md`)),

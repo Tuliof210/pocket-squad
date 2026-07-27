@@ -2,17 +2,15 @@
 description: Unbiased code review of a story PR by a fresh-context subagent. Usage - /ps:review [pr-number]
 ---
 
-Target: "$ARGUMENTS" is the PR number. If empty, use the current branch's PR
-(`gh pr view --json number,url`). If there is none either, run `gh pr list` and ask
-the owner which PR to review.
+Target: "$ARGUMENTS" is the PR number; if empty, the current branch's PR. If there is
+none either, list the open PRs and ask the owner which one.
 
 ## Fresh eyes rule
 
-You (the main chat) may have written this code — you do NOT review it. Dispatch
-exactly ONE `general-purpose` subagent. Its prompt contains ONLY the PR number, the
-repo path, and the instructions below. Do NOT include any summary, defense, or
-explanation of the changes in the dispatch prompt — that context is exactly what
-would bias the review.
+You (the main chat) may have written this code — you do NOT review it. Dispatch ONE
+`general-purpose` subagent whose prompt carries ONLY the PR number, the repo path and
+the instructions below: no summary, no defense of the changes. That omission is the
+whole mechanism.
 
 ## Subagent prompt (self-contained)
 
@@ -24,17 +22,16 @@ would bias the review.
 > (conventions, plus the exemplar file paths it names) and `.squad/learnings.md`.
 > You review against those, not against generic good practice. Verify:
 >
-> - Every DoD item — run the executable checks yourself; never trust the PR's claims.
+> - Every DoD item — run the executable checks yourself, never trust the PR's claims,
+>   and count a test that passes vacuously as a missing test.
 > - Correctness, broken contracts, regressions in the touched code paths.
 > - Security: injection, authorization on objects, secrets in code, unsafe input.
 > - Absences — what the norms require and this diff omits: the auth / validation /
->   scoping step every sibling call site has, a design-system token replaced by a
->   raw value. A diff shows what was written; open the nearest exemplar named in
+>   scoping step every sibling call site has, a design-system token replaced by a raw
+>   value. A diff shows what was written; open the nearest exemplar named in
 >   ARCHITECTURE.md and compare against what wasn't.
-> - Duplication — does the diff reimplement something the repo already has (grep
->   before assuming it doesn't), or repeat a block enough that it belongs in shared
->   code? Name the existing symbol or the extraction target.
-> - Test honesty — do the tests actually bite, or do they pass vacuously?
+> - Duplication — does this reimplement something the repo already has (grep before
+>   assuming), or repeat a block that belongs in shared code? Name the symbol.
 > - Scope creep vs the PR description; over-engineering (reinvented stdlib,
 >   speculative abstraction, unneeded dependency).
 >
@@ -46,6 +43,11 @@ would bias the review.
 
 ## After the verdict
 
-Relay the verdict to the owner in full, then triage together. Findings the owner
-accepts: fix in the story's worktree, push, offer a re-review. The verdict is
-advisory — the owner decides. Post it as a PR comment (`gh pr comment`) only if asked.
+**Post it on the PR. That is the default, not an option** — one call
+(`gh pr review <n> --comment -F -`, `glab mr note <n> -F -`, whichever CLI this
+machine has; none → say so and keep it in chat). It is the only searchable record
+this process leaves, and what `/ps:publish` distills learnings from. Then relay it to
+the owner in full and triage together: accepted findings get fixed in the story's
+worktree, pushed, and re-reviewed — the re-review posts too, so the rounds stay
+countable. A commit answering a finding names it (`fix(review): #2 <what>`), never
+"review fixes". The verdict is advisory; the owner decides.

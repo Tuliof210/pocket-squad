@@ -1,16 +1,17 @@
 {
-  "version": "0.3.0",
-  "installedAt": "2026-07-25T00:12:10.619Z",
+  "version": "0.4.0",
+  "installedAt": "2026-07-27T15:45:20.074Z",
   "files": {
-    "claude/commands/ps/init.md": "5b6788ab6671628aa42f5d54953fee229228d02dfa3ad382fc428c896e07f584",
-    "claude/commands/ps/load.md": "21b4827b53973c5d22bb6dc4e76c9fe0ea3d45fec6637f6bba970b097dea78ac",
-    "claude/commands/ps/publish.md": "7474b44f567f7da67d83d30c0e9d29ec51507da78e34b205dc740c359ffcdce2",
-    "claude/commands/ps/review.md": "55cc8068b650b7ae1ac64140e015933507f7cfcd5f2049189859f7a43c9ceb3b",
-    "claude/commands/ps/run.md": "98747f87e8b9af39b5ed36713336ed96544bc8e17d636196510e664b38d9be13",
-    "claude/commands/ps/story.md": "164a8aa84d6bdf60ac49e3343818801f1430f5aec34428b1d08199346fa450c1",
-    "squad/learnings.md": "e9f340c332d776f967e2409c5d3f6e4cf7e3dccec23306bd364c95bbf92ccbb9",
-    "squad/templates/pr.md": "2db65469b1e6e65b6d43e10b422ebd59ae867b2c4eb8b18464ab2635c871c393",
-    "squad/templates/story.md": "cee5fc39330533927612599eadb99ab2edc266f7fc766174d03a5c9af4eb4ca8",
-    "squad/templates/task.md": "6f4e0bed8f68843d3641004632d0e26b516d8b862b3feaa643505a70d35485a9"
+    "claude/commands/ps/init.md": "0a1783f684dd0ebc7afa6db6b3a71297f452e275cccade97cebe5b69733c5e2f",
+    "claude/commands/ps/load.md": "daf263e3a601be4e3bcacc3688fb0fa6016350e013c4b76a30345dc58b97f9df",
+    "claude/commands/ps/publish.md": "21b0cef2a9230494963c1e0b39005097b6b14ce9b44d8e62a9a173cd70273c89",
+    "claude/commands/ps/review.md": "775794e1797a3381a1c85c653236168466e77770577e2d46804f6f9c2dd69184",
+    "claude/commands/ps/run.md": "9c0915568f4e30cbc74edf37d8d7633377d73729c0243aa50dcb8fe5ee559fd9",
+    "claude/commands/ps/story.md": "8ebe9b405e9e649479742fa99b86de8dc466a114e2a9b1b289548460e05913b2",
+    "claude/ps-check.sh": "4294cf7dd03c72f07804e1eefebedf9b8118cbcfd676d5fe55b00b04dedac309",
+    "squad/learnings.md": "9dd0a998cd393424c4ede4b2e8740e94fb712f7c1f223744cbcdcf25b81bc1a1",
+    "squad/templates/pr.md": "97fc343d21871c88f0e1be5dbda0a1924a258a7635e858168a0a17b34b1e1aad",
+    "squad/templates/story.md": "67d3f0f7cddf8c08c3052eed5ea5dac15713f15882db7f6a93a730d21115ac91",
+    "squad/templates/task.md": "bd476110d2b3123410b2fd8e0c72604ec99264387a0326475a8d9cdb31326fd0"
   }
 }
