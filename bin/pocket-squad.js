@@ -87,6 +87,7 @@ function install() {
   console.log(`  3. Run /ps:story "your idea" — interview only, saves a story + tasks under .squad/stories/.`);
   console.log(`  4. Run /ps:load <story-slug>, then /ps:run <task> — worktree + PR, one per task.`);
   console.log(`  5. Then /ps:review (fresh-eyes review) and /ps:publish (merge + worktree sweep + learnings).`);
+  console.log(`     Or /ps:pipe <story-slug> to chain run + review + publish for the whole story.`);
   if (manifest) console.log(`\n(Previous manifest found — this was a re-install. Use "update" to upgrade managed files.)`);
 }
 

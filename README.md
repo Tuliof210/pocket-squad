@@ -1,6 +1,6 @@
 # Pocket Squad
 
-A lean Claude Code workflow, in your pocket. One `npx` installs six slash commands
+A lean Claude Code workflow, in your pocket. One `npx` installs seven slash commands
 that take an idea from refinement to a merged PR — no agents, no cold starts.
 
 ```bash
@@ -52,6 +52,13 @@ npx pocket-squad status     # managed vs customized files
                          task declared a degradation window and the task that closes
                          it has no PR yet. Then distills learnings — routing each
                          candidate, and retiring one old rule per merge.
+
+/ps:pipe <story-slug>    the four above, unattended: loads the story, runs each wave
+                         of tasks in parallel (one subagent per task, its own worktree
+                         and PR), reviews every PR until it's APPROVED — fixing
+                         blockers and majors, up to three rounds — then publishes them
+                         one at a time. Reports one line per transition so you can
+                         follow along, parks whatever needs you, and keeps going.
 ```
 
 Why no agents? Implementation runs in the main chat — `/ps:load` warms it with a
@@ -62,7 +69,8 @@ is the reviewer, where a cold start is exactly the point.
 
 ```
 .claude/
-  commands/ps/                 story.md  load.md  run.md  review.md  publish.md  init.md
+  commands/ps/                 story.md  load.md  run.md  review.md  publish.md
+                               init.md  pipe.md
   ps-check.sh                  # the mechanical half: open degradation windows,
                                # learnings size, stale worktrees/branches. Run by
                                # /ps:load and /ps:publish — never read into context
@@ -91,6 +99,12 @@ upgraded in place; files you customized are left alone and the new version lands
 to them as `*.new` for manual merge. `.squad/` knowledge files are always kept as-is
 (learnings, templates and stories diverge by design). `install` never overwrites
 anything that exists.
+
+## Migrating from v0.4
+
+Run `npx pocket-squad update` — it adds `/ps:pipe`. Nothing else changes; the six
+other commands work exactly as before, and `/ps:pipe` is opt-in by definition, since
+it only does what you'd have typed yourself.
 
 ## Migrating from v0.3
 

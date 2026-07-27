@@ -23,7 +23,7 @@ try {
   const MANIFEST = path.join(dir, ".claude", "pocket-squad.manifest.json");
   assert.ok(fs.existsSync(MANIFEST), "install should create .claude/pocket-squad.manifest.json");
 
-  for (const cmd of ["story", "review", "publish", "init", "load", "run"]) {
+  for (const cmd of ["story", "review", "publish", "init", "load", "run", "pipe"]) {
     assert.ok(
       fs.existsSync(path.join(dir, ".claude", "commands", "ps", `${cmd}.md`)),
       `install should create the namespaced /ps:${cmd} command`

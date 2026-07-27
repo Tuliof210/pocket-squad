@@ -110,6 +110,35 @@ Contabilidade de contexto: comandos 329 → 328 linhas (tudo que virou script sa
 prosa). Templates 35 → 51 — mas o task file *preenchido* cai de 300–400 linhas para
 ≤ 60, que era o custo real.
 
+## v0.5.0 (2026-07-27) — `/ps:pipe`
+
+Sétimo comando, pedido explícito do dono: encadeia load → run → review → publish sem
+supervisão. Decisões:
+
+1. **Regente, não cópia.** Cada passo do pipe É o comando existente (`/ps:load`,
+   `/ps:run`, `/ps:review`, `/ps:publish`) — invocado ou lido de
+   `.claude/commands/ps/*.md` e seguido literalmente. Nenhuma regra dos quatro é
+   repetida no pipe; se um gate mudar, o pipe não precisa ser editado. Foi o que
+   permitiu caber em ~55 linhas.
+2. **Autorização explícita e delimitada.** O pipe pode agir sem perguntar entre
+   passos, paralelizar e iterar review → fix. Não pode pular gate, enfraquecer check
+   nem decidir escopo — nesses casos ele **parqueia** a task (uma linha no relatório)
+   e segue com o resto, em vez de travar a fila.
+3. **Paralelo onde é seguro, série onde não é.** Tasks de uma mesma onda rodam em
+   subagentes `general-purpose` paralelos (cap 4), cada um em sua worktree/PR — o task
+   file virou contrato auto-contido na v0.4, que é justamente o que torna o subagente
+   frio viável aqui. Reviews paralelizam de graça (já são subagentes). **Publish é
+   estritamente serial**: ele rebaseia a branch base e varre worktrees; dois ao mesmo
+   tempo se corrompem.
+4. **Loop de review com teto.** blocker/major → corrige e re-review; minor → só se for
+   one-liner; 3ª rodada sem APPROVED → para aquela PR e devolve ao dono. Nunca mergeia
+   PR não aprovada.
+5. **Relatório de uma linha por transição** (`▸ wave 1/2 …`, `✓ 03 → PR #41`), sem
+   prosa entre elas — o dono acompanha sem dirigir.
+6. Dois riscos do paralelismo tratados no texto: PRs irmãs marcam checkboxes
+   diferentes no mesmo `story.md` (conflito de squash-merge → manter os dois), e a
+   task que abre `window:` publica imediatamente antes da que fecha.
+
 > Tudo abaixo desta linha descreve a v0.1 — mantido como registro histórico.
 > As decisões 1–16 e a estrutura listada NÃO refletem mais o estado atual.
 
