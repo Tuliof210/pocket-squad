@@ -85,6 +85,14 @@ if [ -f .squad/learnings.md ]; then
   else
     printf '  ok  %s bytes / %s cap\n' "$bytes" "$CAP"
   fi
+  # A rule carrying two dates was grown in place instead of rewritten or promoted —
+  # the second date is the rule announcing it did not work the first time.
+  D='[0-9]{4}-[0-9]{2}-[0-9]{2}'
+  grown=$(grep -cE "$D.*$D" .squad/learnings.md) || grown=0
+  if [ "$grown" -gt 0 ]; then
+    printf '  !   %s rule(s) grown in place — rewrite as one line, or promote to config/test/task\n' "$grown"
+    LEFT=$((LEFT + 1))
+  fi
 else
   echo "  --  no .squad/learnings.md yet"
 fi

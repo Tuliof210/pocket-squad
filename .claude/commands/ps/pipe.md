@@ -47,7 +47,8 @@ its PR URL. A subagent that hits a scope decision or fails its own verification
 Dispatch every PR's review in one message (`review.md` runs them as subagents, so
 they parallelize for free), then work the findings PR by PR:
 
-- blocker or major → fix in that PR's worktree, push, re-review.
+- blocker or major → fix in that PR's worktree, push, re-review — `review.md` sizes
+  that round off the incremental diff, not off how small the fix sounds.
 - minor → fix if it's a one-liner, otherwise report it and move on.
 - Round 3 still not APPROVED → stop that PR, report why, leave it open for the owner.
 

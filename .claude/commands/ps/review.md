@@ -18,6 +18,27 @@ whole mechanism.
 > body holds the story and its Definition of Done), `gh pr diff <n>`, and read-only
 > access to the repo's files for context.
 >
+> Scope the round before spending on it — decided from the diff, never from anyone's
+> account of it:
+>
+> - **Reference-only** — every entry of `gh pr diff <n> --name-status` is a rename,
+>   and the hunks in the files that are not renames change nothing but the paths the
+>   renames broke. No new behaviour exists to review: run every executable check,
+>   grep the repo for surviving references to the old paths (strings and dynamic
+>   lookups no toolchain resolves), confirm the new locations match the layout
+>   ARCHITECTURE.md describes — and stop there. The exemplar, duplication, security
+>   and over-engineering lenses have nothing to bite on. A single added line that is
+>   not a path fix disqualifies the whole PR from this round and it becomes a full one.
+> - **Follow-up** — the PR already carries a verdict of yours. Review
+>   `git diff <the SHA that verdict names>..HEAD` under every lens below, re-run every
+>   executable check against the final state, and close each open finding by the means
+>   that found it: one found by running the thing is closed by running the thing, not
+>   by reading the fix. Repeat the earlier round's manual inspection only where that
+>   incremental diff reaches. It reaches further than the fix claims whenever it leaves
+>   the files the findings named, or adds a branch, a loop or a call — either one puts
+>   you back in a full round, and the fix's own description never decides this.
+> - **Anything else** — full.
+>
 > Before the diff, load the repo's norms — `CLAUDE.md`, `.squad/ARCHITECTURE.md`
 > (conventions, plus the exemplar file paths it names) and `.squad/learnings.md`.
 > You review against those, not against generic good practice. Verify:
@@ -35,11 +56,15 @@ whole mechanism.
 > - Scope creep vs the PR description; over-engineering (reinvented stdlib,
 >   speculative abstraction, unneeded dependency).
 >
-> Verdict — nothing vague ("improve quality" is banned):
+> Verdict — nothing vague ("improve quality" is banned). Open it with the round's
+> scope and the head SHA you reviewed (`gh pr view <n> --json headRefOid`): the next
+> round diffs from that SHA, so an unnamed one costs it a full re-read.
 > - `APPROVED`, with the evidence you gathered, or
 > - `FINDINGS`, numbered, each with file:line, severity (blocker/major/minor), and
 >   what "fixed" concretely means. When a finding breaks a written norm, quote the
->   norm and where it lives.
+>   norm and where it lives — and when it lives in `.squad/learnings.md`, prefix the
+>   finding `REPEAT —`. That rule was already written down and got violated anyway;
+>   `/ps:publish` has to do something other than write it again.
 
 ## After the verdict
 

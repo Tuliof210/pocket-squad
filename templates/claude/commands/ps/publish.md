@@ -28,8 +28,14 @@ verbatim; a non-zero count is a fact the owner needs, not something to smooth ov
 ## Learnings
 
 Sources, best first: the review threads on the PR, the commits that answered them,
-then the diff. Route every candidate — only the first row reaches the file:
+then the diff. Route every candidate — only the second row appends to the file:
 
+- A finding the review tagged `REPEAT` → that rule failed as prose: it was in
+  `.squad/learnings.md`, loaded before implementing, and violated anyway. Delete the
+  line and land its replacement in this same commit — a linter or type-checker rule,
+  a test, or a task file. Never re-word it, never re-date it, never mark it extended.
+  Nothing automatable exists? Then say exactly that in the report and leave the line:
+  the owner is the one who decides to keep paying for a rule on its second life.
 - Non-derivable fact about this repo/tool that no tool would catch → `.squad/learnings.md`
 - A linter/type-checker/test could catch it → change that config now, or file a task
 - Missing shared code → a task, not a rule
