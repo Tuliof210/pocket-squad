@@ -1,5 +1,6 @@
 ---
 description: Execute one task from a loaded story in an isolated worktree and open a PR back to the branch you started from. Usage - /ps:run <task>
+effort: medium
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash(git:*), Bash(gh:*), Bash(glab:*), Bash(sh .claude/ps-check.sh:*), Bash(npm:*), Bash(pnpm:*), Bash(yarn:*), Bash(npx:*), Bash(make:*), Bash(cargo:*), Bash(go:*), Bash(pytest:*), Bash(uv:*)
 ---
 

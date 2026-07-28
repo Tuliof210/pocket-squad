@@ -1,5 +1,6 @@
 ---
 description: Interview to refine a story + its tasks (no plan mode, no PR) and save them under .squad/stories/. Usage - /ps:story ["your idea"]
+effort: high
 allowed-tools: Task, Agent, Read, Write, Edit, Grep, Glob, Bash(git:*), Bash(wc:*), Bash(ls:*)
 ---
 

@@ -163,12 +163,40 @@ reports the exact refused call, leaves that PR open and green, and keeps going, 
 publishes the approved PRs in one batch at the end of the run rather than one at a
 time in the middle.
 
-Two knobs are yours, not the package's, and they multiply everything above:
+### What the wall-clock actually is
 
-- **`effortLevel`** in `~/.claude/settings.json` — `high` means maximum reasoning on
-  every turn, including the trivial ones. `medium` is usually the right default, with
-  `/ps:story` and `/ps:review` being the steps that actually reward `high`.
-- **The model.** Opus is the slowest per turn. A task is ~100 turns.
+Measured across 25 real pocket-squad sessions, deduplicated by message id:
+
+| | |
+|---|---|
+| output tokens per session | **119,144** |
+| model messages per session | 151 (791 tokens each) |
+| of that output, visible in the transcript | **31%** — prose 5%, file and command content 26% |
+| the other 69% | reasoning that is billed and generated but never shown |
+| at ~50 tokens/second | **~40 min of pure generation per session**, 196 min for the worst |
+
+That is the whole answer, and it explains the thing that looks contradictory: the
+*visible* output is small — 5% of it is prose — so the run looks cheap while taking
+hours. Generation is the slow part of a request, and two thirds of what gets generated
+is thinking you never see.
+
+Turn latency is not the problem (2.2 s median) and neither is context (66k–254k, well
+under the window). Command length is not it either: every `/ps:*` file put together is
+about 2% of what a session generates. Trimming the prompts buys almost nothing.
+
+**So each command declares its own `effort`**, instead of inheriting a session-wide
+level that spends decomposition-grade reasoning on ticking a checkbox:
+
+| command | effort | why |
+|---|---|---|
+| `/ps:story` | `high` | the one step where thinking pays — everything downstream is cheap because this was thorough |
+| `/ps:run` `/ps:review` `/ps:publish` `/ps:init` `/ps:prune` `/ps:pipe` | `medium` | real judgment, inside boundaries something else already drew |
+| `/ps:load` | `low` | read a status line, sort tasks into waves |
+
+Your session's `effortLevel` in `~/.claude/settings.json` still sets the floor for
+anything outside a command, and the model still matters — Opus is the slowest per
+token, and a story is a few hundred messages. Both are yours to set; the per-command
+levels above are the package's.
 
 ## Migrating from v0.5
 

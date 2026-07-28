@@ -226,9 +226,28 @@ Eles se agrupam em três causas e a v1.0 ataca as três.
 
 **Causa D — o que não é do pacote.**
 
-6. `effortLevel: high` + Opus são multiplicadores em cima de ~100 turnos e vivem no
-   `~/.claude/settings.json` do dono. Documentados no README, não alterados: preferência
-   de quem usa, não decisão de pacote.
+6. `effortLevel: high` + Opus são multiplicadores e vivem no `~/.claude/settings.json`.
+   **Medido depois, em 25 sessões reais** (dedup por id de mensagem — sem dedup o
+   `usage` de uma mesma mensagem aparece repetido em cada registro de streaming e o
+   total infla ~3x):
+
+   - 119.144 output tokens por sessão, em 151 mensagens (791 tokens cada)
+   - só **31%** disso aparece no transcript — prosa 5%, conteúdo de arquivo/comando 26%
+   - os outros **69%** são raciocínio cobrado e gerado que ninguém vê
+   - a ~50 tok/s: **~40 min de geração pura por sessão**, 196 min na pior
+
+   É essa a resposta para o paradoxo "demora horas mas o consumo de token não é
+   grande": o output *visível* é pequeno, e geração é a parte lenta de um request.
+   O que **não** é o gargalo, também medido: latência por turno (2,2s de mediana),
+   contexto (66k–254k, longe do teto) e tamanho dos comandos (todo `/ps:*` somado é ~2%
+   do que uma sessão gera — cortar prosa de comando não compra quase nada, ao contrário
+   do que a auditoria inicial supôs).
+
+   Por isso **cada comando declara seu `effort`** no frontmatter em vez de herdar o da
+   sessão: `high` só em `/ps:story` (o passo onde pensar paga, e é o que torna os
+   outros baratos), `low` em `/ps:load` (ler status e ordenar ondas), `medium` no
+   resto. O smoke test falha se um comando não declarar — sem a linha, marcar um
+   checkbox custa o mesmo raciocínio que decompor uma story.
 9. **Granularidade 1 task = 1 PR fica.** O custo dela era o overhead fixo, e o overhead
    foi embora — resolver por composição em vez de inventar um modo de bundle. O lever
    real foi para onde pertence: `/ps:story` ganhou um terceiro critério de decomposição

@@ -1,5 +1,6 @@
 ---
 description: Investigate the repo and (re)confirm the 3-file split — CLAUDE.md (operational essentials), .squad/PRODUCT.md (what/why), .squad/ARCHITECTURE.md (how it's built) — proposing findings and waiting for approval before writing. Usage - /ps:init
+effort: medium
 allowed-tools: Task, Agent, Read, Write, Edit, Grep, Glob, Bash(git:*), Bash(ls:*), Bash(cat:*)
 ---
 

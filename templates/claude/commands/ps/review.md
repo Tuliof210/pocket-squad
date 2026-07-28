@@ -1,5 +1,6 @@
 ---
 description: Unbiased code review of a story PR by fresh-context subagents. Usage - /ps:review [pr-number]
+effort: medium
 allowed-tools: Task, Agent, Read, Grep, Glob, Bash(gh:*), Bash(glab:*), Bash(git:*)
 ---
 

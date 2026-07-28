@@ -1,5 +1,6 @@
 ---
 description: Run a whole story end to end - load, then run/review/publish every pending task until nothing is left. Usage - /ps:pipe <story-slug> [task refs]
+effort: medium
 allowed-tools: Task, Agent, Read, Write, Edit, Grep, Glob, Bash(git:*), Bash(gh:*), Bash(glab:*), Bash(sh .claude/ps-check.sh:*), Bash(npm:*), Bash(pnpm:*), Bash(yarn:*), Bash(npx:*), Bash(make:*), Bash(cargo:*), Bash(go:*), Bash(pytest:*), Bash(uv:*)
 ---
 

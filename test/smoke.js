@@ -23,11 +23,20 @@ try {
   const MANIFEST = path.join(dir, ".claude", "pocket-squad.manifest.json");
   assert.ok(fs.existsSync(MANIFEST), "install should create .claude/pocket-squad.manifest.json");
 
+  // Measured on 25 real runs: ~69% of the tokens a session generates are reasoning
+  // that never reaches the transcript, and generation is the wall-clock. A command
+  // with no `effort` inherits the session's, which is how a checkbox tick ends up
+  // costing the same deliberation as a decomposition.
   for (const cmd of ["story", "review", "publish", "init", "load", "run", "pipe", "prune"]) {
-    assert.ok(
-      fs.existsSync(path.join(dir, ".claude", "commands", "ps", `${cmd}.md`)),
-      `install should create the namespaced /ps:${cmd} command`
+    const file = path.join(dir, ".claude", "commands", "ps", `${cmd}.md`);
+    assert.ok(fs.existsSync(file), `install should create the namespaced /ps:${cmd} command`);
+    const fm = fs.readFileSync(file, "utf8").split("---")[1] || "";
+    assert.match(
+      fm,
+      /^effort: (low|medium|high|xhigh|max)$/m,
+      `/ps:${cmd} must declare an effort level, or it silently inherits the session's`
     );
+    assert.match(fm, /^allowed-tools:/m, `/ps:${cmd} must declare allowed-tools`);
   }
 
   // The review prompts live outside the command so the main chat never retypes them

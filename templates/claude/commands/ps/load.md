@@ -1,5 +1,6 @@
 ---
 description: Load a story's context and plan the order to run its tasks. Usage - /ps:load <story-slug>
+effort: low
 allowed-tools: Read, Grep, Glob, Bash(git:*), Bash(gh:*), Bash(glab:*), Bash(sh .claude/ps-check.sh:*)
 ---
 

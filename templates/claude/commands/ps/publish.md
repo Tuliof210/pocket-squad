@@ -1,5 +1,6 @@
 ---
 description: Squash-merge a PR, tick the story, sweep worktrees, and distill learnings when the story closes. Usage - /ps:publish [pr-number]
+effort: medium
 allowed-tools: Read, Write, Edit, Grep, Glob, Bash(git:*), Bash(gh:*), Bash(glab:*), Bash(sh .claude/ps-check.sh:*)
 ---
 
