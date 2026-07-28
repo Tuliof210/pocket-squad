@@ -226,9 +226,51 @@ Eles se agrupam em três causas e a v1.0 ataca as três.
 
 **Causa D — o que não é do pacote.**
 
-6. `effortLevel: high` + Opus são multiplicadores em cima de ~100 turnos e vivem no
-   `~/.claude/settings.json` do dono. Documentados no README, não alterados: preferência
-   de quem usa, não decisão de pacote.
+6. `effortLevel: high` + Opus são multiplicadores e vivem no `~/.claude/settings.json`.
+   **Medido depois, em 25 sessões reais** (dedup por id de mensagem — sem dedup o
+   `usage` de uma mesma mensagem aparece repetido em cada registro de streaming e o
+   total infla ~3x):
+
+   - **187.375 output tokens por sessão** — 119k no chat principal, 68k em subagentes
+   - 151 mensagens no principal, 249 espalhadas em ~4,5 subagentes
+   - só **31%** disso aparece no transcript — prosa 5%, conteúdo de arquivo/comando 26%
+   - os outros **69%** são raciocínio cobrado e gerado que ninguém vê
+   - a ~50 tok/s: **~62 min de geração pura por sessão**
+
+   A primeira passada dessa medição contou só o chat principal e errou por 36%: os
+   transcripts de subagente ficam em `<sessão>/subagents/`, não no `.jsonl` da sessão.
+   Numa sessão tocada por `/ps:pipe` o subagente chega a **79%** de todo o output —
+   é lá que uma story é gerada, não no chat principal.
+
+   É essa a resposta para o paradoxo "demora horas mas o consumo de token não é
+   grande": o output *visível* é pequeno, e geração é a parte lenta de um request.
+   O que **não** é o gargalo, também medido: latência por turno (2,2s de mediana),
+   contexto (66k–254k, longe do teto) e tamanho dos comandos (todo `/ps:*` somado é ~2%
+   do que uma sessão gera — cortar prosa de comando não compra quase nada, ao contrário
+   do que a auditoria inicial supôs).
+
+   Por isso o `effort` passa a ser declarado por passo em vez de herdado. São **dois
+   mecanismos**, porque o frontmatter de um comando **não alcança** um subagente que
+   ele despacha — o subagente recebe "siga o run.md", e ler um markdown não aplica
+   frontmatter nenhum:
+
+   - **comando** (`.claude/commands/ps/*.md`): `high` só em `/ps:story`, `low` em
+     `/ps:load`, `medium` no resto.
+   - **subagente** (`.claude/agents/ps-{task,review,verify}.md`, novos): é o único
+     lugar onde model e effort desse passo existem. `ps-review` em `high` (é o gate de
+     qualidade, e sem ferramentas de escrita — revisor que conserta o que acha deixa de
+     reportar), `ps-task` em `medium`, `ps-verify` em `low` **e em Sonnet** (re-roda
+     check nomeado e faz diff contra um SHA; não forma opinião).
+
+   `/ps:pipe` e `/ps:review` passam a despachar por nome em vez de `general-purpose` —
+   além do effort, um agente nomeado sobe com o próprio system prompt curto em vez do
+   completo. Isso ressuscita `.claude/agents/`, morto desde a v0.2, mas por outro
+   motivo: não são 14 especialistas quase-clones, são 3 arquivos que existem só para
+   fixar o custo de cada passo.
+
+   O smoke test falha se um comando ou agente não declarar effort, se `ps-review`
+   ganhar ferramenta de escrita, ou se remover um órfão levar junto os arquivos
+   shipados que dividem o diretório com ele.
 9. **Granularidade 1 task = 1 PR fica.** O custo dela era o overhead fixo, e o overhead
    foi embora — resolver por composição em vez de inventar um modo de bundle. O lever
    real foi para onde pertence: `/ps:story` ganhou um terceiro critério de decomposição
@@ -242,6 +284,54 @@ Nada disso adicionou dependência (o pacote segue zero-dep) nem arquivo executá
 — `ps-check.sh` continua sendo o único, com quatro modos em vez de dois. O smoke test
 ganhou cobertura para `status`, `sync` e `warm`, incluindo a asserção de que remover
 uma worktree aquecida **não** segue o link e apaga as dependências compartilhadas.
+
+## v2.0.0 (2026-07-28) — Tudo no chat principal, review uma vez por story
+
+Proposta do dono, depois da medição da v1.0. A v1.0 tinha barateado cada passo; a v2.0
+elimina passos inteiros. Decisões:
+
+1. **Execução volta para o chat principal, serial.** `/ps:load` e `/ps:pipe` morrem;
+   `/ps:run` recebe o slug da story e faz os três papéis. Motivo medido, não estético:
+   subagente frio por task gastava 36% do output de uma story (até 79% num run
+   paralelo) reconstruindo o contexto que o chat já segurava. Some o agente `ps-task`.
+   Sobram só os subagentes de review, onde contexto frio é feature e não custo — é a
+   mesma conclusão da v0.2, agora com número.
+2. **Topologia de branch nova.** Da branch alvo sai **uma** worktree em
+   `ps-story/<slug>`, aquecida uma vez. Cada task corta `ps/<slug>/<task-slug>` dali,
+   abre PR **para a branch da story**, e é squash-mergeada sem review. No fim, uma PR
+   da story para a branch alvo — e é **nela** que o review roda. Dois namespaces porque
+   git não guarda `ps/<slug>` e `ps/<slug>/<task>` juntos: o mesmo nome teria que ser
+   arquivo e diretório no ref store.
+3. **Review uma vez por story, não por task.** Revisar cinco fatias da mesma mudança
+   achava as mesmas coisas cinco vezes e custava cinco rodadas. E não enxergava o
+   defeito que mais importa: a task 04 quebrando o que a 02 construiu. A PR da story é
+   o primeiro lugar onde essa costura existe — a lente `run` ganhou um item explícito
+   para ela.
+4. **A máquinaria de `window:` morre inteira** — campo no task, seção
+   `Independently shippable`, bloco `WINDOWS` no `ps-check.sh`, gate no `/ps:publish`,
+   critério "shippable alone" na decomposição. Ela existia porque cada task entrava em
+   main sozinha. Agora main só vê a story completa, num commit squashed: estado
+   intermediário não é regressão em lugar nenhum. Um critério de decomposição sai e
+   nada entra no lugar — decomponha onde o trabalho divide, não onde o produto
+   sobreviveria.
+5. **Ordem é o único mecanismo de dependência.** `Depends on` e `Parallel-safe with`
+   saem do template de task: `/ps:run` executa em ordem de nome de arquivo, então o
+   prefixo `NN` já diz tudo. Sem paralelismo, o checkbox de `story.md` volta a ser
+   marcado no commit da própria task — não há irmã para conflitar.
+6. **PR, veredito e comentário escritos para um júnior.** `pr.md` vira dois formatos
+   (PR de task, curta e auto-mergeada; PR de story, a que alguém lê), ambos com regra
+   explícita: frase simples, nome exato de arquivo e comando, termo explicado na
+   primeira vez. O veredito de review ganhou formato fixo com "o que rodei / o que não
+   rodei" e, por achado, "por que importa" e "resolvido quando". Alcance combinado com
+   o dono: PRs, comentários e reviews — os arquivos `/ps:*` seguem no registro denso.
+7. **Merge da story em main é squash** (escolha do dono): main linear, um commit por
+   story. Os commits de task vivem na branch da story e o registro por task fica nas
+   PRs de task no GitHub.
+
+Contabilidade: 8 comandos → 6, 3 subagentes → 2, e o `ps-check.sh` perde o bloco de
+janelas. O que se perde é paralelismo entre tasks; o que se ganha é uma worktree e um
+install por story em vez de por task, zero conflito de irmãs em `story.md`, nenhuma
+ordem de publish para acertar, e um review em vez de N.
 
 > Tudo abaixo desta linha descreve a v0.1 — mantido como registro histórico.
 > As decisões 1–16 e a estrutura listada NÃO refletem mais o estado atual.

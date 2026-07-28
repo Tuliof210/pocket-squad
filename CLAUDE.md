@@ -5,8 +5,9 @@
 - ZERO runtime and ZERO dev dependencies by design — Node built-ins only (`fs`,
   `path`, `crypto`). Adding a dependency is a design decision, never casual.
 - Distribution: an `npx`-installable CLI. `bin.pocket-squad -> bin/pocket-squad.js`.
-- Shipped content, copied into a target project: markdown under `templates/` — 8
-  `/ps:*` commands, the two review prompts (`.claude/ps-{review,verify}.md`), the
+- Shipped content, copied into a target project: markdown under `templates/` — 6
+  `/ps:*` commands, 2 review subagents (`.claude/agents/ps-{review,verify}.md`), the
+  two review prompts (`.claude/ps-{review,verify}.md`), `.claude/settings.json`, the
   `.squad/{learnings,debt}.md` and `.squad/templates/{story,task,pr}.md` scaffolds —
   plus `templates/claude/ps-check.sh`, the one executable in the package.
 
@@ -44,6 +45,22 @@ managed-but-no-longer-shipped files when untouched; `status` diffs hashes.
 - A subagent prompt lives in its own file (`templates/claude/ps-review.md`) and the
   command points at it. Never inline one as a blockquote the main chat has to retype
   into a dispatch — that regenerates the whole prompt as output tokens every time.
+- Every step declares its cost. A command sets `effort` in its own frontmatter; a
+  **subagent's** cost can only be set in its `templates/claude/agents/*.md` definition,
+  because a command's frontmatter never reaches an agent it dispatches. A dispatch that
+  names `general-purpose` instead of `ps-review`/`ps-verify` is a silent cost
+  regression. The smoke test fails on a missing `effort`.
+- Execution runs in the main chat, serially. Subagents exist for **review only**, where
+  a cold context is the feature — measured, a cold subagent per task spent 36% of a
+  story's output rebuilding what the chat already held. Adding an execution subagent
+  back needs that number to have changed.
+- Branch namespaces: stories on `ps-story/<slug>`, tasks on `ps/<slug>/<task-slug>`.
+  Git cannot hold `ps/<slug>` and `ps/<slug>/<task>` at once — the same name would have
+  to be a file and a directory in the ref store. `ps-check.sh` derives task state from
+  the task branch name, so renaming either scheme breaks `status`, `sync` and `sweep`.
+- PR bodies, review verdicts and posted comments are written for a junior: plain
+  sentences, exact file and command names, every term explained the first time.
+  `.squad/templates/pr.md` is the shape; `ps-review.md` carries the verdict format.
 - The repo dogfoods itself: `templates/claude/*` ≡ `.claude/*` and
   `templates/squad/learnings.md` seeds `.squad/learnings.md` (which then diverges —
   it holds real learnings). After editing templates, run

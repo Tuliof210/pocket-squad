@@ -23,11 +23,20 @@ try {
   const MANIFEST = path.join(dir, ".claude", "pocket-squad.manifest.json");
   assert.ok(fs.existsSync(MANIFEST), "install should create .claude/pocket-squad.manifest.json");
 
-  for (const cmd of ["story", "review", "publish", "init", "load", "run", "pipe", "prune"]) {
-    assert.ok(
-      fs.existsSync(path.join(dir, ".claude", "commands", "ps", `${cmd}.md`)),
-      `install should create the namespaced /ps:${cmd} command`
+  // Measured on 25 real runs: ~69% of the tokens a session generates are reasoning
+  // that never reaches the transcript, and generation is the wall-clock. A command
+  // with no `effort` inherits the session's, which is how a checkbox tick ends up
+  // costing the same deliberation as a decomposition.
+  for (const cmd of ["story", "review", "publish", "init", "run", "prune"]) {
+    const file = path.join(dir, ".claude", "commands", "ps", `${cmd}.md`);
+    assert.ok(fs.existsSync(file), `install should create the namespaced /ps:${cmd} command`);
+    const fm = fs.readFileSync(file, "utf8").split("---")[1] || "";
+    assert.match(
+      fm,
+      /^effort: (low|medium|high|xhigh|max)$/m,
+      `/ps:${cmd} must declare an effort level, or it silently inherits the session's`
     );
+    assert.match(fm, /^allowed-tools:/m, `/ps:${cmd} must declare allowed-tools`);
   }
 
   // The review prompts live outside the command so the main chat never retypes them
@@ -61,15 +70,55 @@ try {
     );
   }
 
-  // The v0.1 squad (agents, skills, techlead, status, project-context) must not ship.
+  // Subagents are where most of a story's tokens are generated, and a command's own
+  // frontmatter never reaches one. The agent definition is the only place their model
+  // and effort can be pinned, so a missing file means the step silently runs at the
+  // session's level — which is the failure this whole file exists to make loud.
+  for (const [agent, expect] of [
+    ["ps-review", /^effort: high$/m],
+    ["ps-verify", /^effort: low$/m],
+  ]) {
+    const file = path.join(dir, ".claude", "agents", `${agent}.md`);
+    assert.ok(fs.existsSync(file), `install should create the ${agent} subagent`);
+    const fm = fs.readFileSync(file, "utf8").split("---")[1] || "";
+    assert.match(fm, expect, `${agent} must pin its effort, or it inherits the session's`);
+    assert.match(fm, /^model: /m, `${agent} must state its model, even when it inherits`);
+    assert.match(fm, new RegExp(`^name: ${agent}$`, "m"), `${agent}'s name must match its dispatch`);
+  }
+  assert.ok(
+    !/Write|Edit/.test(fs.readFileSync(path.join(dir, ".claude", "agents", "ps-review.md"), "utf8")
+      .split("---")[1].match(/^tools: .*/m)[0]),
+    "ps-review must not get write tools — a reviewer that fixes what it finds stops reporting it"
+  );
+
+  // Everything a past version shipped and v2.0 does not. /ps:load and /ps:pipe died
+  // when execution moved into the main chat, and ps-task with them — there are no
+  // execution subagents left, only review ones.
   for (const gone of [
-    path.join(".claude", "agents"),
+    path.join(".claude", "commands", "ps", "load.md"),
+    path.join(".claude", "commands", "ps", "pipe.md"),
+    path.join(".claude", "agents", "ps-task.md"),
+    path.join(".claude", "agents", "backend-junior.md"),
+    path.join(".claude", "agents", "techlead.md"),
     path.join(".claude", "skills"),
     path.join(".claude", "techlead.md"),
     path.join(".claude", "commands", "ps", "status.md"),
     path.join(".squad", "project-context.md"),
   ]) {
     assert.ok(!fs.existsSync(path.join(dir, gone)), `${gone} must not ship`);
+  }
+
+  // The window machinery went with the topology: only whole stories reach the target
+  // branch now, so an intermediate state cannot be a regression there.
+  for (const f of [
+    path.join(dir, ".squad", "templates", "task.md"),
+    path.join(dir, ".claude", "ps-check.sh"),
+    path.join(dir, ".claude", "commands", "ps", "publish.md"),
+  ]) {
+    assert.ok(
+      !/window:/i.test(fs.readFileSync(f, "utf8")),
+      `${path.basename(f)} still mentions the removed degradation-window field`
+    );
   }
 
   assert.ok(
@@ -95,17 +144,28 @@ try {
 
   // Orphan migration: a manifest-managed file that no longer ships (v0.1 leftovers)
   // is deleted by `update` when untouched, and no empty dirs are left behind.
+  // Two orphans on purpose: one whose directory still holds shipped files (v1.0 put
+  // ps-* agents back into .claude/agents/, so that directory must survive), and one
+  // whose directory empties out and must be climbed away.
   const orphan = path.join(dir, ".claude", "agents", "backend-junior.md");
-  fs.mkdirSync(path.dirname(orphan), { recursive: true });
-  fs.writeFileSync(orphan, "old agent\n");
+  const deepOrphan = path.join(dir, ".claude", "skills", "ps-backend-api", "SKILL.md");
+  for (const [p, body] of [[orphan, "old agent\n"], [deepOrphan, "old skill\n"]]) {
+    fs.mkdirSync(path.dirname(p), { recursive: true });
+    fs.writeFileSync(p, body);
+  }
   const manifest = JSON.parse(fs.readFileSync(MANIFEST, "utf8"));
   manifest.files["claude/agents/backend-junior.md"] = sha(fs.readFileSync(orphan));
+  manifest.files["claude/skills/ps-backend-api/SKILL.md"] = sha(fs.readFileSync(deepOrphan));
   fs.writeFileSync(MANIFEST, JSON.stringify(manifest, null, 2));
   execFileSync("node", [CLI, "update"], { cwd: dir });
   assert.ok(!fs.existsSync(orphan), "update should delete untouched orphaned files");
   assert.ok(
-    !fs.existsSync(path.join(dir, ".claude", "agents")),
+    !fs.existsSync(path.join(dir, ".claude", "skills")),
     "update should remove the emptied directory tree of an orphan"
+  );
+  assert.ok(
+    fs.existsSync(path.join(dir, ".claude", "agents", "ps-review.md")),
+    "removing an orphan must not take the shipped files sharing its directory"
   );
 
   // Knowledge files never get nagging .new copies: customize learnings, update again.

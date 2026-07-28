@@ -2,8 +2,8 @@
 # pocket-squad — the mechanical half of the workflow. Meant to be RUN, never read
 # into a model's context: the /ps:* commands call it and quote its output.
 #
-#   sh .claude/ps-check.sh                report  — open windows, learnings size,
-#                                                   debt to sweep, stale refs
+#   sh .claude/ps-check.sh                report  — learnings size, debt to sweep,
+#                                                   stale refs a sweep would remove
 #   sh .claude/ps-check.sh status <slug>  per-task state of one story, from PR state
 #   sh .claude/ps-check.sh sync   <slug>  status, and tick story.md for merged tasks
 #   sh .claude/ps-check.sh warm   <path>  share this checkout's installed deps with a
@@ -37,7 +37,6 @@ if command -v gh >/dev/null 2>&1; then PROVIDER=gh
 elif command -v glab >/dev/null 2>&1; then PROVIDER=glab
 fi
 
-WINDOWS=0
 LEFT=0
 
 # -------------------------------------------------------------------- pr cache
@@ -169,34 +168,6 @@ if [ "$MODE" = warm ]; then
   exit 0
 fi
 
-# ----------------------------------------------------------------- open windows
-# A task may declare `window: <closing-task-stem> — <what degrades>`. The window is
-# closed once that task is merged, and covered while its PR is open. Anything else is
-# a planned regression with nothing scheduled to undo it.
-echo "WINDOWS"
-# One grep across every task file, instead of a loop with a grep inside it: the story
-# directory only ever grows and nothing here archives it.
-for task in $(grep -l '^window:' .squad/stories/*/tasks/*.md 2>/dev/null); do
-  story=${task%/tasks/*}
-  slug=$(basename "$story")
-  line=$(grep -m1 '^window:' "$task")
-  closer=$(printf '%s' "$line" | sed 's/^window:[[:space:]]*//' | awk '{print $1}')
-  st=NONE
-  if grep -qE "^- \[[xX]\] tasks/$closer" "$story/story.md" 2>/dev/null; then
-    st=MERGED
-  else
-    cf=$(ls "$story"/tasks/"$closer"*.md 2>/dev/null | head -1)
-    [ -n "$cf" ] && st=$(pr_state "$(task_branch "$slug" "$cf")")
-  fi
-  case $st in
-    MERGED) printf '  ok  %s — closed, %s is merged\n' "$task" "$closer" ;;
-    OPEN)   printf '  ~   %s — %s has an open PR\n' "$task" "$closer" ;;
-    *)      printf '  !   OPEN WINDOW  %s — waits on %s, which has no PR\n' "$task" "$closer"
-            WINDOWS=$((WINDOWS + 1)) ;;
-  esac
-done
-[ "$WINDOWS" -eq 0 ] && echo "  none open"
-
 # -------------------------------------------------------------------- learnings
 echo "LEARNINGS"
 if [ -f .squad/learnings.md ]; then
@@ -245,6 +216,10 @@ fi
 # ------------------------------------------------------------------- stale refs
 # Worktrees of merged/closed PRs, and the branches they leave behind. Branches are
 # only deleted on MERGED: a CLOSED PR may be abandoned work worth keeping.
+#
+# Two namespaces, because git cannot hold both `ps/<slug>` and `ps/<slug>/<task>` — the
+# same name would have to be a file and a directory in the ref store. Stories live in
+# `ps-story/<slug>` (one worktree each) and their tasks in `ps/<slug>/<task-slug>`.
 echo "STALE"
 if [ "$MODE" = sweep ]; then
   git fetch --prune --quiet 2>/dev/null
@@ -257,7 +232,7 @@ found=0
 WT=$(git worktree list --porcelain 2>/dev/null |
      awk '/^worktree /{p=$2} /^branch /{sub("refs/heads/","",$2); print $2"\t"p}')
 
-for b in $(git for-each-ref --format='%(refname:short)' refs/heads 2>/dev/null | grep '^ps/'); do
+for b in $(git for-each-ref --format='%(refname:short)' refs/heads 2>/dev/null | grep -E '^ps(-story)?/'); do
   st=$(pr_state "$b")
   case $st in MERGED|CLOSED) ;; *) continue ;; esac
   found=$((found + 1))
@@ -282,7 +257,7 @@ for b in $(git for-each-ref --format='%(refname:short)' refs/heads 2>/dev/null |
 done
 [ "$MODE" = sweep ] && git worktree prune 2>/dev/null
 
-for r in $(git for-each-ref --format='%(refname:short)' refs/remotes 2>/dev/null | grep '/ps/'); do
+for r in $(git for-each-ref --format='%(refname:short)' refs/remotes 2>/dev/null | grep -E '/ps(-story)?/'); do
   remote=${r%%/*}
   b=${r#*/}
   [ "$(pr_state "$b")" = MERGED ] || continue
@@ -298,4 +273,4 @@ for r in $(git for-each-ref --format='%(refname:short)' refs/remotes 2>/dev/null
 done
 [ "$found" -eq 0 ] && echo "  none"
 
-printf 'SUMMARY  open windows: %s | needs attention: %s\n' "$WINDOWS" "$LEFT"
+printf 'SUMMARY  needs attention: %s\n' "$LEFT"

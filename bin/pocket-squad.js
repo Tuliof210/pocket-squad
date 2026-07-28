@@ -85,9 +85,8 @@ function install() {
   console.log(`  1. Open Claude Code in this project.`);
   console.log(`  2. Run /ps:init once — proposes CLAUDE.md + .squad/PRODUCT.md + .squad/ARCHITECTURE.md, writes after you confirm.`);
   console.log(`  3. Run /ps:story "your idea" — interview only, saves a story + tasks under .squad/stories/.`);
-  console.log(`  4. Run /ps:load <story-slug>, then /ps:run <task> — worktree + PR, one per task.`);
-  console.log(`  5. Then /ps:review (fresh-eyes review) and /ps:publish (merge + worktree sweep + learnings).`);
-  console.log(`     Or /ps:pipe <story-slug> to chain run + review + publish for the whole story.`);
+  console.log(`  4. Run /ps:run <story-slug> — one worktree, every task in order, one PR to review.`);
+  console.log(`  5. Then /ps:review (fresh-eyes review of that PR) and /ps:publish (merge + sweep + learnings).`);
   if (manifest) console.log(`\n(Previous manifest found — this was a re-install. Use "update" to upgrade managed files.)`);
 }
 
