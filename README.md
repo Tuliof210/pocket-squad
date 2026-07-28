@@ -92,6 +92,10 @@ are the reviewers, where a cold start is exactly the point.
                                # never read into context, and at most ONE network call
   ps-review.md ps-verify.md    # the review prompts, read by the review subagents
                                # themselves — so the main chat never retypes them
+  settings.json                # session-wide pre-approval for the git/gh/test calls
+                               # the workflow is made of, plus a deny list for the
+                               # destructive ones. Never overwrites yours — see
+                               # "Where the time goes" before adopting it
   pocket-squad.manifest.json   # hashes for non-destructive updates
 .squad/
   learnings.md                 # durable one-line rules for code not yet written,
@@ -129,9 +133,35 @@ of that was writing code. What the package could fix, it fixed: dependencies are
 shared with the worktree instead of reinstalled, the test suite runs twice instead of
 four times, `ps-check.sh` makes one network call instead of one per branch, the review
 prompts live in files instead of being retyped into every dispatch, and learnings are
-distilled once per story instead of once per PR. Each command also ships an
-`allowed-tools` list, so the git/gh/test calls the workflow is made of stop asking for
-permission mid-run.
+distilled once per story instead of once per PR.
+
+### Why a long run stalls, and what actually fixes it
+
+Two different mechanisms, and only one of them lasts:
+
+- **`allowed-tools` in a command's frontmatter grants permission for the turn that
+  invoked the command, and the grant clears on your next message.** Useful for a
+  one-shot command, useless for `/ps:pipe`, which runs for an hour. Every `/ps:*`
+  command declares one, but it is not what keeps a long run going.
+- **`permissions.allow` in `.claude/settings.json` lasts the whole session.** That is
+  the file doing the work, and this package ships one. In **auto mode** it matters
+  twice over: narrow allow rules resolve *before* the safety classifier runs, which is
+  what lets `gh pr merge` through. The classifier blocks irreversible actions by
+  default, and `/ps:pipe <slug>` is a general request — it is not stated intent to
+  merge anything. A broad rule like `Bash(*)` would be suspended in auto mode instead,
+  so every rule shipped here is prefixed and specific.
+
+`install` never overwrites an existing `.claude/settings.json`; yours is kept and the
+package's lands as `.claude/settings.json.new` to merge by hand. Read the rules before
+you take them — they let Claude merge PRs and push branches without asking, which is
+the entire point and also a real grant. The `deny` list next to them (force push, hard
+reset, `gh release`, `npm publish`) is what makes it defensible.
+
+Two things it still cannot pre-approve: writes to protected paths (`.git` among them),
+and anything the classifier hard-blocks. `/ps:pipe` treats a refusal as a **park** — it
+reports the exact refused call, leaves that PR open and green, and keeps going, then
+publishes the approved PRs in one batch at the end of the run rather than one at a
+time in the middle.
 
 Two knobs are yours, not the package's, and they multiply everything above:
 
@@ -143,9 +173,15 @@ Two knobs are yours, not the package's, and they multiply everything above:
 ## Migrating from v0.5
 
 Run `npx pocket-squad update`. It upgrades the seven commands you never edited, adds
-`.claude/ps-review.md` and `.claude/ps-verify.md`, and rewrites `ps-check.sh` with four
-new modes (`status`, `sync`, `warm`, plus the single-call PR cache). Customized command
-files land next to yours as `*.new` — worth merging, since v1.0's speed lives in them.
+`.claude/ps-review.md`, `.claude/ps-verify.md` and `.claude/settings.json`, and rewrites
+`ps-check.sh` with four new modes (`status`, `sync`, `warm`, plus the single-call PR
+cache). Customized command files land next to yours as `*.new` — worth merging, since
+v1.0's speed lives in them.
+
+**Read `.claude/settings.json` before you keep it.** It is the file that lets a long
+`/ps:pipe` run finish, and it does that by pre-approving merges and pushes for the whole
+session. If you already had a settings file, yours is untouched and the package's lands
+as `settings.json.new`. See "Where the time goes" above.
 
 One behaviour changes for stories already in flight: `/ps:run` no longer ticks a task's
 box inside its own PR, and `/ps:publish` ticks it on the base branch after merging.

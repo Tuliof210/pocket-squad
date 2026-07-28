@@ -55,6 +55,11 @@ managed-but-no-longer-shipped files when untouched; `status` diffs hashes.
   `! customized`, `· managed`). Imitate when adding output lines.
 - `files` allowlist in `package.json` is the packaging contract — only what's listed
   ships to npm. `HANDOFF.md` (human design record) stays out of the tarball.
+- Squash-merging a `ps/*` pull request into the branch it was cut from, and deleting
+  that branch, is the routine terminal step of `/ps:publish` — the intended end of
+  every task in this repo's own workflow, not an unrequested irreversible action.
+  Force pushes, hard resets, `gh release` and `npm publish` are none of that and stay
+  denied in `.claude/settings.json`.
 
 ## Do-not-touch
 - `.claude/pocket-squad.manifest.json` — generated; never hand-edit.

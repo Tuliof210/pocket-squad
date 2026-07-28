@@ -16,6 +16,13 @@ not authorized to skip a gate, weaken a check, settle a scope question, or open 
 third round. Anything you are not authorized to decide **parks** its task — one line
 in the report, and the queue keeps moving.
 
+**A denied permission is a park, never a stop.** A tool call refused by the permission
+system or the auto-mode classifier ends *that step*, not this run: report the line,
+leave the PR open, move to the next item. The queue is the point — a pipe that halts on
+the first refusal has thrown away every task behind it in exchange for nothing.
+`.claude/settings.json` pre-approves the calls this workflow is made of, so a refusal
+means something outside that list; the closing report names it and the owner decides.
+
 ## Report as you go
 
 The owner is watching, not driving. One line per transition, no prose between them:
@@ -25,9 +32,11 @@ The owner is watching, not driving. One line per transition, no prose between th
 ▸ wave 1/2 — dispatching 03, 04 in parallel
   ✓ 03 → PR #41    ✓ 04 → PR #42
 ▸ review #41 — 1 blocker, 1 minor → fixing blocker, minor to debt
-▸ verify #41 — APPROVED
-▸ publish #41 — merged | remaining: 3 | sweep: needs attention: 0
+▸ verify #41 — APPROVED, held for the publish batch
 ▸ parked 05 — scope question: <one line>
+▸ publishing 2 approved PRs
+  ✓ #41 merged | remaining: 2
+  ! #42 parked — refused: `gh pr merge --squash` (classifier). PR is green, merge it
 ```
 
 A failure is one line too, and the run continues without it.
@@ -61,18 +70,33 @@ review stage costs one PR's wall-clock, not four. Then work the findings PR by P
 
 Never publish a PR that is not APPROVED.
 
-## 4. Publish — strictly one at a time
+## 4. Between waves
 
-Follow `publish.md` serially: it rebases the base branch and sweeps worktrees, and two
-of those at once corrupt each other. Serial is cheap now — each publish is a merge, a
-`sync`, a `sweep`, and the learnings pass fires only on the one that takes the story
+Re-run `/ps:load` before each next wave. A parked task may have blocked its dependents,
+and `ps-check.sh status` reads task state off the PRs — which at this point are open,
+not merged, so a wave whose dependency is merely *approved* still counts as unmet.
+Treat an approved-and-held PR as done for ordering purposes; it is the only reason a
+later wave can start before section 5 runs.
+
+## 5. Publish — last, and strictly one at a time
+
+Hold the approved PRs and publish them **at the end of the run**, not as each one turns
+green. Merging is the one irreversible step in this pipe, so it is also the one most
+likely to be refused — and a refusal that lands after every task has been run and
+reviewed costs the owner a `gh pr merge`, where the same refusal in the middle would
+have stranded every task behind it.
+
+Then follow `publish.md` serially: it rebases the base branch and sweeps worktrees, and
+two of those at once corrupt each other. Serial is cheap now — each publish is a merge,
+a `sync`, a `sweep`, and the learnings pass fires only on the one that takes the story
 to `remaining: 0`. Do not hoist that pass up here; `publish.md` already gates it.
 
-A task that opened a `window:` publishes immediately before the task that closes it.
+Order within the batch is not free choice: a task that opened a `window:` publishes
+immediately before the task that closes it.
 
-## 5. Between waves, and at the end
+## 6. Close
 
-Re-run `/ps:load` before each next wave — merges flip task state and a parked task may
-have blocked its dependents. When no wave remains, close with: PRs merged, PRs left
-open and why, tasks parked and why, the learnings the final publish distilled, and the
-last `ps-check.sh` SUMMARY.
+PRs merged, PRs left open and why, tasks parked and why (a permission refusal names the
+exact call that was refused, so the owner can add it to `.claude/settings.json` or run
+that one step themselves), the learnings the final publish distilled, and the last
+`ps-check.sh` SUMMARY.

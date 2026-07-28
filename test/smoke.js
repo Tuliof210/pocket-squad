@@ -40,6 +40,27 @@ try {
     );
   }
 
+  // Session-wide permissions are what let a long /ps:pipe run finish — a command's
+  // `allowed-tools` grant clears on the owner's next message. Broad rules would be
+  // suspended by auto mode's classifier, so every allow rule has to stay prefixed.
+  const settings = JSON.parse(
+    fs.readFileSync(path.join(dir, ".claude", "settings.json"), "utf8")
+  );
+  assert.ok(
+    settings.permissions.allow.includes("Bash(gh pr merge:*)"),
+    "settings.json must pre-approve the merge, or /ps:publish stalls under auto mode"
+  );
+  assert.ok(
+    settings.permissions.deny.some((r) => r.startsWith("Bash(git push --force")),
+    "settings.json must deny force push — the allow list is only defensible next to it"
+  );
+  for (const rule of settings.permissions.allow) {
+    assert.ok(
+      !/^Bash\(\*?\)$/.test(rule),
+      `allow rule ${rule} is broad enough for auto mode to suspend it — keep rules prefixed`
+    );
+  }
+
   // The v0.1 squad (agents, skills, techlead, status, project-context) must not ship.
   for (const gone of [
     path.join(".claude", "agents"),
