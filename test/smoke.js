@@ -27,7 +27,7 @@ try {
   // that never reaches the transcript, and generation is the wall-clock. A command
   // with no `effort` inherits the session's, which is how a checkbox tick ends up
   // costing the same deliberation as a decomposition.
-  for (const cmd of ["story", "review", "publish", "init", "load", "run", "pipe", "prune"]) {
+  for (const cmd of ["story", "review", "publish", "init", "run", "prune"]) {
     const file = path.join(dir, ".claude", "commands", "ps", `${cmd}.md`);
     assert.ok(fs.existsSync(file), `install should create the namespaced /ps:${cmd} command`);
     const fm = fs.readFileSync(file, "utf8").split("---")[1] || "";
@@ -75,7 +75,6 @@ try {
   // and effort can be pinned, so a missing file means the step silently runs at the
   // session's level — which is the failure this whole file exists to make loud.
   for (const [agent, expect] of [
-    ["ps-task", /^effort: medium$/m],
     ["ps-review", /^effort: high$/m],
     ["ps-verify", /^effort: low$/m],
   ]) {
@@ -92,8 +91,13 @@ try {
     "ps-review must not get write tools — a reviewer that fixes what it finds stops reporting it"
   );
 
-  // The v0.1 squad (its agents, skills, techlead, status, project-context) must not ship.
+  // Everything a past version shipped and v2.0 does not. /ps:load and /ps:pipe died
+  // when execution moved into the main chat, and ps-task with them — there are no
+  // execution subagents left, only review ones.
   for (const gone of [
+    path.join(".claude", "commands", "ps", "load.md"),
+    path.join(".claude", "commands", "ps", "pipe.md"),
+    path.join(".claude", "agents", "ps-task.md"),
     path.join(".claude", "agents", "backend-junior.md"),
     path.join(".claude", "agents", "techlead.md"),
     path.join(".claude", "skills"),
@@ -102,6 +106,19 @@ try {
     path.join(".squad", "project-context.md"),
   ]) {
     assert.ok(!fs.existsSync(path.join(dir, gone)), `${gone} must not ship`);
+  }
+
+  // The window machinery went with the topology: only whole stories reach the target
+  // branch now, so an intermediate state cannot be a regression there.
+  for (const f of [
+    path.join(dir, ".squad", "templates", "task.md"),
+    path.join(dir, ".claude", "ps-check.sh"),
+    path.join(dir, ".claude", "commands", "ps", "publish.md"),
+  ]) {
+    assert.ok(
+      !/window:/i.test(fs.readFileSync(f, "utf8")),
+      `${path.basename(f)} still mentions the removed degradation-window field`
+    );
   }
 
   assert.ok(
@@ -147,7 +164,7 @@ try {
     "update should remove the emptied directory tree of an orphan"
   );
   assert.ok(
-    fs.existsSync(path.join(dir, ".claude", "agents", "ps-task.md")),
+    fs.existsSync(path.join(dir, ".claude", "agents", "ps-review.md")),
     "removing an orphan must not take the shipped files sharing its directory"
   );
 

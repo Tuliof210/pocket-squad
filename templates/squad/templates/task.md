@@ -16,18 +16,9 @@ review, was the loop's biggest avoidable cost. Carry the finding, not its addres
   turned up>.
 <Nothing that already lives in CLAUDE.md or ARCHITECTURE.md — both load anyway.>
 
-## Independently shippable
-yes
-<replace the line above ONLY with the owner's explicit approval, by:>
-<window: NN-closing-task-slug — what stays degraded until that task merges>
-
 ## Scope
 - In: <paths or areas this task may touch>
 - Out: <what a reader would assume is included and must not touch>
-
-## When to run
-- Depends on: none
-- Parallel-safe with: none
 
 ## Verify
 <exact, copy-pasteable commands that prove the Outcome — plus anything to measure

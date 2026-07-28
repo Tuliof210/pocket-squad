@@ -285,6 +285,54 @@ Nada disso adicionou dependência (o pacote segue zero-dep) nem arquivo executá
 ganhou cobertura para `status`, `sync` e `warm`, incluindo a asserção de que remover
 uma worktree aquecida **não** segue o link e apaga as dependências compartilhadas.
 
+## v2.0.0 (2026-07-28) — Tudo no chat principal, review uma vez por story
+
+Proposta do dono, depois da medição da v1.0. A v1.0 tinha barateado cada passo; a v2.0
+elimina passos inteiros. Decisões:
+
+1. **Execução volta para o chat principal, serial.** `/ps:load` e `/ps:pipe` morrem;
+   `/ps:run` recebe o slug da story e faz os três papéis. Motivo medido, não estético:
+   subagente frio por task gastava 36% do output de uma story (até 79% num run
+   paralelo) reconstruindo o contexto que o chat já segurava. Some o agente `ps-task`.
+   Sobram só os subagentes de review, onde contexto frio é feature e não custo — é a
+   mesma conclusão da v0.2, agora com número.
+2. **Topologia de branch nova.** Da branch alvo sai **uma** worktree em
+   `ps-story/<slug>`, aquecida uma vez. Cada task corta `ps/<slug>/<task-slug>` dali,
+   abre PR **para a branch da story**, e é squash-mergeada sem review. No fim, uma PR
+   da story para a branch alvo — e é **nela** que o review roda. Dois namespaces porque
+   git não guarda `ps/<slug>` e `ps/<slug>/<task>` juntos: o mesmo nome teria que ser
+   arquivo e diretório no ref store.
+3. **Review uma vez por story, não por task.** Revisar cinco fatias da mesma mudança
+   achava as mesmas coisas cinco vezes e custava cinco rodadas. E não enxergava o
+   defeito que mais importa: a task 04 quebrando o que a 02 construiu. A PR da story é
+   o primeiro lugar onde essa costura existe — a lente `run` ganhou um item explícito
+   para ela.
+4. **A máquinaria de `window:` morre inteira** — campo no task, seção
+   `Independently shippable`, bloco `WINDOWS` no `ps-check.sh`, gate no `/ps:publish`,
+   critério "shippable alone" na decomposição. Ela existia porque cada task entrava em
+   main sozinha. Agora main só vê a story completa, num commit squashed: estado
+   intermediário não é regressão em lugar nenhum. Um critério de decomposição sai e
+   nada entra no lugar — decomponha onde o trabalho divide, não onde o produto
+   sobreviveria.
+5. **Ordem é o único mecanismo de dependência.** `Depends on` e `Parallel-safe with`
+   saem do template de task: `/ps:run` executa em ordem de nome de arquivo, então o
+   prefixo `NN` já diz tudo. Sem paralelismo, o checkbox de `story.md` volta a ser
+   marcado no commit da própria task — não há irmã para conflitar.
+6. **PR, veredito e comentário escritos para um júnior.** `pr.md` vira dois formatos
+   (PR de task, curta e auto-mergeada; PR de story, a que alguém lê), ambos com regra
+   explícita: frase simples, nome exato de arquivo e comando, termo explicado na
+   primeira vez. O veredito de review ganhou formato fixo com "o que rodei / o que não
+   rodei" e, por achado, "por que importa" e "resolvido quando". Alcance combinado com
+   o dono: PRs, comentários e reviews — os arquivos `/ps:*` seguem no registro denso.
+7. **Merge da story em main é squash** (escolha do dono): main linear, um commit por
+   story. Os commits de task vivem na branch da story e o registro por task fica nas
+   PRs de task no GitHub.
+
+Contabilidade: 8 comandos → 6, 3 subagentes → 2, e o `ps-check.sh` perde o bloco de
+janelas. O que se perde é paralelismo entre tasks; o que se ganha é uma worktree e um
+install por story em vez de por task, zero conflito de irmãs em `story.md`, nenhuma
+ordem de publish para acertar, e um review em vez de N.
+
 > Tudo abaixo desta linha descreve a v0.1 — mantido como registro histórico.
 > As decisões 1–16 e a estrutura listada NÃO refletem mais o estado atual.
 
