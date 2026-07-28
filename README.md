@@ -23,36 +23,42 @@ npx pocket-squad status     # managed vs customized files
                          a question with suggested defaults, until the story is round.
                          Investigates the repo read-only, then saves a story + 1..N
                          tasks under .squad/stories/<date>-<slug>/. A task file is a
-                         contract — outcome, scope, exemplar to imitate, verification
-                         commands — never the implementation, and never over 60 lines.
-                         Every task must ship on its own: a slice that only works once
-                         the next one lands gets merged, reordered, or flagged.
+                         contract — outcome, scope, and a ## Context section carrying
+                         the exemplar's actual lines, the symbol's signature and the
+                         verified commands, so nobody surveys the repo again. Never
+                         the implementation, never over 120 lines. Every task must
+                         ship on its own, and be worth a PR: a slice that only works
+                         once the next one lands, or whose diff is a handful of lines,
+                         gets merged into its neighbour here.
 
-/ps:load <story-slug>    loads a saved story's full context into the chat and plans
-                         the order to run its tasks, respecting each task's
-                         dependencies and what can run in parallel.
+/ps:load <story-slug>    one ps-check.sh call says which tasks are done (PR merged),
+                         in flight, or pending. Reads only the pending ones, then
+                         plans the order — dependencies, and what runs in parallel.
 
 /ps:run <task>           executes ONE task: isolates it in a git worktree off the
-                         branch you're currently on, implements it using only that
-                         task's own context (minimal rediscovery by design), and opens
-                         ONE PR per task back to that branch.
+                         branch you're currently on, WARMS it (shares this checkout's
+                         installed dependencies instead of installing them again),
+                         implements it from the task's own ## Context with no
+                         rediscovery, and opens ONE PR back to that branch.
 
-/ps:review [pr]          unbiased review. Dispatches ONE fresh-context subagent that
-                         fetches the PR itself (view + diff), re-runs the DoD checks,
-                         and returns APPROVED or numbered findings with file:line and
-                         severity. The dispatch prompt carries no summary of the
-                         changes — fresh eyes by construction. The verdict is posted
-                         on the PR by default: it's the only searchable history the
-                         process leaves, and what /ps:publish learns from.
+/ps:review [pr]          unbiased review by TWO fresh-context subagents in parallel:
+                         `run` executes (DoD, correctness, security), `read` compares
+                         against the exemplar (absences, duplication, scope creep,
+                         over-engineering) and runs nothing. Disjoint ground, so the
+                         suite runs exactly once. Both read their prompt from
+                         .claude/ps-review.md themselves — the dispatch carries a PR
+                         number and a lens, no summary of the changes. Fresh eyes by
+                         construction. The verdict posts on the PR by default.
 
 /ps:publish [pr]         squash-merges the PR, returns to the base branch,
-                         git pull --rebase, then runs ps-check.sh: it sweeps the
-                         worktrees, local and remote branches of merged PRs and
-                         reports what it couldn't remove. Blocks the merge when the
-                         task declared a degradation window and the task that closes
-                         it has no PR yet. Then distills learnings — routing each
-                         candidate to .squad/learnings.md, .squad/debt.md, a config
-                         change, a task or nowhere, and retiring one rule per merge.
+                         git pull --rebase, then ps-check.sh `sync` (ticks story.md
+                         for merged tasks, here, so sibling PRs never conflict on it)
+                         and `sweep` (worktrees and branches of merged PRs). Blocks
+                         the merge when the task declared a degradation window and the
+                         task that closes it has no PR yet. Distills learnings only
+                         when that merge takes the story to zero remaining tasks —
+                         routing each candidate to .squad/learnings.md, .squad/debt.md,
+                         a config change, a task or nowhere, and retiring one rule.
 
 /ps:prune [file]         the deeper pass over .squad/learnings.md and .squad/debt.md
                          that a per-merge retirement doesn't reach: drops what is
@@ -63,15 +69,15 @@ npx pocket-squad status     # managed vs customized files
 
 /ps:pipe <story-slug>    the four above, unattended: loads the story, runs each wave
                          of tasks in parallel (one subagent per task, its own worktree
-                         and PR), reviews every PR until it's APPROVED — fixing
-                         blockers and majors, up to three rounds — then publishes them
-                         one at a time. Reports one line per transition so you can
-                         follow along, parks whatever needs you, and keeps going.
+                         and PR), reviews every PR — fixing blockers and majors, then
+                         one verification round — and publishes them one at a time.
+                         Reports one line per transition so you can follow along,
+                         parks whatever genuinely needs you, and keeps going.
 ```
 
 Why no agents? Implementation runs in the main chat — `/ps:load` warms it with a
-story's context, `/ps:run` does the work, one task at a time. The only subagent left
-is the reviewer, where a cold start is exactly the point.
+story's context, `/ps:run` does the work, one task at a time. The only subagents left
+are the reviewers, where a cold start is exactly the point.
 
 ## What gets installed
 
@@ -79,10 +85,13 @@ is the reviewer, where a cold start is exactly the point.
 .claude/
   commands/ps/                 story.md  load.md  run.md  review.md  publish.md
                                init.md  pipe.md  prune.md
-  ps-check.sh                  # the mechanical half: open degradation windows,
-                               # learnings size, debt entries to sweep, stale
-                               # worktrees/branches. Run by /ps:load, /ps:publish and
-                               # /ps:prune — never read into context
+  ps-check.sh                  # the mechanical half: task state from PR state,
+                               # story.md ticking, worktree warming, open degradation
+                               # windows, learnings size, debt to sweep, stale refs.
+                               # Run by /ps:load, /ps:run, /ps:publish and /ps:prune —
+                               # never read into context, and at most ONE network call
+  ps-review.md ps-verify.md    # the review prompts, read by the review subagents
+                               # themselves — so the main chat never retypes them
   pocket-squad.manifest.json   # hashes for non-destructive updates
 .squad/
   learnings.md                 # durable one-line rules for code not yet written,
@@ -112,6 +121,39 @@ upgraded in place; files you customized are left alone and the new version lands
 to them as `*.new` for manual merge. `.squad/` knowledge files are always kept as-is
 (learnings, templates and stories diverge by design). `install` never overwrites
 anything that exists.
+
+## Where the time goes
+
+v1.0 exists because a single task was taking close to two hours, and only ~20 minutes
+of that was writing code. What the package could fix, it fixed: dependencies are
+shared with the worktree instead of reinstalled, the test suite runs twice instead of
+four times, `ps-check.sh` makes one network call instead of one per branch, the review
+prompts live in files instead of being retyped into every dispatch, and learnings are
+distilled once per story instead of once per PR. Each command also ships an
+`allowed-tools` list, so the git/gh/test calls the workflow is made of stop asking for
+permission mid-run.
+
+Two knobs are yours, not the package's, and they multiply everything above:
+
+- **`effortLevel`** in `~/.claude/settings.json` — `high` means maximum reasoning on
+  every turn, including the trivial ones. `medium` is usually the right default, with
+  `/ps:story` and `/ps:review` being the steps that actually reward `high`.
+- **The model.** Opus is the slowest per turn. A task is ~100 turns.
+
+## Migrating from v0.5
+
+Run `npx pocket-squad update`. It upgrades the seven commands you never edited, adds
+`.claude/ps-review.md` and `.claude/ps-verify.md`, and rewrites `ps-check.sh` with four
+new modes (`status`, `sync`, `warm`, plus the single-call PR cache). Customized command
+files land next to yours as `*.new` — worth merging, since v1.0's speed lives in them.
+
+One behaviour changes for stories already in flight: `/ps:run` no longer ticks a task's
+box inside its own PR, and `/ps:publish` ticks it on the base branch after merging.
+A PR opened under v0.5 that already carries its tick still merges fine — `sync` is
+idempotent and skips a box that is already `[x]`.
+
+Existing task files have no `## Context` section. They keep working — `/ps:run` looks
+it up itself, once, and says so in the PR body. New stories get it automatically.
 
 ## Migrating from v0.4
 

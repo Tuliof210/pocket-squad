@@ -1,20 +1,22 @@
 {
-  "version": "0.5.0",
-  "installedAt": "2026-07-28T05:02:00.574Z",
+  "version": "1.0.0",
+  "installedAt": "2026-07-28T15:01:50.808Z",
   "files": {
-    "claude/commands/ps/init.md": "0a1783f684dd0ebc7afa6db6b3a71297f452e275cccade97cebe5b69733c5e2f",
-    "claude/commands/ps/load.md": "daf263e3a601be4e3bcacc3688fb0fa6016350e013c4b76a30345dc58b97f9df",
-    "claude/commands/ps/pipe.md": "0c8aba948654817424fffd880102572e4bd9cd05b977b7dff1ec5a3e4e1e30cc",
-    "claude/commands/ps/prune.md": "0314fc898886de66a677570a69deee77cf6c2d2888bccd66e46496fa7a6d1c3b",
-    "claude/commands/ps/publish.md": "c50af1bfed898052b4ab12559ff23074620a34f7786994f36b3ff3a2e35a8edc",
-    "claude/commands/ps/review.md": "2d2b656f6a0b517ec0a305cec55a779bea0d2f58ba3da6a28f6429f01580e79b",
-    "claude/commands/ps/run.md": "e4482811d9b901343cb0406f3a8259fa826bee67d11cc886926fc75c11f8a8c4",
-    "claude/commands/ps/story.md": "8ebe9b405e9e649479742fa99b86de8dc466a114e2a9b1b289548460e05913b2",
-    "claude/ps-check.sh": "6caf56f310faa12134e9669905b97572c74fa7e6eab9f8e7e0f2de26e28eaea8",
+    "claude/commands/ps/init.md": "157f2b87125b28b36537aa99a406938a7d4f057890b3988a192cd657abc166f8",
+    "claude/commands/ps/load.md": "3133758f1f164a9dd3c9b349e4697a59aeffaf9f8e8a023f362123d00849cf9d",
+    "claude/commands/ps/pipe.md": "f3b0781c42d0c971f4697a9d5bc123cefdc5f83eb17a34c467cd3868ce24d96a",
+    "claude/commands/ps/prune.md": "39902eb5200f214cf0b32700b608c300a67b3b00035955ec2be9357c4d56a05e",
+    "claude/commands/ps/publish.md": "5ea4d6bcc012d37523b5aec91cb4f28c2a0330239ac7b875b339119e101348fd",
+    "claude/commands/ps/review.md": "9e1384edcf87724e05f4dbc2191098e253031a97fa8f645a9d833f0cc5520fac",
+    "claude/commands/ps/run.md": "736ae52603ad2b87f5a0b764d7a7cd6f1bd4c76690e6a3dab964d7e17ed3e77e",
+    "claude/commands/ps/story.md": "c78b57e1208c033c5dc78eaea663d80f6f3dda55df40880ed47e8ca997189054",
+    "claude/ps-check.sh": "fddc9e7a412892bd08c8dd0f752378ac88dcb91b0425eeff29a26a557677d2f6",
+    "claude/ps-review.md": "6fae414cd6862faa14fba92cc3ccc6fc86b2b216753f897437478fa24c5afd99",
+    "claude/ps-verify.md": "caaf482dfa8fe628cde0f70dbdc6c4bb36a459d46bda89ff20b081538dd58299",
     "squad/debt.md": "3335b4c2f7a7f9488eca20eee37adb3b382c1c3d272011c3d2ac0042b3fae628",
     "squad/learnings.md": "9dd0a998cd393424c4ede4b2e8740e94fb712f7c1f223744cbcdcf25b81bc1a1",
     "squad/templates/pr.md": "97fc343d21871c88f0e1be5dbda0a1924a258a7635e858168a0a17b34b1e1aad",
     "squad/templates/story.md": "67d3f0f7cddf8c08c3052eed5ea5dac15713f15882db7f6a93a730d21115ac91",
-    "squad/templates/task.md": "bd476110d2b3123410b2fd8e0c72604ec99264387a0326475a8d9cdb31326fd0"
+    "squad/templates/task.md": "cede114e1e8757c732cc0a640d60144de329eec7943b9db957f6a0ddf99c5b0c"
   }
 }

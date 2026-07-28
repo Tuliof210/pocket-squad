@@ -139,6 +139,91 @@ supervisão. Decisões:
    diferentes no mesmo `story.md` (conflito de squash-merge → manter os dois), e a
    task que abre `window:` publica imediatamente antes da que fecha.
 
+## v1.0.0 (2026-07-28) — O ciclo deixa de custar duas horas
+
+Sintoma medido pelo dono: **uma task levava perto de 2 horas**, das quais só 10–30 min
+eram escrever código. A auditoria achou 15 gargalos; nenhum era "o modelo é lento".
+Eles se agrupam em três causas e a v1.0 ataca as três.
+
+**Causa A — o mesmo trabalho feito N vezes.**
+
+1. **A suíte rodava 4x** (executor, reviewer, fix round, verificação). A v0.1 já tinha
+   corrigido isso para 2x (decisão 4 abaixo) e a v0.4 perdeu a regra. Agora: executor
+   roda uma vez no fim, reviewer roda uma vez do frio, e **é só**. O fix round roda os
+   checks que os findings nomeiam; a verificação re-roda só esses. Nenhum dos dois roda
+   a suíte inteira.
+2. **Worktree fria pagava um install completo por task** — e nenhum comando mencionava
+   isso, o que é por que passou despercebido por 4 versões. Novo modo
+   `ps-check.sh warm <path>`: linka `node_modules`/`.venv`/`vendor`/... do checkout
+   principal para a worktree recém-criada. Os lockfiles são idênticos por construção
+   (a worktree acabou de ser cortada dali), então compartilhar é seguro. Guard impresso
+   na saída: task que mexe em lockfile quebra o link e instala de verdade.
+3. **A investigação do plan-time era jogada fora e refeita 3x.** A v0.4 mandou o task
+   file gravar só o *endereço* do achado — o que obrigava executor e reviewer a reabrir
+   o repo. Volta a decisão 16 da v0.1: `## Context` obrigatório no task file, com as
+   linhas do exemplar citadas, a assinatura do símbolo verbatim e os comandos
+   confirmados. Teto do task sobe de 60 para **120 linhas**, deliberadamente: 60 linhas
+   lidas uma vez custam menos que dois agentes re-derivando-as do repositório.
+10. **Learnings destilados por PR** viravam uma mini-análise de 5–10 min a cada merge.
+    Agora rodam **uma vez por story**, no publish que zera o `remaining` — número que o
+    `ps-check.sh sync` devolve de graça.
+11. **Round 1 era um subagente serial com 6 lentes.** Vira **dois em paralelo**: `run`
+    executa (DoD, correção, segurança), `read` compara com o exemplar (ausências,
+    duplicação, scope creep, over-engineering) e **não roda nada**. Terreno disjunto,
+    ninguém espera ninguém, e a suíte roda exatamente uma vez na rodada.
+12. **Mutation testing obrigatório na verificação** virava editar/rodar/reverter por
+    finding. Fica só onde é informativo: um finding de "teste passa vazio".
+
+**Causa B — trabalho mecânico feito por prosa, ou feito com rede.**
+
+4. **`ps-check.sh` fazia uma chamada de rede por branch** (duas quando havia ref
+   remota), sem cache, em toda invocação — e `/ps:pipe` re-roda `/ps:load` por onda.
+   Medido: 0,61s por chamada. Agora é **uma chamada só**, para dentro de `$PRS`, e todo
+   lookup depois é `awk` local. O `git for-each-ref` que rodava dentro do loop de tasks
+   saiu para fora, e o loop de janelas virou um `grep -l` único.
+13. **O checkbox em `story.md` era marcado dentro da PR da própria task**, o que fazia
+    toda PR irmã conflitar naquele arquivo. Agora o estado da task é **derivado do
+    estado da PR** (`ps-check.sh status <slug>`), e `sync` marca os boxes na branch base
+    depois do merge. Idempotente, sem conflito, e o checkbox continua valendo como
+    fallback quando não há `gh`/`glab` na máquina.
+15. **`review.md` tinha 132 linhas e o prompt do subagente era um blockquote de ~60**
+    que o chat principal regerava como *output* a cada dispatch, duas vezes por PR. Os
+    prompts saíram para `.claude/ps-review.md` e `.claude/ps-verify.md`, que os
+    subagentes leem sozinhos. O dispatch virou uma frase; `review.md` caiu para ~80
+    linhas sem perder nenhuma regra.
+
+**Causa C — o loop parava esperando gente.**
+
+7. **Nenhum `allowed-tools`**: cada `git`, `gh`, `npm test` podia pedir aprovação.
+   Todo comando agora declara o seu. É o escopo certo — por comando, dentro do pacote,
+   sem tocar em `settings.json` do usuário.
+8. **Seis pontos de bloqueio explícitos.** Viram *park*: reporta uma linha, larga
+   aquela task, segue com o resto. Sobrou um bloqueio de verdade, e é o certo: janela
+   de degradação aberta no `/ps:publish`, porque mergear ali embarca uma regressão.
+   O review passa a rotear por severidade sozinho em vez de "triar junto com o dono".
+5. **Hook do impeccable apontando para arquivo inexistente** (`${CLAUDE_PROJECT_DIR}`
+   em vez do global), spawnando `node` a cada Edit/Write. Repontado — a skill existe em
+   `~/.claude/skills/`, o caminho é que estava errado.
+
+**Causa D — o que não é do pacote.**
+
+6. `effortLevel: high` + Opus são multiplicadores em cima de ~100 turnos e vivem no
+   `~/.claude/settings.json` do dono. Documentados no README, não alterados: preferência
+   de quem usa, não decisão de pacote.
+9. **Granularidade 1 task = 1 PR fica.** O custo dela era o overhead fixo, e o overhead
+   foi embora — resolver por composição em vez de inventar um modo de bundle. O lever
+   real foi para onde pertence: `/ps:story` ganhou um terceiro critério de decomposição
+   ("worth a PR"), então uma fatia de poucas linhas é dobrada na vizinha **no plan
+   time**, e `/ps:run` continua se recusando a agrupar.
+14. **Publish continua estritamente serial** (rebase + sweep se corrompem em paralelo),
+    mas agora é barato: merge + `sync` + `sweep` de uma chamada, e a passada de
+    learnings dispara só no último. Resolvido por composição, sem máquina nova.
+
+Nada disso adicionou dependência (o pacote segue zero-dep) nem arquivo executável novo
+— `ps-check.sh` continua sendo o único, com quatro modos em vez de dois. O smoke test
+ganhou cobertura para `status`, `sync` e `warm`, incluindo a asserção de que remover
+uma worktree aquecida **não** segue o link e apaga as dependências compartilhadas.
+
 > Tudo abaixo desta linha descreve a v0.1 — mantido como registro histórico.
 > As decisões 1–16 e a estrutura listada NÃO refletem mais o estado atual.
 

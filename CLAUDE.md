@@ -5,9 +5,10 @@
 - ZERO runtime and ZERO dev dependencies by design — Node built-ins only (`fs`,
   `path`, `crypto`). Adding a dependency is a design decision, never casual.
 - Distribution: an `npx`-installable CLI. `bin.pocket-squad -> bin/pocket-squad.js`.
-- Shipped content: markdown under `templates/` (6 `/ps:*` commands + the
-  `.squad/learnings.md` and `.squad/templates/{story,task,pr}.md` scaffolds)
-  copied into a target project.
+- Shipped content, copied into a target project: markdown under `templates/` — 8
+  `/ps:*` commands, the two review prompts (`.claude/ps-{review,verify}.md`), the
+  `.squad/{learnings,debt}.md` and `.squad/templates/{story,task,pr}.md` scaffolds —
+  plus `templates/claude/ps-check.sh`, the one executable in the package.
 
 ## Commands
 - test: `npm test` — zero-dep smoke test (`node test/smoke.js`), also runs on
@@ -34,6 +35,15 @@ managed-but-no-longer-shipped files when untouched; `status` diffs hashes.
   mirror the hash-guarded logic in `install()`/`update()`.
 - Command templates live in `templates/claude/commands/ps/` so they surface as
   namespaced `/ps:*` slash commands. Exemplar: `templates/claude/commands/ps/story.md`.
+  Every command declares `allowed-tools` in its frontmatter — a missing one means a
+  permission prompt mid-run, which is a stall, not a safety feature.
+- Anything mechanical and repeated belongs in `ps-check.sh`, never in a command's
+  prose: a markdown command is reliable at deriving, judging and writing, and not at
+  running the same checklist for the fiftieth time. The script costs at most ONE
+  network call per invocation — keep it that way (`$PRS` is the cache).
+- A subagent prompt lives in its own file (`templates/claude/ps-review.md`) and the
+  command points at it. Never inline one as a blockquote the main chat has to retype
+  into a dispatch — that regenerates the whole prompt as output tokens every time.
 - The repo dogfoods itself: `templates/claude/*` ≡ `.claude/*` and
   `templates/squad/learnings.md` seeds `.squad/learnings.md` (which then diverges —
   it holds real learnings). After editing templates, run
