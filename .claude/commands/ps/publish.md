@@ -28,7 +28,7 @@ verbatim; a non-zero count is a fact the owner needs, not something to smooth ov
 ## Learnings
 
 Sources, best first: the review threads on the PR, the commits that answered them,
-then the diff. Route every candidate — only the second row appends to the file:
+then the diff. Route every candidate — it lands in exactly one of these:
 
 - A finding the review tagged `REPEAT` → that rule failed as prose: it was in
   `.squad/learnings.md`, loaded before implementing, and violated anyway. Delete the
@@ -36,6 +36,10 @@ then the diff. Route every candidate — only the second row appends to the file
   a test, or a task file. Never re-word it, never re-date it, never mark it extended.
   Nothing automatable exists? Then say exactly that in the report and leave the line:
   the owner is the one who decides to keep paying for a rule on its second life.
+- A finding the owner declined, or a shortcut the PR's Decisions section says was
+  taken on purpose → `.squad/debt.md`, naming file:line and what would earn it a fix.
+  Nothing else records a decision not to fix: unwritten, the next review pays full
+  price to find it and the owner pays again to decline it.
 - Non-derivable fact about this repo/tool that no tool would catch → `.squad/learnings.md`
 - A linter/type-checker/test could catch it → change that config now, or file a task
 - Missing shared code → a task, not a rule

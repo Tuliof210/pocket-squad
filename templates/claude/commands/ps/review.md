@@ -40,8 +40,11 @@ whole mechanism.
 > - **Anything else** — full.
 >
 > Before the diff, load the repo's norms — `CLAUDE.md`, `.squad/ARCHITECTURE.md`
-> (conventions, plus the exemplar file paths it names) and `.squad/learnings.md`.
-> You review against those, not against generic good practice. Verify:
+> (conventions, plus the exemplar file paths it names), `.squad/learnings.md` and
+> `.squad/debt.md`. You review against those, not against generic good practice.
+> A line in `debt.md` is known and already declined: do not raise it again. Do raise
+> it when this diff made it worse or copied it to a site it had not reached — say
+> which of the two, and treat the new site as a new finding, not as covered. Verify:
 >
 > - Every DoD item — run the executable checks yourself, never trust the PR's claims,
 >   and count a test that passes vacuously as a missing test.

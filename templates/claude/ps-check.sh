@@ -97,6 +97,29 @@ else
   echo "  --  no .squad/learnings.md yet"
 fi
 
+# ------------------------------------------------------------------------ debt
+# Debt has no cap — it grows honestly. It stays short by being swept: an entry whose
+# path is gone died with the code, and one with no `until` never said what would earn
+# it a fix, which makes it a wish.
+echo "DEBT"
+if [ -f .squad/debt.md ]; then
+  n=0
+  bad=0
+  while IFS= read -r line; do
+    case $line in '- ['*) ;; *) continue ;; esac
+    n=$((n + 1))
+    p=$(printf '%s' "$line" | sed 's/^- \[//; s/[]:].*//')
+    why=
+    [ -e "$p" ] || why="path is gone — delete the entry"
+    case $line in *' until '*) ;; *) why="${why:+$why, and }no 'until' — say what earns it a fix" ;; esac
+    [ -z "$why" ] || { printf '  !   %s — %s\n' "$p" "$why"; bad=$((bad + 1)); }
+  done < .squad/debt.md
+  printf '  %s  %s entries, %s to sweep\n' "$([ "$bad" -eq 0 ] && echo ok || echo '! ')" "$n" "$bad"
+  LEFT=$((LEFT + bad))
+else
+  echo "  --  no .squad/debt.md yet"
+fi
+
 # ----------------------------------------------------------------- stale refs
 # Worktrees of merged/closed PRs, and the branches they leave behind. Branches are
 # only deleted on MERGED: a CLOSED PR may be abandoned work worth keeping.
