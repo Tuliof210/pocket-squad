@@ -56,6 +56,22 @@ whole mechanism.
 > - Scope creep vs the PR description; over-engineering (reinvented stdlib,
 >   speculative abstraction, unneeded dependency).
 >
+> How far to go — reading is the default, running is not optional where it triggers.
+> The diff settles broken norms, duplication, absences and scope creep. It cannot
+> settle what a value becomes at runtime, whether an algorithm terminates on the real
+> input, or whether the screen renders. So run it instead of reading it wherever the
+> diff:
+>
+> - adds or changes a branch, a loop or recursion → trace it against real input, the
+>   ugliest the repo has, never a sample you invented;
+> - touches anything the DoD names as an observable outcome → produce that outcome;
+> - parses, or takes data from outside the process → feed it a real file.
+>
+> None of those fired? Then the diff plus the exemplar is the whole review. Either
+> way the verdict says what you ran and what you deliberately did not run — an
+> undeclared skip is the single thing that makes a fast round untrustworthy, and it
+> is what separates this from guessing quickly.
+>
 > Verdict — nothing vague ("improve quality" is banned). Open it with the round's
 > scope and the head SHA you reviewed (`gh pr view <n> --json headRefOid`): the next
 > round diffs from that SHA, so an unnamed one costs it a full re-read.

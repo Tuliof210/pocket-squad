@@ -43,9 +43,18 @@ the PR and lands on the base branch when the PR merges.
 ## 4. PR
 
 Push and open the PR against the recorded branch (`gh pr create --base <branch>`, or
-the equivalent). Body follows `.squad/templates/pr.md` — self-contained, readable
-without this chat. If the task declares a `window:`, copy that line into the body:
-whoever publishes it has to see it.
+the equivalent). The title is exactly this and nothing else:
+
+    <story-slug> 3/5 — <task title>
+
+`3` is the task filename's `NN` stem, `5` is how many tasks `story.md` lists, and the
+title is that task file's heading. A squash-merge makes this line the base branch's
+commit subject, so where the repo has a commit convention it goes in front —
+`feat: export-csv 3/5 — recursive column parser`.
+
+Body follows `.squad/templates/pr.md` — self-contained, readable without this chat.
+If the task declares a `window:`, copy that line into the body: whoever publishes it
+has to see it.
 
 ## 5. Report
 

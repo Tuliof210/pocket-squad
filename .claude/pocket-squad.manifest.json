@@ -1,13 +1,13 @@
 {
   "version": "0.5.0",
-  "installedAt": "2026-07-27T20:23:09.461Z",
+  "installedAt": "2026-07-27T23:44:52.174Z",
   "files": {
     "claude/commands/ps/init.md": "0a1783f684dd0ebc7afa6db6b3a71297f452e275cccade97cebe5b69733c5e2f",
     "claude/commands/ps/load.md": "daf263e3a601be4e3bcacc3688fb0fa6016350e013c4b76a30345dc58b97f9df",
     "claude/commands/ps/pipe.md": "617d5b324853194e2c4c26be5016fe3a4c2f8ed170f10b6fa7ff48d57f297fcd",
     "claude/commands/ps/publish.md": "794332e2cf478726d135cf415ac0721d6ae9e20b4c459cc888f1aea439df9d73",
-    "claude/commands/ps/review.md": "ad5bbbc5a4eaa65fe09b9fc669e52fe1bc7313ec442ac29090300a28089df5c3",
-    "claude/commands/ps/run.md": "9c0915568f4e30cbc74edf37d8d7633377d73729c0243aa50dcb8fe5ee559fd9",
+    "claude/commands/ps/review.md": "ffd453ebfbc15242648cf46bfc59f606c2547c2ac46b3619b98fd71a780f11d3",
+    "claude/commands/ps/run.md": "e4482811d9b901343cb0406f3a8259fa826bee67d11cc886926fc75c11f8a8c4",
     "claude/commands/ps/story.md": "8ebe9b405e9e649479742fa99b86de8dc466a114e2a9b1b289548460e05913b2",
     "claude/ps-check.sh": "43f39139b88712a4facb30c344ae55e63b17b3cd535030c789dc48bdb292f1b2",
     "squad/learnings.md": "9dd0a998cd393424c4ede4b2e8740e94fb712f7c1f223744cbcdcf25b81bc1a1",
