@@ -1,10 +1,11 @@
 {
   "version": "0.5.0",
-  "installedAt": "2026-07-28T00:34:06.018Z",
+  "installedAt": "2026-07-28T00:58:22.791Z",
   "files": {
     "claude/commands/ps/init.md": "0a1783f684dd0ebc7afa6db6b3a71297f452e275cccade97cebe5b69733c5e2f",
     "claude/commands/ps/load.md": "daf263e3a601be4e3bcacc3688fb0fa6016350e013c4b76a30345dc58b97f9df",
     "claude/commands/ps/pipe.md": "617d5b324853194e2c4c26be5016fe3a4c2f8ed170f10b6fa7ff48d57f297fcd",
+    "claude/commands/ps/prune.md": "0314fc898886de66a677570a69deee77cf6c2d2888bccd66e46496fa7a6d1c3b",
     "claude/commands/ps/publish.md": "64bbb58397b4571d11e4cb48ae0424dae7825f24afb3e0d3a6ff36970a5ae59b",
     "claude/commands/ps/review.md": "ae9061274f62ee8f89a4a827aa1cb7248ffa9a347f708b8c8c3e758ac2f383db",
     "claude/commands/ps/run.md": "e4482811d9b901343cb0406f3a8259fa826bee67d11cc886926fc75c11f8a8c4",

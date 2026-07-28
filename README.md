@@ -1,6 +1,6 @@
 # Pocket Squad
 
-A lean Claude Code workflow, in your pocket. One `npx` installs seven slash commands
+A lean Claude Code workflow, in your pocket. One `npx` installs eight slash commands
 that take an idea from refinement to a merged PR — no agents, no cold starts.
 
 ```bash
@@ -51,7 +51,15 @@ npx pocket-squad status     # managed vs customized files
                          reports what it couldn't remove. Blocks the merge when the
                          task declared a degradation window and the task that closes
                          it has no PR yet. Then distills learnings — routing each
-                         candidate, and retiring one old rule per merge.
+                         candidate to .squad/learnings.md, .squad/debt.md, a config
+                         change, a task or nowhere, and retiring one rule per merge.
+
+/ps:prune [file]         the deeper pass over .squad/learnings.md and .squad/debt.md
+                         that a per-merge retirement doesn't reach: drops what is
+                         duplicated, dead or superseded by a check that now exists,
+                         and rewrites what grew verbose. Every cut carries its
+                         evidence — the empty grep, the check proven to bite — and
+                         nothing is written until you approve the list.
 
 /ps:pipe <story-slug>    the four above, unattended: loads the story, runs each wave
                          of tasks in parallel (one subagent per task, its own worktree
@@ -70,14 +78,19 @@ is the reviewer, where a cold start is exactly the point.
 ```
 .claude/
   commands/ps/                 story.md  load.md  run.md  review.md  publish.md
-                               init.md  pipe.md
+                               init.md  pipe.md  prune.md
   ps-check.sh                  # the mechanical half: open degradation windows,
-                               # learnings size, stale worktrees/branches. Run by
-                               # /ps:load and /ps:publish — never read into context
+                               # learnings size, debt entries to sweep, stale
+                               # worktrees/branches. Run by /ps:load, /ps:publish and
+                               # /ps:prune — never read into context
   pocket-squad.manifest.json   # hashes for non-destructive updates
 .squad/
-  learnings.md                 # durable one-line rules, capped at 6 KB — written by
-                               # /ps:publish, read by /ps:story, /ps:run, /ps:review
+  learnings.md                 # durable one-line rules for code not yet written,
+                               # capped at 6 KB — written by /ps:publish, read by
+                               # /ps:story, /ps:run, /ps:review
+  debt.md                      # knowingly-wrong code nobody is fixing now: a declined
+                               # finding or a deliberate shortcut, each with file:line
+                               # and what would earn it a fix. No cap — swept instead
   templates/
     story.md  task.md  pr.md   # blank shapes /ps:story and /ps:run fill in
 ```
