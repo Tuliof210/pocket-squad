@@ -23,10 +23,20 @@ try {
   const MANIFEST = path.join(dir, ".claude", "pocket-squad.manifest.json");
   assert.ok(fs.existsSync(MANIFEST), "install should create .claude/pocket-squad.manifest.json");
 
-  for (const cmd of ["story", "review", "publish", "init", "load", "run", "pipe"]) {
+  for (const cmd of ["story", "review", "publish", "init", "load", "run", "pipe", "prune"]) {
     assert.ok(
       fs.existsSync(path.join(dir, ".claude", "commands", "ps", `${cmd}.md`)),
       `install should create the namespaced /ps:${cmd} command`
+    );
+  }
+
+  // The review prompts live outside the command so the main chat never retypes them
+  // into a dispatch. /ps:review points at these paths — missing, the dispatch is a
+  // subagent told to read a file that isn't there.
+  for (const prompt of ["ps-review.md", "ps-verify.md"]) {
+    assert.ok(
+      fs.existsSync(path.join(dir, ".claude", prompt)),
+      `install should create .claude/${prompt}`
     );
   }
 
@@ -85,7 +95,81 @@ try {
     "update must not write .new for knowledge files (.squad/)"
   );
 
+  psCheckModes();
   console.log("smoke test passed");
 } finally {
   fs.rmSync(dir, { recursive: true, force: true });
+}
+
+/**
+ * The ps-check.sh modes the commands hand their mechanical work to. `sh -n` above
+ * only proves it parses; these prove the three modes with real logic in them do what
+ * /ps:load, /ps:run and /ps:publish assume. A mode that silently does nothing looks
+ * exactly like a mode that worked.
+ */
+function psCheckModes() {
+  const repo = fs.mkdtempSync(path.join(os.tmpdir(), "pocket-squad-repo-"));
+  const wt = path.join(os.tmpdir(), `${path.basename(repo)}--ps-wt`);
+  const git = (...args) => execFileSync("git", args, { cwd: repo, stdio: "pipe" });
+  try {
+    git("init", "-q", "-b", "main");
+    git("config", "user.email", "smoke@example.com");
+    git("config", "user.name", "smoke");
+    execFileSync("node", [CLI, "install"], { cwd: repo, stdio: "pipe" });
+    fs.writeFileSync(path.join(repo, "seed.txt"), "seed\n");
+    git("add", "-A");
+    git("commit", "-qm", "seed");
+
+    const ps = path.join(repo, ".claude", "ps-check.sh");
+    const story = path.join(repo, ".squad", "stories", "2026-01-01-demo");
+    fs.mkdirSync(path.join(story, "tasks"), { recursive: true });
+    fs.writeFileSync(
+      path.join(story, "story.md"),
+      "# Demo\n\n## Tasks\n- [x] tasks/01-ticked.md — already merged\n- [ ] tasks/02-pending.md — not yet\n"
+    );
+    fs.writeFileSync(path.join(story, "tasks", "01-ticked.md"), "# Ticked\n");
+    fs.writeFileSync(path.join(story, "tasks", "02-pending.md"), "# Pending\n");
+
+    // status — /ps:load reads waves off this, /ps:publish gates learnings on
+    // `remaining`. No PR exists for either task, so the ticked box is the fallback.
+    const status = execFileSync("sh", [ps, "status", "demo"], { cwd: repo }).toString();
+    assert.match(status, /done\s+tasks\/01-ticked\.md/, "status must read a ticked box as done");
+    assert.match(status, /todo\s+tasks\/02-pending\.md/, "status must read an unticked box as todo");
+    assert.match(status, /remaining: 1/, "status must report what is left, or publish cannot gate on it");
+
+    // sync — ticks only what a provider confirmed MERGED. Nothing is merged here, so
+    // it must change nothing: a sync that ticks optimistically would mark a story done
+    // while its PRs are still open.
+    const storyMd = path.join(story, "story.md");
+    const before = fs.readFileSync(storyMd, "utf8");
+    execFileSync("sh", [ps, "sync", "demo"], { cwd: repo });
+    assert.strictEqual(
+      fs.readFileSync(storyMd, "utf8"),
+      before,
+      "sync must not tick a task with no merged PR"
+    );
+    assert.ok(!fs.existsSync(`${storyMd}.ps-tmp`), "sync must not leave its temp file behind");
+
+    // warm — a fresh worktree with no deps is what made every task pay a full install.
+    fs.mkdirSync(path.join(repo, "node_modules", "left-pad"), { recursive: true });
+    fs.writeFileSync(path.join(repo, "node_modules", "left-pad", "index.js"), "module.exports=1\n");
+    git("worktree", "add", "--quiet", wt, "-b", "ps/demo/pending");
+    const warm = execFileSync("sh", [ps, "warm", wt], { cwd: repo }).toString();
+    assert.match(warm, /node_modules ->/, "warm must link node_modules into the worktree");
+    assert.ok(
+      fs.existsSync(path.join(wt, "node_modules", "left-pad", "index.js")),
+      "the linked node_modules must resolve from inside the worktree"
+    );
+
+    // The link points at the main checkout. Tearing the worktree down must unlink it,
+    // never follow it — otherwise every sweep deletes the shared dependencies.
+    git("worktree", "remove", "--force", wt);
+    assert.ok(
+      fs.existsSync(path.join(repo, "node_modules", "left-pad", "index.js")),
+      "removing a warmed worktree must not delete the shared dependencies it linked"
+    );
+  } finally {
+    fs.rmSync(wt, { recursive: true, force: true });
+    fs.rmSync(repo, { recursive: true, force: true });
+  }
 }

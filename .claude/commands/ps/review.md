@@ -1,82 +1,39 @@
 ---
-description: Unbiased code review of a story PR by a fresh-context subagent. Usage - /ps:review [pr-number]
+description: Unbiased code review of a story PR by fresh-context subagents. Usage - /ps:review [pr-number]
+allowed-tools: Task, Agent, Read, Grep, Glob, Bash(gh:*), Bash(glab:*), Bash(git:*)
 ---
 
-Target: "$ARGUMENTS" is the PR number; if empty, the current branch's PR. If there is
-none either, list the open PRs and ask the owner which one.
+Target: "$ARGUMENTS" is the PR number; empty → the current branch's PR. Neither → list
+the open PRs and ask the owner which one.
 
 Two rounds exist and no more — **review**, then, only if a blocker or major had to be
-fixed, **verification**. Round two is not a second review: it asks whether the named
-findings closed and whether the fix stayed where it was told, and nothing else. A third
-round is the owner's call, never this command's.
+fixed, **verification**. A third round is the owner's call, never this command's.
 
 ## Fresh eyes rule
 
-You (the main chat) may have written this code — you do NOT review it. Dispatch ONE
-`general-purpose` subagent whose prompt carries ONLY the PR number, the repo path and
-the instructions below: no summary, no defense of the changes. That omission is the
-whole mechanism. The verification round is a second, equally fresh subagent.
+You (the main chat) may have written this code — you do NOT review it. The prompts
+live in `.claude/ps-review.md` and `.claude/ps-verify.md`, and the subagents read them
+themselves. Your dispatch carries the PR number, the repo path and the lens, and
+nothing else: no summary of the changes, no defense of them. That omission is the
+whole mechanism — and keeping the prompt in a file the subagent opens, instead of a
+blockquote you retype into every dispatch, is what makes it cheap.
 
-## Round 1 — review (subagent prompt, self-contained)
+## Round 1 — two lenses, one message
 
-> Review PR #<n> in <repo path>. Fetch everything yourself: `gh pr view <n>` (the
-> body holds the story and its Definition of Done), `gh pr diff <n>`, and read-only
-> access to the repo's files for context.
->
-> First, one shortcut: is every entry of `gh pr diff <n> --name-status` a rename, with
-> the remaining hunks changing nothing but the paths those renames broke? Then no new
-> behaviour exists to review — run every executable check, grep the repo for surviving
-> references to the old paths (strings and dynamic lookups no toolchain resolves),
-> confirm the new locations match the layout ARCHITECTURE.md describes, and stop there.
-> One added line that is not a path fix and the shortcut is off.
->
-> Otherwise, load the repo's norms first — `CLAUDE.md`, `.squad/ARCHITECTURE.md`
-> (conventions, plus the exemplar file paths it names), `.squad/learnings.md` and
-> `.squad/debt.md`. You review against those, not against generic good practice.
-> A line in `debt.md` is known and already declined: do not raise it again. Do raise
-> it when this diff made it worse or copied it to a site it had not reached — say
-> which of the two, and treat the new site as a new finding, not as covered. Verify:
->
-> - Every DoD item — run the executable checks yourself, never trust the PR's claims,
->   and count a test that passes vacuously as a missing test.
-> - Correctness, broken contracts, regressions in the touched code paths.
-> - Security: injection, authorization on objects, secrets in code, unsafe input.
-> - Absences — what the norms require and this diff omits: the auth / validation /
->   scoping step every sibling call site has, a design-system token replaced by a raw
->   value. A diff shows what was written; open the nearest exemplar named in
->   ARCHITECTURE.md and compare against what wasn't.
-> - Duplication — does this reimplement something the repo already has (grep before
->   assuming), or repeat a block that belongs in shared code? Name the symbol.
-> - Scope creep vs the PR description; over-engineering (reinvented stdlib,
->   speculative abstraction, unneeded dependency).
->
-> How far to go — reading is the default, running is not optional where it triggers.
-> The diff settles broken norms, duplication, absences and scope creep. It cannot
-> settle what a value becomes at runtime, whether an algorithm terminates on the real
-> input, or whether the screen renders. So run it instead of reading it wherever the
-> diff:
->
-> - adds or changes a branch, a loop or recursion → trace it against real input, the
->   ugliest the repo has, never a sample you invented;
-> - touches anything the DoD names as an observable outcome → produce that outcome;
-> - parses, or takes data from outside the process → feed it a real file.
->
-> None of those fired? Then the diff plus the exemplar is the whole review. Either
-> way the verdict says what you ran and what you deliberately did not run — an
-> undeclared skip is the single thing that makes a fast round untrustworthy, and it
-> is what separates this from guessing quickly.
->
-> Verdict — nothing vague ("improve quality" is banned). Open it with the head SHA you
-> reviewed (`gh pr view <n> --json headRefOid`): verification diffs from that SHA.
-> - `APPROVED`, with the evidence you gathered, or
-> - `FINDINGS`, numbered, each with file:line, severity, and what "fixed" concretely
->   means. Severity decides who pays: **blocker/major buys a fix round; minor does
->   not** — it is recorded, declined by default, and `/ps:publish` files it in
->   `debt.md`. Raise minors freely; they cost a line, not a round. When a finding
->   breaks a written norm, quote the norm and where it lives — and when it lives in
->   `.squad/learnings.md`, prefix the finding `REPEAT —`. That rule was already written
->   down and got violated anyway; `/ps:publish` has to do something other than write it
->   again.
+Dispatch **two** `general-purpose` subagents in a single message:
+
+> Review PR #<n> in <repo path>. Read `.claude/ps-review.md` and follow it for the
+> `run` lens.
+
+> Review PR #<n> in <repo path>. Read `.claude/ps-review.md` and follow it for the
+> `read` lens.
+
+`run` executes — DoD, correctness, security. `read` compares — absences, duplication,
+scope creep, over-engineering — and runs nothing. Disjoint ground, neither waits on
+the other, and the suite runs exactly once this round.
+
+Merge the two verdicts: `APPROVED` only when both approve; otherwise the union of
+their findings, renumbered, each keeping its severity and its head SHA.
 
 ## The fix — a contract, not a free hand
 
@@ -89,37 +46,24 @@ Whoever fixes:
   quiet commit riding along on a review fix.
 - **Closes each finding by the means that found it.** Found by running the thing,
   closed by running the thing — not by reading the fix and agreeing with it.
-- **Proves it before pushing**: the repo's standard lint/test/build, plus
-  `git diff <verdict SHA>..HEAD --name-only`. Files in that list and not in the
-  findings mean the contract broke — say so to the owner before pushing, do not let
-  verification find it.
+- **Proves it before pushing**: the checks those findings name, plus
+  `git diff <verdict SHA>..HEAD --name-only`. A file in that list and not in the
+  findings means the contract broke — say so to the owner before pushing, do not let
+  verification find it. The full suite is **not** re-run here; round 1 owns it, and
+  the fix is bounded to files round 1 already read.
 - One commit per finding, naming it: `fix(review): #2 <what>`. Never "review fixes".
+
+Minors are never fixed here. They ride on the posted verdict to `/ps:publish`, which
+files them in `debt.md`.
 
 ## Round 2 — verification (fresh subagent)
 
-> Verification round on PR #<n> in <repo path>. This is not a review. The prior
-> verdict is below; it names the head SHA it reviewed — your diff is `<SHA>..HEAD`.
->
-> <paste the round-1 verdict verbatim>
->
-> Two questions, nothing else:
-> 1. Did each blocker and major close? Re-run the check that found it, the reviewer's
->    method and not the fixer's description. A finding about a missing test closes only
->    if that test fails when you break what it covers — mutate the code and watch.
-> 2. Is every path in `git diff <SHA>..HEAD --name-only` among the files those findings
->    name? Anything outside was reviewed by nobody and cannot be vouched for here.
->
-> Then run the repo's standard lint/test/build. Do not open new lenses on the fix —
-> no duplication pass, no over-engineering pass, no line-count opinions. Those bite on
-> the story's code and round one already had its turn.
->
-> Verdict: `APPROVED`, or `NOT CLOSED` naming which finding is still open and how you
-> know, or `OUT OF BOUNDS` listing the files. The last two go to the owner.
+Only when a blocker or major was fixed. One subagent:
 
-The trade is deliberate: a bug the fix introduces *inside* the finding's own files, in
-a path no existing check covers, ships. That costs less than a second full review on
-every PR, and the bounded diff is what keeps the exposure small. Widen it only when a
-real defect escapes this way — not on suspicion.
+> Verification round on PR #<n> in <repo path>. Read `.claude/ps-verify.md` and follow
+> it. The round-1 verdict:
+>
+> <paste the merged verdict verbatim>
 
 ## After the verdict
 
@@ -127,6 +71,10 @@ real defect escapes this way — not on suspicion.
 (`gh pr review <n> --comment -F -`, `glab mr note <n> -F -`, whichever CLI this
 machine has; none → say so and keep it in chat). It is the only searchable record this
 process leaves, and what `/ps:publish` distills learnings from. The verification
-verdict posts too, so the rounds stay countable. Then relay it to the owner in full and
-triage together. The verdict is advisory; the owner decides — including deciding to fix
-a minor, or to open the third round this command will not open by itself.
+verdict posts too, so the rounds stay countable.
+
+Then report it to the owner and **route by severity yourself** — blocker/major already
+bought its round, minor is already declined and filed. Stop and ask only for what
+severity does not settle: a scope question, or a verdict still not APPROVED after
+round two. Everything else is already decided, and asking about a decided thing is a
+stall, not a gate.

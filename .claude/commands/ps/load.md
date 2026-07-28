@@ -1,24 +1,30 @@
 ---
 description: Load a story's context and plan the order to run its tasks. Usage - /ps:load <story-slug>
+allowed-tools: Read, Grep, Glob, Bash(git:*), Bash(gh:*), Bash(glab:*), Bash(sh .claude/ps-check.sh:*)
 ---
 
-Target: "$ARGUMENTS" is the story slug (the `.squad/stories/<slug>` directory
-name, or enough of it to match one). **Required** — if empty, list the slugs
-under `.squad/stories/` and ask which one; never guess.
+Target: "$ARGUMENTS" is the story slug (the `.squad/stories/<slug>` directory name, or
+enough of it to match one). **Required** — if empty, list the slugs under
+`.squad/stories/` and ask which one; never guess.
 
-## 1. Load
+## 1. Status first
 
-Read `story.md` and every file under `tasks/` in full — this is the context
-the rest of the session works from. No project code edits here.
+    sh .claude/ps-check.sh status <story-slug>
 
-## 2. Status
+One call, one network round trip, and it answers what used to take a read of every
+file: which tasks are `done` (their PR merged), which are `open` (PR in flight, don't
+re-run them) and which are `todo`. Merge state is the source of truth; the checkbox in
+`story.md` is only the fallback when no provider CLI is around to ask.
 
-A task's checkbox in `story.md`'s Tasks list is the source of truth for done — it
-gets checked as part of that task's own PR, so it flips on merge. Then run
-`sh .claude/ps-check.sh`: its `WINDOWS` block names the pending tasks with a
-degradation window standing open against them. If `gh` is available, cross-check
-`gh pr list` for open PRs on `ps/<slug>/*` so you don't recommend re-running
-something already in flight.
+## 2. Load only what is pending
+
+Read `story.md`, then the task files the status call marked `todo` or `open` — those
+are the ones this session can act on. A `done` task's file is history; opening it
+costs context and buys nothing. Read it only if a pending task's Context points into
+it. No project code edits here.
+
+Then run `sh .claude/ps-check.sh` for the `WINDOWS` block: it names the pending tasks
+with a degradation window standing open against them.
 
 ## 3. Plan the order
 
@@ -33,7 +39,7 @@ Order **and** risk, e.g.:
 
 ```
 Story: <title>  (.squad/stories/<slug>/)
-2 of 5 tasks done.
+2 of 5 done, 0 in flight.
 
 Next:
   1. tasks/03-*.md   (no dependency)
@@ -44,4 +50,4 @@ Open windows: 02 left the export screen without its button until 04 merges.
 ```
 
 This command only loads context and plans — it never executes a task. That's
-`/ps:run`.
+`/ps:run`, and these waves are its running order.
