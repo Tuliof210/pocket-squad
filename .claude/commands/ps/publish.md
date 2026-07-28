@@ -36,7 +36,8 @@ then the diff. Route every candidate — it lands in exactly one of these:
   a test, or a task file. Never re-word it, never re-date it, never mark it extended.
   Nothing automatable exists? Then say exactly that in the report and leave the line:
   the owner is the one who decides to keep paying for a rule on its second life.
-- A finding the owner declined, or a shortcut the PR's Decisions section says was
+- A finding the review filed as minor (declined by default), one the owner declined
+  explicitly, or a shortcut the PR's Decisions section says was
   taken on purpose → `.squad/debt.md`, naming file:line and what would earn it a fix.
   Nothing else records a decision not to fix: unwritten, the next review pays full
   price to find it and the owner pays again to decline it.
