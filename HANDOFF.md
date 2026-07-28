@@ -194,9 +194,28 @@ Eles se agrupam em três causas e a v1.0 ataca as três.
 
 **Causa C — o loop parava esperando gente.**
 
-7. **Nenhum `allowed-tools`**: cada `git`, `gh`, `npm test` podia pedir aprovação.
-   Todo comando agora declara o seu. É o escopo certo — por comando, dentro do pacote,
-   sem tocar em `settings.json` do usuário.
+7. **Nenhuma pré-aprovação de sessão**: cada `git`, `gh`, `npm test` podia parar
+   pedindo aprovação. A primeira tentativa usou `allowed-tools` no frontmatter de cada
+   comando e **estava errada**: esse campo concede permissão só durante o turno que
+   invoca o comando, e o grant expira na mensagem seguinte do dono — inútil para um
+   `/ps:pipe` de uma hora. O que dura a sessão inteira é `permissions.allow` num
+   settings file, e o pacote passa a shipar `.claude/settings.json` com regras
+   estreitas (mais um `deny` de force push, hard reset, `gh release`, `npm publish`).
+   Em **auto mode** isso importa duas vezes: regra estreita resolve **antes** do
+   classificador de segurança, que por padrão barra ação irreversível — e
+   `/ps:pipe <slug>` é pedido genérico, não intenção declarada de mergear nada. Regra
+   larga (`Bash(*)`) seria suspensa pelo auto mode, então toda regra shipada é
+   prefixada. `allowed-tools` continua no frontmatter: útil no primeiro turno, só não
+   é o que sustenta o run.
+
+   Duas coisas seguem sem pré-aprovação possível, por design: escrita em protected
+   path (`.git`, `.claude`) e o que o classificador barra em hard block. Por isso
+   `/ps:pipe` passa a tratar **recusa como park** — reporta a chamada exata recusada,
+   deixa a PR aberta e verde, e segue — e a publicar as PRs aprovadas **em lote no fim
+   do run**, não uma a uma no meio: uma recusa depois de tudo rodado e revisado custa
+   um `gh pr merge` ao dono, a mesma recusa no meio abandonaria a fila inteira.
+   `/ps:init` ganhou um passo 5 que confere as duas coisas e propõe (sem impor) a linha
+   de CLAUDE.md que dá contexto ao classificador — o classificador lê CLAUDE.md.
 8. **Seis pontos de bloqueio explícitos.** Viram *park*: reporta uma linha, larga
    aquela task, segue com o resto. Sobrou um bloqueio de verdade, e é o certo: janela
    de degradação aberta no `/ps:publish`, porque mergear ali embarca uma regressão.
