@@ -1,5 +1,6 @@
 ---
 description: Prune .squad/learnings.md and .squad/debt.md - drop what is duplicated, dead or verbose. Usage - /ps:prune [learnings|debt]
+effort: medium
 allowed-tools: Read, Write, Edit, Grep, Glob, Bash(git:*), Bash(sh .claude/ps-check.sh:*)
 ---
 

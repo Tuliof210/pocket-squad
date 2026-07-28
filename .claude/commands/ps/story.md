@@ -1,5 +1,6 @@
 ---
 description: Interview to refine a story + its tasks (no plan mode, no PR) and save them under .squad/stories/. Usage - /ps:story ["your idea"]
+effort: high
 allowed-tools: Task, Agent, Read, Write, Edit, Grep, Glob, Bash(git:*), Bash(wc:*), Bash(ls:*)
 ---
 
@@ -7,7 +8,7 @@ The owner's request, if any: "$ARGUMENTS" — may be empty; start the interview 
 scratch if so.
 
 **This command's Definition of Done is story + task files saved to disk.** Nothing is
-implemented and no PR opens here — that's `/ps:load` + `/ps:run`.
+implemented and no PR opens here — that's `/ps:run`.
 
 This is where the whole loop's context budget is spent. Everything found here gets
 written down once and read by two agents that will otherwise re-derive it: the
@@ -49,21 +50,21 @@ the reviewer to do it a second time — which is the cost this step exists to pa
 
 ## 4. Decompose into tasks
 
-Split into 1..N tasks. Three criteria:
+Split into 1..N tasks, **numbered in the order they will run**. `/ps:run` executes them
+serially in filename order, all onto one story branch, so the number *is* the dependency
+mechanism: if 04 needs 02, it is numbered after it, and nothing else needs recording.
 
-- **Reviewable alone** — small enough to be one PR.
-- **Shippable alone** — merged by itself, with no other task of this story, the product
-  still works. No capability removed now to be restored later, no route to a screen
-  that isn't there yet. If slice A only makes sense once B lands: make them one task,
-  invert the order, or put A behind a flag.
-- **Worth a PR.** Every task pays a fixed toll — worktree, two suite runs, two review
-  lenses, a merge. A slice whose diff would be a handful of lines does not earn that;
-  fold it into the neighbour it belongs to. Granularity is decided here, and nowhere
-  else — `/ps:run` will not bundle for you.
+Two criteria:
 
-A degradation window is not a planning tool. If you ask the owner directly and they
-accept one anyway, it goes in that task's `window:` field — `/ps:publish` gates on it.
-Record, per task, what it depends on (by number) and what it is parallel-safe with.
+- **Reviewable as a step** — small enough that its commit reads as one idea.
+- **Worth its own commit.** A slice whose diff would be a handful of lines gets folded
+  into the neighbour it belongs to. Granularity is decided here and nowhere else;
+  `/ps:run` will not merge tasks for you.
+
+What is **not** a criterion: whether a task ships on its own. Tasks merge into the story
+branch, and only the finished story reaches the target branch, as one squashed commit —
+so an intermediate state that would once have been a regression in main is now invisible
+there. Split where the work splits, not where the product would survive.
 
 ## 5. Write
 
@@ -89,5 +90,5 @@ agents re-deriving them from the repo.
 
 ## 6. Report
 
-Story path, task list, and suggest `/ps:load <slug>`. A scope decision appearing
-mid-refinement goes to the owner — never invent it.
+Story path, task list in run order, and suggest `/ps:run <slug>`. A scope decision
+appearing mid-refinement goes to the owner — never invent it.

@@ -8,9 +8,8 @@ only stops them from being made again, at full price, every round.
 Not learnings. A learning is a rule for code that does not exist yet and points at no
 line. Debt points at a line — that is the whole test: **can you name the file, it is
 debt; can you not, it is a learning.** Not a task either: what is being fixed is a
-task, debt is what was declined. Not a `window:`: a window already has the task that
-closes it and `ps-check.sh` blocks the merge until it lands. Nothing here has a
-closer, which is exactly why each entry has to say what would earn it one.
+task, debt is what was declined. Nothing here has anything scheduled to close it, which
+is exactly why each entry has to say what would earn it one.
 
 No cap — debt grows honestly and capping it would only make the file lie. It is kept
 short another way: `sh .claude/ps-check.sh` flags an entry whose path no longer
