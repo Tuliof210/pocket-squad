@@ -48,19 +48,23 @@ Follow `load.md`. Its waves are the plan for the rest of this run.
 
 ## 2. Each wave — tasks in parallel
 
-One `general-purpose` subagent per pending task of the wave, dispatched in a single
+One **`ps-task`** subagent per pending task of the wave, dispatched in a single
 message, at most 4 in flight. Each prompt carries only the task reference, the story
-slug, the repo path, the base branch and "follow .claude/commands/ps/run.md" — the
-task file is a self-contained contract carrying its own `## Context`, so nothing else
-belongs there. Each returns its PR URL. A subagent that hits a scope decision or fails
+slug, the repo path and the base branch — `ps-task` already knows to follow
+`run.md`, and the task file is a self-contained contract carrying its own `## Context`,
+so nothing else belongs there.
+
+Use `ps-task`, not `general-purpose`. A command's frontmatter does not reach a subagent
+you dispatch — the agent definition is the only place the effort and model of this
+step can be set, and this step is most of what a story generates. Each returns its PR URL. A subagent that hits a scope decision or fails
 its own verification **parks** that task: report the line, drop it, keep the rest
 moving.
 
 ## 3. Each PR — review, fix, verify
 
-Dispatch every PR's round 1 in one message. `review.md` uses two subagents per PR
-(`run` and `read`), so four PRs is eight subagents and they all parallelize — the
-review stage costs one PR's wall-clock, not four. Then work the findings PR by PR:
+Dispatch every PR's round 1 in one message. `review.md` uses two `ps-review` subagents
+per PR (`run` and `read`), so four PRs is eight subagents and they all parallelize —
+the review stage costs one PR's wall-clock, not four. Then work the findings PR by PR:
 
 - blocker or major → fix in that PR's worktree under `review.md`'s fix contract, push,
   then its verification round. Only these two severities buy a round.

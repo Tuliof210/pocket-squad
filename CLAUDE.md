@@ -6,7 +6,8 @@
   `path`, `crypto`). Adding a dependency is a design decision, never casual.
 - Distribution: an `npx`-installable CLI. `bin.pocket-squad -> bin/pocket-squad.js`.
 - Shipped content, copied into a target project: markdown under `templates/` — 8
-  `/ps:*` commands, the two review prompts (`.claude/ps-{review,verify}.md`), the
+  `/ps:*` commands, 3 subagent definitions (`.claude/agents/ps-{task,review,verify}.md`),
+  the two review prompts (`.claude/ps-{review,verify}.md`), `.claude/settings.json`, the
   `.squad/{learnings,debt}.md` and `.squad/templates/{story,task,pr}.md` scaffolds —
   plus `templates/claude/ps-check.sh`, the one executable in the package.
 
@@ -44,6 +45,12 @@ managed-but-no-longer-shipped files when untouched; `status` diffs hashes.
 - A subagent prompt lives in its own file (`templates/claude/ps-review.md`) and the
   command points at it. Never inline one as a blockquote the main chat has to retype
   into a dispatch — that regenerates the whole prompt as output tokens every time.
+- Every step declares its cost. A command sets `effort` in its own frontmatter; a
+  **subagent's** cost can only be set in its `templates/claude/agents/*.md` definition,
+  because a command's frontmatter never reaches an agent it dispatches. Measured, ~36%
+  of a story's output is generated inside subagents (up to 79% under `/ps:pipe`), so a
+  dispatch that names `general-purpose` instead of `ps-task`/`ps-review`/`ps-verify` is
+  a silent cost regression. The smoke test fails on a missing `effort`.
 - The repo dogfoods itself: `templates/claude/*` ≡ `.claude/*` and
   `templates/squad/learnings.md` seeds `.squad/learnings.md` (which then diverges —
   it holds real learnings). After editing templates, run

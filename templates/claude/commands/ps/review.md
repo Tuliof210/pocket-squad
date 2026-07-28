@@ -21,7 +21,10 @@ blockquote you retype into every dispatch, is what makes it cheap.
 
 ## Round 1 — two lenses, one message
 
-Dispatch **two** `general-purpose` subagents in a single message:
+Dispatch **two `ps-review` subagents** in a single message. The agent type is not
+interchangeable with `general-purpose`: `ps-review` pins the effort this step is worth,
+carries no write tools, and boots with its own small system prompt instead of the full
+one.
 
 > Review PR #<n> in <repo path>. Read `.claude/ps-review.md` and follow it for the
 > `run` lens.
@@ -59,7 +62,9 @@ files them in `debt.md`.
 
 ## Round 2 — verification (fresh subagent)
 
-Only when a blocker or major was fixed. One subagent:
+Only when a blocker or major was fixed. One **`ps-verify`** subagent — a cheaper agent
+than round one on purpose, because it re-runs named checks rather than forming
+opinions:
 
 > Verification round on PR #<n> in <repo path>. Read `.claude/ps-verify.md` and follow
 > it. The round-1 verdict:

@@ -231,10 +231,16 @@ Eles se agrupam em três causas e a v1.0 ataca as três.
    `usage` de uma mesma mensagem aparece repetido em cada registro de streaming e o
    total infla ~3x):
 
-   - 119.144 output tokens por sessão, em 151 mensagens (791 tokens cada)
+   - **187.375 output tokens por sessão** — 119k no chat principal, 68k em subagentes
+   - 151 mensagens no principal, 249 espalhadas em ~4,5 subagentes
    - só **31%** disso aparece no transcript — prosa 5%, conteúdo de arquivo/comando 26%
    - os outros **69%** são raciocínio cobrado e gerado que ninguém vê
-   - a ~50 tok/s: **~40 min de geração pura por sessão**, 196 min na pior
+   - a ~50 tok/s: **~62 min de geração pura por sessão**
+
+   A primeira passada dessa medição contou só o chat principal e errou por 36%: os
+   transcripts de subagente ficam em `<sessão>/subagents/`, não no `.jsonl` da sessão.
+   Numa sessão tocada por `/ps:pipe` o subagente chega a **79%** de todo o output —
+   é lá que uma story é gerada, não no chat principal.
 
    É essa a resposta para o paradoxo "demora horas mas o consumo de token não é
    grande": o output *visível* é pequeno, e geração é a parte lenta de um request.
@@ -243,11 +249,28 @@ Eles se agrupam em três causas e a v1.0 ataca as três.
    do que uma sessão gera — cortar prosa de comando não compra quase nada, ao contrário
    do que a auditoria inicial supôs).
 
-   Por isso **cada comando declara seu `effort`** no frontmatter em vez de herdar o da
-   sessão: `high` só em `/ps:story` (o passo onde pensar paga, e é o que torna os
-   outros baratos), `low` em `/ps:load` (ler status e ordenar ondas), `medium` no
-   resto. O smoke test falha se um comando não declarar — sem a linha, marcar um
-   checkbox custa o mesmo raciocínio que decompor uma story.
+   Por isso o `effort` passa a ser declarado por passo em vez de herdado. São **dois
+   mecanismos**, porque o frontmatter de um comando **não alcança** um subagente que
+   ele despacha — o subagente recebe "siga o run.md", e ler um markdown não aplica
+   frontmatter nenhum:
+
+   - **comando** (`.claude/commands/ps/*.md`): `high` só em `/ps:story`, `low` em
+     `/ps:load`, `medium` no resto.
+   - **subagente** (`.claude/agents/ps-{task,review,verify}.md`, novos): é o único
+     lugar onde model e effort desse passo existem. `ps-review` em `high` (é o gate de
+     qualidade, e sem ferramentas de escrita — revisor que conserta o que acha deixa de
+     reportar), `ps-task` em `medium`, `ps-verify` em `low` **e em Sonnet** (re-roda
+     check nomeado e faz diff contra um SHA; não forma opinião).
+
+   `/ps:pipe` e `/ps:review` passam a despachar por nome em vez de `general-purpose` —
+   além do effort, um agente nomeado sobe com o próprio system prompt curto em vez do
+   completo. Isso ressuscita `.claude/agents/`, morto desde a v0.2, mas por outro
+   motivo: não são 14 especialistas quase-clones, são 3 arquivos que existem só para
+   fixar o custo de cada passo.
+
+   O smoke test falha se um comando ou agente não declarar effort, se `ps-review`
+   ganhar ferramenta de escrita, ou se remover um órfão levar junto os arquivos
+   shipados que dividem o diretório com ele.
 9. **Granularidade 1 task = 1 PR fica.** O custo dela era o overhead fixo, e o overhead
    foi embora — resolver por composição em vez de inventar um modo de bundle. O lever
    real foi para onde pertence: `/ps:story` ganhou um terceiro critério de decomposição

@@ -165,38 +165,49 @@ time in the middle.
 
 ### What the wall-clock actually is
 
-Measured across 25 real pocket-squad sessions, deduplicated by message id:
+Measured across 25 real pocket-squad sessions, main chat plus every subagent,
+deduplicated by message id:
 
 | | |
 |---|---|
-| output tokens per session | **119,144** |
-| model messages per session | 151 (791 tokens each) |
+| output tokens per session | **187,375** — 119k main chat, 68k subagents |
+| model messages per session | 151 main, 249 across ~4.5 subagents |
 | of that output, visible in the transcript | **31%** — prose 5%, file and command content 26% |
 | the other 69% | reasoning that is billed and generated but never shown |
-| at ~50 tokens/second | **~40 min of pure generation per session**, 196 min for the worst |
+| at ~50 tokens/second | **~62 min of pure generation per session** |
 
-That is the whole answer, and it explains the thing that looks contradictory: the
-*visible* output is small — 5% of it is prose — so the run looks cheap while taking
+That is the whole answer, and it explains the part that looks contradictory: the
+*visible* output is tiny — 5% of it is prose — so the run looks cheap while taking
 hours. Generation is the slow part of a request, and two thirds of what gets generated
-is thinking you never see.
+is thinking nobody sees.
 
-Turn latency is not the problem (2.2 s median) and neither is context (66k–254k, well
-under the window). Command length is not it either: every `/ps:*` file put together is
-about 2% of what a session generates. Trimming the prompts buys almost nothing.
+Three things measured and ruled out: turn latency (2.2 s median), context size
+(66k–254k, nowhere near the window), and command length — every `/ps:*` file put
+together is about 2% of what a session generates, so trimming prompts buys nothing.
 
-**So each command declares its own `effort`**, instead of inheriting a session-wide
-level that spends decomposition-grade reasoning on ticking a checkbox:
+**So effort is declared per step rather than inherited from the session**, which
+otherwise spends decomposition-grade reasoning on ticking a checkbox. It takes two
+mechanisms, because a command's frontmatter does not reach a subagent it dispatches:
 
-| command | effort | why |
+| where | what | effort |
 |---|---|---|
-| `/ps:story` | `high` | the one step where thinking pays — everything downstream is cheap because this was thorough |
-| `/ps:run` `/ps:review` `/ps:publish` `/ps:init` `/ps:prune` `/ps:pipe` | `medium` | real judgment, inside boundaries something else already drew |
-| `/ps:load` | `low` | read a status line, sort tasks into waves |
+| `.claude/commands/ps/story.md` | the interview, investigation and decomposition | `high` |
+| `.claude/agents/ps-review.md` | both review lenses — the quality gate | `high` |
+| `.claude/agents/ps-task.md` | implementing one task under `/ps:pipe` | `medium` |
+| the other five commands | judgment inside boundaries something else drew | `medium` |
+| `.claude/commands/ps/load.md` | read a status line, sort tasks into waves | `low` |
+| `.claude/agents/ps-verify.md` | re-run named checks, diff against a SHA | `low`, on Sonnet |
 
-Your session's `effortLevel` in `~/.claude/settings.json` still sets the floor for
-anything outside a command, and the model still matters — Opus is the slowest per
-token, and a story is a few hundred messages. Both are yours to set; the per-command
-levels above are the package's.
+**Subagents are where most of a story is generated** — up to 79% of output in a
+`/ps:pipe` run — and the agent definition is the only place their model and effort can
+be set. That is why `/ps:pipe` and `/ps:review` dispatch `ps-task`, `ps-review` and
+`ps-verify` by name instead of `general-purpose`: a named agent also boots with its own
+small system prompt rather than the full one, and `ps-review` ships without write tools,
+since a reviewer that fixes what it finds stops being able to report it.
+
+Everything else was made cheap so that review could stay expensive. Your session's
+`effortLevel` still sets the floor outside these steps, and the model still matters —
+Opus is the slowest per token and a story is a few hundred messages.
 
 ## Migrating from v0.5
 
