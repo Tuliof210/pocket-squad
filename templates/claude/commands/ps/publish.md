@@ -20,7 +20,7 @@ This publishes a **story**, once. Task PRs were merged into the story branch by
 
 ## Merge
 
-    gh pr merge <n> --squash --delete-branch
+    gh pr merge <n> --squash
 
 Squash on purpose: the target branch gets one commit per story. The per-task commits
 lived on the story branch and their record lives in the task PRs — the target branch's
@@ -66,7 +66,7 @@ the diff. Route every candidate — it lands in exactly one of these:
 - Already in ARCHITECTURE.md, or already enforced → nowhere
 
 Then retire one existing rule: has it become code, config, or dead weight? Delete it in
-this same commit — leaving the file is what a rule is *for*, and the git log is its
+this same commit — leaving the file is what a rule is _for_, and the git log is its
 archive. `ps-check.sh` must show learnings under cap; over it, compress or drop the
 weakest, never grow a line in place.
 

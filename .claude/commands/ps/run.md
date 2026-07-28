@@ -54,7 +54,7 @@ Work inside the worktree. For task `NN-<task-slug>.md`:
    serial, so no two branches touch that file at once.
 6. Push, and open a PR **into `ps-story/<story-slug>`**, body per `.squad/templates/pr.md`
    ("Task PR"). Title: `<story-slug> NN/N — <task title>`.
-7. Squash-merge it immediately: `gh pr merge <n> --squash --delete-branch`. **No review
+7. Squash-merge it immediately: `gh pr merge <n> --squash`. **No review
    here** — the review happens once, on the whole story, in section 4.
 8. `git switch ps-story/<story-slug> && git pull` before the next task.
 
