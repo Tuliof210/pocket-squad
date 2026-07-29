@@ -36,6 +36,55 @@ function destFor(rel) {
   return path.join(CWD, ".squad", rel.slice(("squad" + path.sep).length));
 }
 
+const SETTINGS_REL = path.join("claude", "settings.json");
+
+/**
+ * The one file that has to land in EVERY project, pre-existing settings or not: without
+ * its allow rules a long `/ps:run` stalls on a permission prompt halfway through. So it
+ * is merged instead of skipped — our permission lists are unioned into whatever is
+ * already there, every other key the project set is left untouched, and nothing is ever
+ * removed. Returns the hash of the file on disk afterwards, for the manifest.
+ */
+function mergeSettings() {
+  const dst = destFor(SETTINGS_REL);
+  const label = path.relative(CWD, dst);
+  const raw = fs.readFileSync(path.join(TEMPLATES, SETTINGS_REL));
+
+  if (!fs.existsSync(dst)) {
+    fs.mkdirSync(path.dirname(dst), { recursive: true });
+    fs.writeFileSync(dst, raw);
+    console.log(`  + created      ${label}`);
+    return sha(raw);
+  }
+
+  const cur = fs.readFileSync(dst);
+  let settings;
+  try {
+    settings = JSON.parse(cur);
+  } catch {
+    console.log(`  ! unreadable   ${label} (not valid JSON — permissions NOT merged, fix it by hand)`);
+    return sha(cur);
+  }
+
+  const perms = (settings.permissions = settings.permissions || {});
+  let added = 0;
+  for (const [list, rules] of Object.entries(JSON.parse(raw).permissions)) {
+    const have = Array.isArray(perms[list]) ? perms[list] : [];
+    const missing = rules.filter((r) => !have.includes(r));
+    added += missing.length;
+    perms[list] = [...have, ...missing];
+  }
+  if (!added) {
+    console.log(`  · managed      ${label} (permissions already present)`);
+    return sha(cur);
+  }
+
+  const out = Buffer.from(JSON.stringify(settings, null, 2) + "\n");
+  fs.writeFileSync(dst, out);
+  console.log(`  ^ merged       ${label} (${added} permission rule${added === 1 ? "" : "s"} added, yours kept)`);
+  return sha(out);
+}
+
 function loadManifest() {
   try {
     return JSON.parse(fs.readFileSync(MANIFEST_PATH, "utf8"));
@@ -59,6 +108,7 @@ function install() {
   let created = 0, skipped = 0, kept = 0;
 
   for (const rel of rels) {
+    if (rel === SETTINGS_REL) { hashes[rel] = mergeSettings(); continue; }
     const src = path.join(TEMPLATES, rel);
     const dst = destFor(rel);
     const content = fs.readFileSync(src);
@@ -101,6 +151,7 @@ function update() {
   let updated = 0, added = 0, conflicted = 0, unchanged = 0;
 
   for (const rel of rels) {
+    if (rel === SETTINGS_REL) { hashes[rel] = mergeSettings(); continue; }
     const src = path.join(TEMPLATES, rel);
     const dst = destFor(rel);
     const content = fs.readFileSync(src);

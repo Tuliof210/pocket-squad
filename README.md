@@ -105,8 +105,9 @@ that question is gone entirely.
                                ONE network call per invocation
   settings.json                session-wide pre-approval for the git/gh/test calls the
                                workflow is made of, plus a deny list for the
-                               destructive ones. Never overwrites yours — see
-                               "Where the time goes" before adopting it
+                               destructive ones. The one merged file: if you already
+                               have one, our rules are added and yours are kept —
+                               see "Where the time goes" before adopting it
   pocket-squad.manifest.json   hashes for non-destructive updates
 .squad/
   learnings.md                 durable one-line rules for code not yet written, capped
@@ -203,11 +204,18 @@ Two different mechanisms, and only one of them lasts:
   rule like `Bash(*)` would be suspended in auto mode instead, so every rule shipped here
   is prefixed and specific.
 
-`install` never overwrites an existing `.claude/settings.json`; yours is kept and the
-package's lands as `.claude/settings.json.new` to merge by hand. Read the rules before
-you take them — they let Claude merge PRs and push branches without asking, which is the
-entire point and also a real grant. The `deny` list next to them (force push, hard reset,
-`gh release`, `npm publish`) is what makes it defensible.
+`.claude/settings.json` is the one file `install` and `update` **merge** instead of
+leaving alone: every rule above is added to whatever you already have, every rule and
+setting of yours is kept, nothing is ever removed, and running it twice changes nothing
+the second time. Skipping the file — the rule for every other file here — meant the
+workflow arrived with none of its permissions in exactly the projects that already used
+Claude Code. If your settings file is not valid JSON it is reported and left untouched.
+
+Read the rules before you keep them — they let Claude merge PRs and push branches without
+asking, which is the entire point and also a real grant. The `deny` list next to them
+(force push, hard reset, `gh release`, `npm publish`) is what makes it defensible; delete
+any `allow` line you would rather approve by hand, and it stays deleted until you run
+`install` or `update` again.
 
 Two things it still cannot pre-approve: writes to protected paths (`.git` and `.claude`
 among them), and anything the classifier hard-blocks. `/ps:run` treats a refusal as a
@@ -251,8 +259,8 @@ v1.0's speed lives in them.
 
 **Read `.claude/settings.json` before you keep it.** It is the file that lets a long
 `/ps:run` finish, and it does that by pre-approving merges and pushes for the whole
-session. If you already had a settings file, yours is untouched and the package's lands
-as `settings.json.new`. See "Where the time goes" above.
+session. If you already had a settings file, its rules and yours are merged into it —
+nothing of yours is removed. See "Where the time goes" above.
 
 One behaviour changes for stories already in flight: `/ps:run` no longer ticks a task's
 box inside its own PR, and `/ps:publish` ticks it on the base branch after merging.

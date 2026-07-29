@@ -29,6 +29,10 @@ SHA-256 hashes in `.claude/pocket-squad.manifest.json`. `install` never clobbers
 `update` upgrades untouched files in place, writes `*.new` next to customized ones
 (except `.squad/` knowledge files, which are always kept as-is), and deletes
 managed-but-no-longer-shipped files when untouched; `status` diffs hashes.
+`.claude/settings.json` is the single exception to the copy-or-skip rule: `mergeSettings()`
+unions our `permissions.allow`/`deny` lists into an existing file and leaves every other
+key alone, because a project that already had settings would otherwise run the whole
+workflow with none of its permissions.
 
 ## Conventions
 - CommonJS, Node built-ins only. No transpilation, no `import`.

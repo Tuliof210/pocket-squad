@@ -177,9 +177,63 @@ try {
   );
 
   psCheckModes();
+  settingsMerge();
   console.log("smoke test passed");
 } finally {
   fs.rmSync(dir, { recursive: true, force: true });
+}
+
+/**
+ * Most projects already have a `.claude/settings.json`. Skipping it there — which is what
+ * "never clobber" meant for every other file — shipped the workflow with none of its
+ * permissions, so a long `/ps:run` stalled on a prompt in exactly the projects that
+ * already used Claude Code. settings.json is the one merged file: ours are added, theirs
+ * are kept, nothing is ever dropped, and running twice adds nothing the second time.
+ */
+function settingsMerge() {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "pocket-squad-settings-"));
+  const file = path.join(dir, ".claude", "settings.json");
+  try {
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    fs.writeFileSync(
+      file,
+      JSON.stringify({
+        model: "opusplan",
+        permissions: { allow: ["Bash(terraform plan:*)"], deny: ["Bash(rm -rf:*)"] },
+      })
+    );
+    execFileSync("node", [CLI, "install"], { cwd: dir });
+
+    const merged = JSON.parse(fs.readFileSync(file, "utf8"));
+    assert.strictEqual(merged.model, "opusplan", "merging permissions must not drop other settings keys");
+    assert.ok(
+      merged.permissions.allow.includes("Bash(terraform plan:*)") &&
+        merged.permissions.deny.includes("Bash(rm -rf:*)"),
+      "merging must keep every rule the project already had"
+    );
+    assert.ok(
+      merged.permissions.allow.includes("Bash(gh pr merge:*)") &&
+        merged.permissions.deny.includes("Bash(git push --force:*)"),
+      "install must add our rules to a pre-existing settings.json, not skip the file"
+    );
+
+    // Idempotent, and `update` merges too — a rule count that grows every run would
+    // mean duplicates piling up in the file forever.
+    const before = merged.permissions.allow.length;
+    execFileSync("node", [CLI, "install"], { cwd: dir });
+    execFileSync("node", [CLI, "update"], { cwd: dir });
+    const after = JSON.parse(fs.readFileSync(file, "utf8")).permissions.allow.length;
+    assert.strictEqual(after, before, "re-running must not duplicate permission rules");
+    assert.ok(!fs.existsSync(file + ".new"), "a merged settings.json must never leave a .new to hand-merge");
+
+    // Malformed JSON must not be overwritten — losing a project's settings to a stray
+    // trailing comma is the one outcome worse than a permission prompt.
+    fs.writeFileSync(file, "{ oops");
+    execFileSync("node", [CLI, "update"], { cwd: dir });
+    assert.strictEqual(fs.readFileSync(file, "utf8"), "{ oops", "unparseable settings must be left alone");
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
 }
 
 /**
