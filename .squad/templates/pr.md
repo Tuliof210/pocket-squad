@@ -1,10 +1,10 @@
 # PR bodies
 
-Two shapes. Both are written for someone who was not in the room: a new teammate, a
-reviewer six weeks from now, you at 3am. Plain sentences. If a sentence only parses
-when you already know the answer, rewrite it.
+One shape, one PR per story. It is written for someone who was not in the room: a new
+teammate, a reviewer six weeks from now, you at 3am. Plain sentences. If a sentence only
+parses when you already know the answer, rewrite it.
 
-Rules for both:
+Rules:
 
 - Say what changed and why. Not how clever it was.
 - Name files and commands exactly — `src/parser/csv.ts`, `npm test` — never "the parser".
@@ -13,28 +13,11 @@ Rules for both:
 
 ---
 
-## Task PR — into the story branch
-
-Small, merged automatically, nobody reviews it. Its only job is a readable record of
-one step. Three short sections.
-
-```markdown
-## What this does
-<1-2 plain sentences. "Adds the CSV column parser that the import screen calls.">
-
-## Why
-<1-2 sentences. What was missing or wrong before this.>
-
-## How I checked
-<the exact command, and what it printed. "npm test -- csv.spec.ts — 14 passed.">
-```
-
----
-
 ## Story PR — into the target branch
 
-The one that gets reviewed and merged, so it carries the whole story. Same plain
-language; longer only because it covers more.
+The only PR a story produces, and the one that gets reviewed and merged, so it carries
+the whole story. Each task is one commit on the branch; this body is what a human reads
+instead of those commits.
 
 ```markdown
 ## What this story does

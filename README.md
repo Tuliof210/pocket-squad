@@ -30,10 +30,10 @@ npx pocket-squad status     # managed vs customized files
 
 /ps:run <story-slug>     runs the whole story, in this chat, one task at a time. Cuts
                          ONE worktree on a story branch, warms it once, then per task:
-                         reads that task file, branches, implements, verifies, opens a
-                         small PR into the story branch and squash-merges it — no
-                         review at this level. Ends by opening ONE PR from the story
-                         branch back to where you started.
+                         reads that task file, implements, verifies, and commits onto
+                         the story branch — one commit per task, no PR and no review at
+                         this level. Ends by opening ONE PR from the story branch back
+                         to where you started.
 
 /ps:review [pr]          the review, once, on that story PR. Two fresh-context
                          subagents in parallel: `run` executes (DoD, correctness,
@@ -44,8 +44,8 @@ npx pocket-squad status     # managed vs customized files
                          verdict posts on the PR, written so a junior can act on it.
 
 /ps:publish [pr]         squash-merges the approved story PR, returns to the base
-                         branch, git pull --rebase, then ps-check.sh `sync` (ticks
-                         story.md) and `sweep` (the story worktree and its branches).
+                         branch, git pull --rebase, then ps-check.sh `sweep` (the story
+                         worktree and its branch).
                          Then distills learnings — routing each candidate to
                          .squad/learnings.md, .squad/debt.md, a config change, a task
                          or nowhere, and retiring one rule.
@@ -62,15 +62,16 @@ npx pocket-squad status     # managed vs customized files
 
 ```
 main                                    ← where you started; the target branch
- └── ps-story/export-csv                ← one worktree, warmed once
-      ├── ps/export-csv/column-parser   → PR → squash-merged, no review
-      ├── ps/export-csv/download-button → PR → squash-merged, no review
-      └── ps/export-csv/empty-state     → PR → squash-merged, no review
+ └── ps-story/export-csv                ← one branch, one worktree, warmed once
+      ├── commit: 01 column-parser      ← one commit per task, no PR, no review
+      ├── commit: 02 download-button
+      └── commit: 03 empty-state
  └── PR: ps-story/export-csv → main     ← reviewed here, then squashed into main
 ```
 
-Two branch namespaces because git cannot hold `ps/<slug>` and `ps/<slug>/<task>` at
-once — the same name would have to be both a file and a directory in the ref store.
+One branch, because a task branch squash-merged into the story left exactly one commit
+behind anyway. Committing straight to the story branch lands the same history and skips
+a push, a PR body and a merge per task — for a PR that nobody, by design, ever read.
 
 **Why review only at the story level.** Reviewing five slices of one change found the
 same things five times and cost five rounds. It also could not see the defect that
@@ -222,6 +223,31 @@ among them), and anything the classifier hard-blocks. `/ps:run` treats a refusal
 **park** — it reports the exact refused call, leaves that task's branch alone, and moves
 to the next task.
 
+## Migrating from v2.0
+
+Run `npx pocket-squad update`.
+
+**Task branches and task PRs are gone.** `/ps:run` now commits each task straight onto
+`ps-story/<slug>`, one commit per task. The story branch ends up with the same history
+it had before — a task branch squash-merged into it always left exactly one commit — so
+nothing about `/ps:review` or `/ps:publish` changes. What you stop paying is a push, a
+PR body and a merge for every task.
+
+**`ps-check.sh sync` is gone**, and `status` no longer calls a provider: a task is done
+when its box is ticked, and `/ps:run` commits that box in the same commit as the work it
+claims. Mid-story the boxes only exist on the story branch, so `status` reads `story.md`
+from there. `/ps:publish` no longer runs `sync`; an unticked task after a run is one that
+parked, and it is supposed to stay unticked.
+
+**A parked task now stashes** instead of leaving a branch behind:
+`git stash push -u -m "parked <story-slug> NN-<task-slug>"`. The stash survives `sweep`,
+so check `git stash list` when a story ends with one.
+
+**Finish stories already in flight under v2.0 before updating.** A story with open task
+PRs still merges them fine — nothing here deletes anything — but `status` reads boxes
+now, so tick `story.md` for tasks whose PR already merged before running `/ps:run` again,
+or it will run them a second time.
+
 ## Migrating from v1.0
 
 Run `npx pocket-squad update`. This is a breaking change to the workflow, not just to
@@ -232,9 +258,9 @@ deletes them wherever you never edited them; anything you customized is flagged
 `obsolete` for you to delete. `/ps:run` now takes a **story slug**, not a task, and does
 what `load` + `run` + `pipe` used to do between them.
 
-**Branch names changed.** Stories live on `ps-story/<slug>` and tasks on
-`ps/<slug>/<task-slug>`. Git cannot hold `ps/<slug>` and `ps/<slug>/<task>` at the same
-time, which is why the story got its own namespace.
+**Branch names changed.** Stories live on `ps-story/<slug>`. v2.0 also put each task on
+`ps/<slug>/<task-slug>`; from v3.0 tasks are commits on the story branch and that second
+namespace is gone — see the v2.0 notes above.
 
 **The `window:` field is gone**, with the `Independently shippable` section, the
 `WINDOWS` block in `ps-check.sh` and the publish gate that read it. Only whole stories
@@ -253,19 +279,14 @@ that matters.
 
 Run `npx pocket-squad update`. It upgrades the seven commands you never edited, adds
 `.claude/ps-review.md`, `.claude/ps-verify.md` and `.claude/settings.json`, and rewrites
-`ps-check.sh` with four new modes (`status`, `sync`, `warm`, plus the single-call PR
-cache). Customized command files land next to yours as `*.new` — worth merging, since
-v1.0's speed lives in them.
+`ps-check.sh` with new modes (`status`, `warm`, plus the single-call PR cache).
+Customized command files land next to yours as `*.new` — worth merging, since v1.0's
+speed lives in them.
 
 **Read `.claude/settings.json` before you keep it.** It is the file that lets a long
 `/ps:run` finish, and it does that by pre-approving merges and pushes for the whole
 session. If you already had a settings file, its rules and yours are merged into it —
 nothing of yours is removed. See "Where the time goes" above.
-
-One behaviour changes for stories already in flight: `/ps:run` no longer ticks a task's
-box inside its own PR, and `/ps:publish` ticks it on the base branch after merging.
-A PR opened under v0.5 that already carries its tick still merges fine — `sync` is
-idempotent and skips a box that is already `[x]`.
 
 Existing task files have no `## Context` section. They keep working — `/ps:run` looks
 it up itself, once, and says so in the PR body. New stories get it automatically.

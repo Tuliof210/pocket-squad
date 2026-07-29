@@ -239,7 +239,7 @@ function settingsMerge() {
 /**
  * The ps-check.sh modes the commands hand their mechanical work to. `sh -n` above
  * only proves it parses; these prove the three modes with real logic in them do what
- * /ps:load, /ps:run and /ps:publish assume. A mode that silently does nothing looks
+ * /ps:run and /ps:publish assume. A mode that silently does nothing looks
  * exactly like a mode that worked.
  */
 function psCheckModes() {
@@ -265,25 +265,31 @@ function psCheckModes() {
     fs.writeFileSync(path.join(story, "tasks", "01-ticked.md"), "# Ticked\n");
     fs.writeFileSync(path.join(story, "tasks", "02-pending.md"), "# Pending\n");
 
-    // status — /ps:load reads waves off this, /ps:publish gates learnings on
-    // `remaining`. No PR exists for either task, so the ticked box is the fallback.
+    // status — /ps:run skips what this calls done and /ps:publish gates learnings on
+    // `remaining`. With no story branch yet it reads the boxes in this checkout.
     const status = execFileSync("sh", [ps, "status", "demo"], { cwd: repo }).toString();
     assert.match(status, /done\s+tasks\/01-ticked\.md/, "status must read a ticked box as done");
     assert.match(status, /todo\s+tasks\/02-pending\.md/, "status must read an unticked box as todo");
     assert.match(status, /remaining: 1/, "status must report what is left, or publish cannot gate on it");
 
-    // sync — ticks only what a provider confirmed MERGED. Nothing is merged here, so
-    // it must change nothing: a sync that ticks optimistically would mark a story done
-    // while its PRs are still open.
+    // A story in flight has its ticks on the story branch and nowhere else — they
+    // reach this checkout only when the story PR merges. Reading story.md from here
+    // would call a finished task todo, and /ps:run would do it a second time.
     const storyMd = path.join(story, "story.md");
     const before = fs.readFileSync(storyMd, "utf8");
-    execFileSync("sh", [ps, "sync", "demo"], { cwd: repo });
-    assert.strictEqual(
-      fs.readFileSync(storyMd, "utf8"),
-      before,
-      "sync must not tick a task with no merged PR"
+    git("add", "-A");
+    git("commit", "-qm", "story");
+    git("switch", "-q", "-c", "ps-story/2026-01-01-demo");
+    fs.writeFileSync(storyMd, before.replace("- [ ] tasks/02", "- [x] tasks/02"));
+    git("commit", "-qam", "02 done");
+    git("switch", "-q", "main");
+    const inFlight = execFileSync("sh", [ps, "status", "demo"], { cwd: repo }).toString();
+    assert.match(
+      inFlight,
+      /done\s+tasks\/02-pending\.md/,
+      "status must read the ticks off the story branch, not this checkout"
     );
-    assert.ok(!fs.existsSync(`${storyMd}.ps-tmp`), "sync must not leave its temp file behind");
+    assert.match(inFlight, /remaining: 0/, "a story whose branch ticks every box has nothing left");
 
     // warm — a fresh worktree with no deps is what made every task pay a full install.
     fs.mkdirSync(path.join(repo, "node_modules", "left-pad"), { recursive: true });

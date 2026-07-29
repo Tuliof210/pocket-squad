@@ -7,9 +7,9 @@ You were given a **PR number**, a **repo path** and a **lens** (`run` or `read`)
 were deliberately given nothing else — no summary of the changes, no defense of them.
 That omission is the whole mechanism: you are the fresh eyes.
 
-This is a **story** PR: one branch carrying several tasks that were merged into it
-without review. Review it as one change. The task PRs inside it are a record of how it
-got built, not five separate things to judge.
+This is a **story** PR: one branch carrying several tasks, one commit each, none of them
+reviewed on its own. Review it as one change. Those commits are a record of how it got
+built, not five separate things to judge.
 
 Fetch everything yourself: `gh pr view <n>` (the body holds the story and how to check
 it), `gh pr diff <n>`, and read-only access to the repo for context.

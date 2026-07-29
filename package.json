@@ -1,6 +1,6 @@
 {
   "name": "pocket-squad",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "A lean Claude Code workflow in your pocket: /ps:init (CLAUDE.md + PRODUCT.md + ARCHITECTURE.md), /ps:story (refine → .squad/stories), /ps:run (one worktree, tasks in order, one PR per story), /ps:review (fresh eyes, two parallel lenses, once per story), /ps:publish (squash-merge + sweep + learnings).",
   "bin": { "pocket-squad": "bin/pocket-squad.js" },
   "files": ["bin", "templates", "README.md"],

@@ -61,10 +61,10 @@ neither without saying what you are changing and why.
   `allowed-tools` frontmatter is not a substitute: it grants only for the turn that
   invoked the command and clears on the owner's next message.
 - **CLAUDE.md is read by the auto-mode classifier**, not just by Claude. It is what
-  tells the classifier that squash-merging a `ps/*` task PR into its story branch, and
-  a reviewed `ps-story/*` PR into the target branch, is this project's routine terminal
-  step rather than an unrequested irreversible action. Propose one line saying exactly
-  that — and let the owner reject it, because it is a line that loosens a safety check.
+  tells the classifier that squash-merging a reviewed `ps-story/*` PR into the target
+  branch, and deleting that branch, is this project's routine terminal step rather than
+  an unrequested irreversible action. Propose one line saying exactly that — and let the
+  owner reject it, because it is a line that loosens a safety check.
 
 Neither of these makes a merge unconditional: writes to `.git` and the other protected
 paths are never pre-approved by settings, and a refusal parks that task instead of

@@ -58,10 +58,12 @@ workflow with none of its permissions.
   a cold context is the feature — measured, a cold subagent per task spent 36% of a
   story's output rebuilding what the chat already held. Adding an execution subagent
   back needs that number to have changed.
-- Branch namespaces: stories on `ps-story/<slug>`, tasks on `ps/<slug>/<task-slug>`.
-  Git cannot hold `ps/<slug>` and `ps/<slug>/<task>` at once — the same name would have
-  to be a file and a directory in the ref store. `ps-check.sh` derives task state from
-  the task branch name, so renaming either scheme breaks `status`, `sync` and `sweep`.
+- One branch per story, `ps-story/<slug>`, and one commit per task on it — no task
+  branches, no task PRs. A task branch squash-merged into the story left exactly one
+  commit behind, so this lands the same history without the push, the PR body and the
+  merge per task. `ps-check.sh status` reads the story.md boxes (off the story branch
+  while the story is open), and `sweep` matches `ps-story/*`, so renaming the scheme
+  breaks both.
 - PR bodies, review verdicts and posted comments are written for a junior: plain
   sentences, exact file and command names, every term explained the first time.
   `.squad/templates/pr.md` is the shape; `ps-review.md` carries the verdict format.
@@ -76,7 +78,7 @@ workflow with none of its permissions.
   `! customized`, `· managed`). Imitate when adding output lines.
 - `files` allowlist in `package.json` is the packaging contract — only what's listed
   ships to npm. `HANDOFF.md` (human design record) stays out of the tarball.
-- Squash-merging a `ps/*` pull request into the branch it was cut from, and deleting
+- Squash-merging a `ps-story/*` pull request into the branch it was cut from, and deleting
   that branch, is the routine terminal step of `/ps:publish` — the intended end of
   every task in this repo's own workflow, not an unrequested irreversible action.
   Force pushes, hard resets, `gh release` and `npm publish` are none of that and stay

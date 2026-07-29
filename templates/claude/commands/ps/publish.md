@@ -8,40 +8,41 @@ Target: "$ARGUMENTS" is the PR number; if empty, the current branch's PR. Read
 `gh pr view <n> --json headRefName,baseRefName,mergeable,url` — `headRefName` is
 `ps-story/<story-slug>`, which is where the story slug comes from below.
 
-This publishes a **story**, once. Task PRs were merged into the story branch by
-`/ps:run` and never reach here.
+This publishes a **story**, once. There is nothing smaller to publish: `/ps:run`
+committed each task straight onto the story branch, so this PR is the only one there
+ever was.
 
 ## Preflight
 
 - The PR must be open and mergeable, checks green where they exist, and the main
   checkout clean — dirty → warn the owner and stop. Never force.
 - **The PR must be APPROVED by `/ps:review`.** Never publish a story nobody reviewed;
-  the task PRs skipped review on the promise that this one would not.
+  no task in it was reviewed on its own, on the promise that this one would be.
 
 ## Merge
 
     gh pr merge <n> --squash --delete-branch
 
 Squash on purpose: the target branch gets one commit per story. The per-task commits
-lived on the story branch and their record lives in the task PRs — the target branch's
-history is a list of stories, not of steps.
+lived on the story branch and their record stays in this PR's commit list — the target
+branch's history is a list of stories, not of steps.
 
 Then go home: if you are inside the story's worktree, leave it (`ExitWorktree`, or run
 the rest from the main checkout's path); in the main checkout,
 `git checkout <baseRefName>` then `git pull --rebase`.
 
-## Tick and sweep
+## Sweep
 
-    sh .claude/ps-check.sh sync <story-slug>
     sh .claude/ps-check.sh sweep
 
-`sync` ticks `story.md` for anything the run left unticked — normally nothing, since
-`/ps:run` ticks each box as it goes, but a run that died mid-story leaves work for it.
-Commit whatever it changed.
+It removes the story worktree and its branch, and reports what it could not. Quote its
+`SUMMARY` line verbatim; a non-zero count is a fact the owner needs, not something to
+smooth over.
 
-`sweep` removes the story worktree, its branch and any leftover task branches, and
-reports what it could not. Quote its `SUMMARY` line verbatim; a non-zero count is a fact
-the owner needs, not something to smooth over.
+Nothing needs ticking here: `/ps:run` commits each box with the work it claims, so an
+unticked task is one that parked, and it should stay unticked. Its half-finished work is
+in a stash named `parked <story-slug> ...`, which survives the worktree removal — list
+`git stash list` and name any that are left, so they do not rot unnoticed.
 
 ## Learnings
 
@@ -76,4 +77,5 @@ branch → leave the commit local and tell the owner).
 ## Report
 
 Plain language, for someone who was not here: what shipped, which branch it landed on,
-the `sync` and `sweep` SUMMARY lines, and what went into learnings and debt.
+the `sweep` SUMMARY line, any parked stash still around, and what went into learnings
+and debt.

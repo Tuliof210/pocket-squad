@@ -4,8 +4,7 @@
 #
 #   sh .claude/ps-check.sh                report  — learnings size, debt to sweep,
 #                                                   stale refs a sweep would remove
-#   sh .claude/ps-check.sh status <slug>  per-task state of one story, from PR state
-#   sh .claude/ps-check.sh sync   <slug>  status, and tick story.md for merged tasks
+#   sh .claude/ps-check.sh status <slug>  per-task state of one story, from its boxes
 #   sh .claude/ps-check.sh warm   <path>  share this checkout's installed deps with a
 #                                         fresh worktree — no install per task
 #   sh .claude/ps-check.sh sweep          remove worktrees/branches of merged PRs
@@ -58,7 +57,6 @@ load_prs() {
       ;;
   esac
 }
-[ -n "$PROVIDER" ] && load_prs
 
 # <branch> -> MERGED | CLOSED | OPEN | NONE | UNKNOWN   (local lookup, no network)
 pr_state() {
@@ -73,61 +71,41 @@ pr_state() {
   esac
 }
 
-# tasks/07-recursive-parser.md in story <slug> -> ps/<slug>/recursive-parser
-task_branch() {
-  b=$(basename "$2" .md)
-  printf 'ps/%s/%s' "$1" "${b#*-}"
-}
-
-# --------------------------------------------------------------- status / sync
-# A task is done when its PR is merged — not when someone remembered to tick a box.
-# Up to v0.5 the box was ticked inside the task's own PR, which made every pair of
-# sibling PRs conflict on story.md. `sync` ticks them here, on the base branch, after
-# the merge that made them true.
-if [ "$MODE" = status ] || [ "$MODE" = sync ]; then
-  [ -n "$ARG" ] || { echo "ps-check: $MODE needs a story slug"; exit 1; }
+# -------------------------------------------------------------------- status
+# A task is done when its box is ticked. That box is trustworthy because `/ps:run`
+# commits it in the same commit as the work it claims: a run that dies leaves either
+# both or neither, never a tick without code.
+#
+# Up to v2.0 each task had its own branch and PR, and this asked the provider whether
+# that PR was merged — a whole `sync` mode existed to copy that answer back into the
+# boxes. Tasks now commit straight to the story branch, so the box IS the record and
+# this mode costs no network at all.
+if [ "$MODE" = status ]; then
+  [ -n "$ARG" ] || { echo "ps-check: status needs a story slug"; exit 1; }
   story=$(ls -d .squad/stories/*"$ARG"*/ 2>/dev/null | head -1)
   [ -n "$story" ] || { echo "ps-check: no story matching '$ARG'"; exit 1; }
   slug=$(basename "${story%/}")
 
-  printf '%s %s\n' "$(printf '%s' "$MODE" | tr 'a-z' 'A-Z')" "$slug"
-  n=0; ndone=0; nopen=0; ntodo=0
-  ticks=
+  # Mid-story the ticks live on the story branch and have not reached this checkout
+  # yet, so read story.md from there when that branch exists.
+  md=$(git show "ps-story/$slug:${story}story.md" 2>/dev/null) ||
+    md=$(cat "${story}story.md" 2>/dev/null)
+
+  printf 'STATUS %s\n' "$slug"
+  n=0; ndone=0; ntodo=0
 
   for task in "$story"tasks/*.md; do
     [ -f "$task" ] || continue
     n=$((n + 1))
     rel="tasks/$(basename "$task")"
-    br=$(task_branch "$slug" "$task")
-    case $(pr_state "$br") in
-      MERGED) ndone=$((ndone + 1)); printf '  done  %s\n' "$rel"
-              ticks="$ticks $rel" ;;
-      OPEN)   nopen=$((nopen + 1)); printf '  open  %s  (%s)\n' "$rel" "$br" ;;
-      *)      # No PR, or no provider to ask — fall back to the box someone ticked.
-              if grep -qE "^- \[[xX]\] $rel" "$story/story.md" 2>/dev/null; then
-                ndone=$((ndone + 1)); printf '  done  %s  (ticked, no PR found)\n' "$rel"
-              else
-                ntodo=$((ntodo + 1)); printf '  todo  %s\n' "$rel"
-              fi ;;
-    esac
+    if printf '%s\n' "$md" | grep -qE "^- \[[xX]\] $rel"; then
+      ndone=$((ndone + 1)); printf '  done  %s\n' "$rel"
+    else
+      ntodo=$((ntodo + 1)); printf '  todo  %s\n' "$rel"
+    fi
   done
 
-  if [ "$MODE" = sync ] && [ -n "$ticks" ]; then
-    tmp="$story/story.md.ps-tmp"
-    cp "$story/story.md" "$tmp" || exit 1
-    for rel in $ticks; do
-      sed "s|^- \[ \] $rel|- [x] $rel|" "$tmp" > "$tmp.2" && mv "$tmp.2" "$tmp"
-    done
-    if cmp -s "$tmp" "$story/story.md"; then
-      rm -f "$tmp"
-    else
-      mv "$tmp" "$story/story.md"
-      echo "  ~~  story.md ticked for merged tasks"
-    fi
-  fi
-
-  printf 'SUMMARY  %s tasks | done: %s | open: %s | todo: %s | remaining: %s\n' \
-    "$n" "$ndone" "$nopen" "$ntodo" "$((nopen + ntodo))"
+  printf 'SUMMARY  %s tasks | done: %s | remaining: %s\n' "$n" "$ndone" "$ntodo"
   exit 0
 fi
 
@@ -217,14 +195,14 @@ fi
 # Worktrees of merged/closed PRs, and the branches they leave behind. Branches are
 # only deleted on MERGED: a CLOSED PR may be abandoned work worth keeping.
 #
-# Two namespaces, because git cannot hold both `ps/<slug>` and `ps/<slug>/<task>` — the
-# same name would have to be a file and a directory in the ref store. Stories live in
-# `ps-story/<slug>` (one worktree each) and their tasks in `ps/<slug>/<task-slug>`.
+# Stories live in `ps-story/<slug>`, one worktree each, and that is the only namespace
+# left — tasks commit onto the story branch instead of branching off it. The `ps/*`
+# pattern is still matched here so stories run under v2.0 or earlier get swept too.
 echo "STALE"
-if [ "$MODE" = sweep ]; then
-  git fetch --prune --quiet 2>/dev/null
-  load_prs                      # refs just moved; the single call is worth repeating
-fi
+# The single provider call happens here and nowhere else: `status` and `warm` never
+# need it, and in sweep it has to come after the fetch that moves the refs.
+[ "$MODE" = sweep ] && git fetch --prune --quiet 2>/dev/null
+[ -n "$PROVIDER" ] && load_prs
 [ -n "$PROVIDER" ] || echo "  --  no gh/glab on this machine — merge state unknown, nothing removed"
 found=0
 
