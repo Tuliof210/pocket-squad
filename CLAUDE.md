@@ -5,11 +5,11 @@
 - ZERO runtime and ZERO dev dependencies by design — Node built-ins only (`fs`,
   `path`, `crypto`). Adding a dependency is a design decision, never casual.
 - Distribution: an `npx`-installable CLI. `bin.pocket-squad -> bin/pocket-squad.js`.
-- Shipped content, copied into a target project: markdown under `templates/` — 6
-  `/ps:*` commands, 2 review subagents (`.claude/agents/ps-{review,verify}.md`), the
-  two review prompts (`.claude/ps-{review,verify}.md`), `.claude/settings.json`, the
-  `.squad/{learnings,debt}.md` and `.squad/templates/{story,task,pr}.md` scaffolds —
-  plus `templates/claude/ps-check.sh`, the one executable in the package.
+- Shipped content, copied into a target project: markdown under `templates/` — 5
+  `/ps:*` commands, the review subagent (`.claude/agents/ps-review.md`), the review
+  prompt (`.claude/ps-review.md`), `.claude/settings.json` and the
+  `.squad/templates/{prompt,pr}.md` scaffolds — plus `templates/claude/ps-check.sh`,
+  the one executable in the package.
 
 ## Commands
 - test: `npm test` — zero-dep smoke test (`node test/smoke.js`), also runs on
@@ -26,20 +26,24 @@ A single-file CLI (`bin/pocket-squad.js`) with three commands — `install | upd
 status`. It walks `templates/`, maps each path via `destFor()` (`templates/claude/*`
 → `.claude/*`, `templates/squad/*` → `.squad/*`), and tracks file identity with
 SHA-256 hashes in `.claude/pocket-squad.manifest.json`. `install` never clobbers;
-`update` upgrades untouched files in place, writes `*.new` next to customized ones
-(except `.squad/` knowledge files, which are always kept as-is), and deletes
-managed-but-no-longer-shipped files when untouched; `status` diffs hashes.
+`update` upgrades untouched files in place, writes `*.new` next to customized ones, and
+deletes managed-but-no-longer-shipped files when untouched (a customized one is reported
+as `! obsolete` and left alone); `status` diffs hashes.
 `.claude/settings.json` is the single exception to the copy-or-skip rule: `mergeSettings()`
 unions our `permissions.allow`/`deny` lists into an existing file and leaves every other
 key alone, because a project that already had settings would otherwise run the whole
 workflow with none of its permissions.
+
+## The workflow it ships (v4)
+`/ps:sync` → `/ps:task` → `/ps:run` → `/ps:review` → `/ps:publish`. One request becomes
+one prompt file, one branch, one PR, one review round.
 
 ## Conventions
 - CommonJS, Node built-ins only. No transpilation, no `import`.
 - Non-destructive by default: no file operation may silently overwrite user content —
   mirror the hash-guarded logic in `install()`/`update()`.
 - Command templates live in `templates/claude/commands/ps/` so they surface as
-  namespaced `/ps:*` slash commands. Exemplar: `templates/claude/commands/ps/story.md`.
+  namespaced `/ps:*` slash commands. Exemplar: `templates/claude/commands/ps/task.md`.
   Every command declares `allowed-tools` in its frontmatter — a missing one means a
   permission prompt mid-run, which is a stall, not a safety feature.
 - Anything mechanical and repeated belongs in `ps-check.sh`, never in a command's
@@ -52,33 +56,37 @@ workflow with none of its permissions.
 - Every step declares its cost. A command sets `effort` in its own frontmatter; a
   **subagent's** cost can only be set in its `templates/claude/agents/*.md` definition,
   because a command's frontmatter never reaches an agent it dispatches. A dispatch that
-  names `general-purpose` instead of `ps-review`/`ps-verify` is a silent cost
-  regression. The smoke test fails on a missing `effort`.
+  names `general-purpose` instead of `ps-review` is a silent cost regression. The smoke
+  test fails on a missing `effort`.
 - Execution runs in the main chat, serially. Subagents exist for **review only**, where
   a cold context is the feature — measured, a cold subagent per task spent 36% of a
-  story's output rebuilding what the chat already held. Adding an execution subagent
+  task's output rebuilding what the chat already held. Adding an execution subagent
   back needs that number to have changed.
-- One branch per story, `ps-story/<slug>`, and one commit per task on it — no task
-  branches, no task PRs. A task branch squash-merged into the story left exactly one
-  commit behind, so this lands the same history without the push, the PR body and the
-  merge per task. `ps-check.sh status` reads the story.md boxes (off the story branch
-  while the story is open), and `sweep` matches `ps-story/*`, so renaming the scheme
-  breaks both.
-- PR bodies, review verdicts and posted comments are written for a junior: plain
-  sentences, exact file and command names, every term explained the first time.
-  `.squad/templates/pr.md` is the shape; `ps-review.md` carries the verdict format.
-- The repo dogfoods itself: `templates/claude/*` ≡ `.claude/*` and
-  `templates/squad/learnings.md` seeds `.squad/learnings.md` (which then diverges —
-  it holds real learnings). After editing templates, run
-  `node bin/pocket-squad.js update` at the repo root to re-sync the dogfood.
-- `.squad/PRODUCT.md`, `.squad/ARCHITECTURE.md` and `.squad/stories/` are never
-  shipped templates — `/ps:init` and `/ps:story` create them per-project at
-  runtime, same as a target project's own `CLAUDE.md`.
+- One branch per task, `task/<kebab-case title>`, one conventional commit per step, one
+  PR whose title is the task title. `ps-check.sh` matches `task/*` in `publish` and
+  `sweep`, so renaming the scheme breaks both.
+- The unit of work is one refined prompt at `.squad/tasks/<yymmdd-hhmm>.prompt.md`,
+  written by `/ps:task` in the conversation's language and executed verbatim by
+  `/ps:run`. `/ps:run` never re-interviews: paying twice for the same questions is the
+  cost this split exists to avoid.
+- **No learnings file, no debt ledger.** Both existed up to v3 and both were removed:
+  a rule read alongside CLAUDE.md and ARCHITECTURE.md was a third voice saying almost
+  the same thing, and a debt ledger was a place to defer a fix to instead of fixing it.
+  A durable rule goes in `.squad/ARCHITECTURE.md`; anything else goes in the prompt.
+- Prompts, PR bodies and review verdicts follow the **task's language**, are written for
+  a junior — plain sentences, exact file and command names — and are **short enough to
+  be read**. `.squad/templates/{prompt,pr}.md` are the shapes; `ps-review.md` carries
+  the verdict format.
+- The repo dogfoods itself: `templates/claude/*` ≡ `.claude/*`. After editing templates,
+  run `node bin/pocket-squad.js update` at the repo root to re-sync the dogfood.
+- `.squad/PRODUCT.md`, `.squad/ARCHITECTURE.md` and `.squad/tasks/` are never shipped
+  templates — `/ps:sync` and `/ps:task` create them per-project at runtime, same as a
+  target project's own `CLAUDE.md`.
 - Console output: plain aligned text with leading glyphs (`+ created`, `^ updated`,
   `! customized`, `· managed`). Imitate when adding output lines.
 - `files` allowlist in `package.json` is the packaging contract — only what's listed
   ships to npm. `HANDOFF.md` (human design record) stays out of the tarball.
-- Squash-merging a `ps-story/*` pull request into the branch it was cut from, and deleting
+- Squash-merging a `task/*` pull request into the branch it was cut from, and deleting
   that branch, is the routine terminal step of `/ps:publish` — the intended end of
   every task in this repo's own workflow, not an unrequested irreversible action.
   Force pushes, hard resets, `gh release` and `npm publish` are none of that and stay

@@ -127,16 +127,15 @@ function install() {
     console.log(`  + created      ${path.relative(CWD, dst)}`);
   }
 
-  // Preserve knowledge files across reinstalls: only record hashes for files we own.
   saveManifest(hashes);
   console.log(`\nPocket Squad v${VERSION} installed.`);
   console.log(`  ${created} created, ${kept} unchanged, ${skipped} pre-existing (untouched).`);
   console.log(`\nNext steps:`);
   console.log(`  1. Open Claude Code in this project.`);
-  console.log(`  2. Run /ps:init once — proposes CLAUDE.md + .squad/PRODUCT.md + .squad/ARCHITECTURE.md, writes after you confirm.`);
-  console.log(`  3. Run /ps:story "your idea" — interview only, saves a story + tasks under .squad/stories/.`);
-  console.log(`  4. Run /ps:run <story-slug> — one worktree, every task in order, one PR to review.`);
-  console.log(`  5. Then /ps:review (fresh-eyes review of that PR) and /ps:publish (merge + sweep + learnings).`);
+  console.log(`  2. Run /ps:sync once — moves product/architecture rules into .squad/PRODUCT.md + .squad/ARCHITECTURE.md, writes after you confirm.`);
+  console.log(`  3. Run /ps:task "your request" — refines it into .squad/tasks/<yymmdd-hhmm>.prompt.md.`);
+  console.log(`  4. Run /ps:run <id> — worktree on task/<slug>, one commit per step, one PR.`);
+  console.log(`  5. Then /ps:review (fresh eyes, one round) and /ps:publish (merge + cleanup).`);
   if (manifest) console.log(`\n(Previous manifest found — this was a re-install. Use "update" to upgrade managed files.)`);
 }
 
@@ -173,10 +172,6 @@ function update() {
       fs.writeFileSync(dst, content);
       updated++;
       console.log(`  ^ updated      ${path.relative(CWD, dst)}`);
-    } else if (rel.startsWith("squad" + path.sep)) {
-      // Knowledge files (.squad/) diverge by design — learnings accumulate. Never nag with .new.
-      unchanged++;
-      console.log(`  ~ kept         ${path.relative(CWD, dst)} (knowledge file)`);
     } else {
       // User customized it — never overwrite. Ship the new version alongside.
       fs.writeFileSync(dst + ".new", content);

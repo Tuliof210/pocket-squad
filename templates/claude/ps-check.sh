@@ -2,31 +2,27 @@
 # pocket-squad — the mechanical half of the workflow. Meant to be RUN, never read
 # into a model's context: the /ps:* commands call it and quote its output.
 #
-#   sh .claude/ps-check.sh                report  — learnings size, debt to sweep,
-#                                                   stale refs a sweep would remove
-#   sh .claude/ps-check.sh status <slug>  per-task state of one story, from its boxes
-#   sh .claude/ps-check.sh warm   <path>  share this checkout's installed deps with a
-#                                         fresh worktree — no install per task
-#   sh .claude/ps-check.sh sweep          remove worktrees/branches of merged PRs
+#   sh .claude/ps-check.sh warm <path>     share this checkout's installed deps with a
+#                                          fresh worktree — no install per task
+#   sh .claude/ps-check.sh publish <pr>    squash-merge, delete the branch everywhere,
+#                                          remove the worktree, go home and pull
+#   sh .claude/ps-check.sh sweep           remove worktrees/branches of merged PRs
 #
 # Provider-agnostic: plain git, plus gh or glab if the machine happens to have one.
 # Without a provider CLI it can read merge state from nowhere, so it removes nothing
 # and says so — silence would read as "swept clean".
 #
-# Every mode costs at most ONE network call. The provider is listed once into $PRS
-# and every lookup after that is a local awk over it. Up to v0.5 this asked the
-# provider once per branch, twice for a branch that also had a remote ref, and did it
-# again on every invocation — tens of seconds per task, all of it spent waiting.
+# Every mode costs at most ONE network call beyond the merge itself. The provider is
+# listed once into $PRS and every lookup after that is a local awk over it.
 set -u
 
-MODE=${1:-report}
+MODE=${1:-}
 ARG=${2:-}
-CAP=6144
 
 git rev-parse --git-dir >/dev/null 2>&1 || { echo "ps-check: not a git repository"; exit 1; }
 
-# The main checkout, even when invoked from inside a worktree: it is where the
-# stories, the knowledge files and the installed dependencies live.
+# The main checkout, even when invoked from inside a worktree: it is where the task
+# prompts and the installed dependencies live, and where publish ends up.
 MAIN=$(git worktree list --porcelain 2>/dev/null | awk '/^worktree /{print $2; exit}')
 [ -n "$MAIN" ] || MAIN=$(git rev-parse --show-toplevel)
 cd "$MAIN" || exit 1
@@ -38,76 +34,32 @@ fi
 
 LEFT=0
 
-# -------------------------------------------------------------------- pr cache
-# One call, every state. Lines are "<head-branch><TAB><STATE>".
-PRS=
-load_prs() {
-  case $PROVIDER in
-    gh)
-      PRS=$(gh pr list --state all --limit 300 --json state,headRefName \
-              --jq '.[] | "\(.headRefName)\t\(.state)"' 2>/dev/null) || PRS=
-      ;;
-    glab)
-      # Field order is not guaranteed, so pull each key independently per object.
-      PRS=$(glab mr list --all -F json 2>/dev/null | tr '}' '\n' | while IFS= read -r o; do
-              b=$(printf '%s' "$o" | grep -o '"source_branch":"[^"]*"' | cut -d'"' -f4)
-              s=$(printf '%s' "$o" | grep -o '"state":"[^"]*"' | cut -d'"' -f4)
-              [ -n "$b" ] && printf '%s\t%s\n' "$b" "$s"
-            done) || PRS=
-      ;;
-  esac
+# Worktree paths resolved once: "<branch><TAB><path>".
+wt_list() {
+  git worktree list --porcelain 2>/dev/null |
+    awk '/^worktree /{p=$2} /^branch /{sub("refs/heads/","",$2); print $2"\t"p}'
 }
+wt_of() { printf '%s\n' "$WT" | awk -F'\t' -v b="$1" '$1 == b { print $2; exit }'; }
 
-# <branch> -> MERGED | CLOSED | OPEN | NONE | UNKNOWN   (local lookup, no network)
-pr_state() {
-  [ -n "$PROVIDER" ] || { echo UNKNOWN; return; }
-  s=$(printf '%s\n' "$PRS" | awk -F'\t' -v b="$1" '$1 == b { print $2; exit }')
-  case $(printf '%s' "$s" | tr 'a-z' 'A-Z') in
-    MERGED)      echo MERGED ;;
-    CLOSED)      echo CLOSED ;;
-    OPEN|OPENED) echo OPEN ;;
-    '')          echo NONE ;;
-    *)           echo UNKNOWN ;;
-  esac
-}
-
-# -------------------------------------------------------------------- status
-# A task is done when its box is ticked. That box is trustworthy because `/ps:run`
-# commits it in the same commit as the work it claims: a run that dies leaves either
-# both or neither, never a tick without code.
-#
-# Up to v2.0 each task had its own branch and PR, and this asked the provider whether
-# that PR was merged — a whole `sync` mode existed to copy that answer back into the
-# boxes. Tasks now commit straight to the story branch, so the box IS the record and
-# this mode costs no network at all.
-if [ "$MODE" = status ]; then
-  [ -n "$ARG" ] || { echo "ps-check: status needs a story slug"; exit 1; }
-  story=$(ls -d .squad/stories/*"$ARG"*/ 2>/dev/null | head -1)
-  [ -n "$story" ] || { echo "ps-check: no story matching '$ARG'"; exit 1; }
-  slug=$(basename "${story%/}")
-
-  # Mid-story the ticks live on the story branch and have not reached this checkout
-  # yet, so read story.md from there when that branch exists.
-  md=$(git show "ps-story/$slug:${story}story.md" 2>/dev/null) ||
-    md=$(cat "${story}story.md" 2>/dev/null)
-
-  printf 'STATUS %s\n' "$slug"
-  n=0; ndone=0; ntodo=0
-
-  for task in "$story"tasks/*.md; do
-    [ -f "$task" ] || continue
-    n=$((n + 1))
-    rel="tasks/$(basename "$task")"
-    if printf '%s\n' "$md" | grep -qE "^- \[[xX]\] $rel"; then
-      ndone=$((ndone + 1)); printf '  done  %s\n' "$rel"
+# Remove the worktree and local branch a finished PR left behind. $1 = branch.
+drop_branch() {
+  b=$1
+  wt=$(wt_of "$b")
+  if [ -n "$wt" ]; then
+    # The dep links `warm` created point outside the worktree; git removes the links,
+    # never what they point at.
+    if git worktree remove "$wt" 2>/dev/null; then
+      printf '  ok  removed worktree %s\n' "$wt"
     else
-      ntodo=$((ntodo + 1)); printf '  todo  %s\n' "$rel"
+      printf '  !   worktree %s refused removal (uncommitted changes?) — left alone\n' "$wt"
+      LEFT=$((LEFT + 1))
+      return 1
     fi
-  done
-
-  printf 'SUMMARY  %s tasks | done: %s | remaining: %s\n' "$n" "$ndone" "$ntodo"
-  exit 0
-fi
+  fi
+  git worktree prune 2>/dev/null
+  git branch -D "$b" >/dev/null 2>&1 && printf '  ok  deleted local branch %s\n' "$b"
+  return 0
+}
 
 # ------------------------------------------------------------------------ warm
 # A fresh worktree has no node_modules / .venv / vendor and no build cache. Installing
@@ -146,96 +98,122 @@ if [ "$MODE" = warm ]; then
   exit 0
 fi
 
-# -------------------------------------------------------------------- learnings
-echo "LEARNINGS"
-if [ -f .squad/learnings.md ]; then
-  bytes=$(wc -c < .squad/learnings.md | tr -d ' ')
-  if [ "$bytes" -gt "$CAP" ]; then
-    printf '  !   %s bytes / %s cap — OVER: compress or drop before appending\n' "$bytes" "$CAP"
-    LEFT=$((LEFT + 1))
-  else
-    printf '  ok  %s bytes / %s cap\n' "$bytes" "$CAP"
+# --------------------------------------------------------------------- publish
+# The whole terminal step of a task, deterministic. /ps:publish decides one thing —
+# whether the review approved — and then calls this. Exit 2 means CONFLICT and nothing
+# was merged: resolve it on the branch and run this again, unchanged.
+if [ "$MODE" = publish ]; then
+  [ -n "$ARG" ] || { echo "ps-check: publish needs a PR number"; exit 1; }
+  [ "$PROVIDER" = gh ] || { echo "ps-check: publish needs the gh CLI (GitHub); merge by hand"; exit 1; }
+
+  # Uncommitted work in the main checkout would be caught by the checkout/pull below,
+  # halfway through, with the merge already done. Untracked files are fine — a fresh
+  # `.squad/tasks/*.prompt.md` is untracked until /ps:task commits it.
+  if ! git diff --quiet || ! git diff --cached --quiet; then
+    echo "ABORT  main checkout has uncommitted changes to tracked files — commit or stash first"
+    exit 1
   fi
-  # A rule carrying two dates was grown in place instead of rewritten or promoted —
-  # the second date is the rule announcing it did not work the first time.
-  D='[0-9]{4}-[0-9]{2}-[0-9]{2}'
-  grown=$(grep -cE "$D.*$D" .squad/learnings.md) || grown=0
-  if [ "$grown" -gt 0 ]; then
-    printf '  !   %s rule(s) grown in place — rewrite as one line, or promote to config/test/task\n' "$grown"
-    LEFT=$((LEFT + 1))
+
+  info=$(gh pr view "$ARG" --json headRefName,baseRefName,state,mergeable \
+           --jq '[.headRefName, .baseRefName, .state, .mergeable] | @tsv' 2>/dev/null) ||
+    { printf 'ABORT  could not read PR %s\n' "$ARG"; exit 1; }
+  head=$(printf '%s' "$info" | cut -f1)
+  base=$(printf '%s' "$info" | cut -f2)
+  state=$(printf '%s' "$info" | cut -f3)
+  mergeable=$(printf '%s' "$info" | cut -f4)
+
+  printf 'PUBLISH #%s  %s -> %s\n' "$ARG" "$head" "$base"
+  [ "$state" = OPEN ] || { printf 'ABORT  PR is %s, not OPEN\n' "$state"; exit 1; }
+  if [ "$mergeable" = CONFLICTING ]; then
+    printf 'CONFLICT  %s cannot merge into %s — resolve it on the branch, then run this again\n' "$head" "$base"
+    exit 2
   fi
-else
-  echo "  --  no .squad/learnings.md yet"
+
+  # Squash on purpose: the base branch gets one commit per task. The per-step commits
+  # stay in this PR's commit list.
+  gh pr merge "$ARG" --squash --delete-branch ||
+    { echo 'ABORT  merge refused — nothing was changed locally'; exit 1; }
+  printf '  ok  squash-merged, remote branch %s deleted\n' "$head"
+
+  WT=$(wt_list)
+  drop_branch "$head"
+
+  git checkout -q "$base" 2>/dev/null && printf '  ok  on %s\n' "$base" ||
+    { printf '  !   could not check out %s\n' "$base"; LEFT=$((LEFT + 1)); }
+  git pull --rebase --quiet && printf '  ok  pulled %s\n' "$base" ||
+    { printf '  !   pull --rebase failed on %s — do it by hand\n' "$base"; LEFT=$((LEFT + 1)); }
+
+  printf 'SUMMARY  needs attention: %s\n' "$LEFT"
+  exit 0
 fi
 
-# ------------------------------------------------------------------------- debt
-# Debt has no cap — it grows honestly. It stays short by being swept: an entry whose
-# path is gone died with the code, and one with no `until` never said what would earn
-# it a fix, which makes it a wish.
-echo "DEBT"
-if [ -f .squad/debt.md ]; then
-  n=0
-  bad=0
-  while IFS= read -r line; do
-    case $line in '- ['*) ;; *) continue ;; esac
-    n=$((n + 1))
-    p=$(printf '%s' "$line" | sed 's/^- \[//; s/[]:].*//')
-    why=
-    [ -e "$p" ] || why="path is gone — delete the entry"
-    case $line in *' until '*) ;; *) why="${why:+$why, and }no 'until' — say what earns it a fix" ;; esac
-    [ -z "$why" ] || { printf '  !   %s — %s\n' "$p" "$why"; bad=$((bad + 1)); }
-  done < .squad/debt.md
-  printf '  %s  %s entries, %s to sweep\n' "$([ "$bad" -eq 0 ] && echo ok || echo '! ')" "$n" "$bad"
-  LEFT=$((LEFT + bad))
-else
-  echo "  --  no .squad/debt.md yet"
-fi
-
-# ------------------------------------------------------------------- stale refs
-# Worktrees of merged/closed PRs, and the branches they leave behind. Branches are
-# only deleted on MERGED: a CLOSED PR may be abandoned work worth keeping.
+# ----------------------------------------------------------------------- sweep
+# Strays: worktrees and branches of PRs that finished without going through
+# `publish` — abandoned tasks, PRs merged in the browser. Branches are only deleted
+# on MERGED; a CLOSED PR may be abandoned work worth keeping.
 #
-# Stories live in `ps-story/<slug>`, one worktree each, and that is the only namespace
-# left — tasks commit onto the story branch instead of branching off it. The `ps/*`
-# pattern is still matched here so stories run under v2.0 or earlier get swept too.
-echo "STALE"
-# The single provider call happens here and nowhere else: `status` and `warm` never
-# need it, and in sweep it has to come after the fetch that moves the refs.
+# `ps-story/*` and `ps/*` are still matched so branches left by v3 and earlier get
+# swept too.
+if [ "$MODE" != sweep ] && [ "$MODE" != report ]; then
+  echo "usage: sh .claude/ps-check.sh warm <path> | publish <pr> | sweep"
+  exit 1
+fi
+
+# One provider call, every state. Lines are "<head-branch><TAB><STATE>".
+PRS=
 [ "$MODE" = sweep ] && git fetch --prune --quiet 2>/dev/null
-[ -n "$PROVIDER" ] && load_prs
+case $PROVIDER in
+  gh)
+    PRS=$(gh pr list --state all --limit 300 --json state,headRefName \
+            --jq '.[] | "\(.headRefName)\t\(.state)"' 2>/dev/null) || PRS=
+    ;;
+  glab)
+    # Field order is not guaranteed, so pull each key independently per object.
+    PRS=$(glab mr list --all -F json 2>/dev/null | tr '}' '\n' | while IFS= read -r o; do
+            b=$(printf '%s' "$o" | grep -o '"source_branch":"[^"]*"' | cut -d'"' -f4)
+            s=$(printf '%s' "$o" | grep -o '"state":"[^"]*"' | cut -d'"' -f4)
+            [ -n "$b" ] && printf '%s\t%s\n' "$b" "$s"
+          done) || PRS=
+    ;;
+esac
+
+# <branch> -> MERGED | CLOSED | OPEN | NONE | UNKNOWN   (local lookup, no network)
+pr_state() {
+  [ -n "$PROVIDER" ] || { echo UNKNOWN; return; }
+  s=$(printf '%s\n' "$PRS" | awk -F'\t' -v b="$1" '$1 == b { print $2; exit }')
+  case $(printf '%s' "$s" | tr 'a-z' 'A-Z') in
+    MERGED)      echo MERGED ;;
+    CLOSED)      echo CLOSED ;;
+    OPEN|OPENED) echo OPEN ;;
+    '')          echo NONE ;;
+    *)           echo UNKNOWN ;;
+  esac
+}
+
+echo "STALE"
 [ -n "$PROVIDER" ] || echo "  --  no gh/glab on this machine — merge state unknown, nothing removed"
 found=0
+WT=$(wt_list)
 
-# Worktree paths resolved once, instead of re-walking the porcelain per branch.
-WT=$(git worktree list --porcelain 2>/dev/null |
-     awk '/^worktree /{p=$2} /^branch /{sub("refs/heads/","",$2); print $2"\t"p}')
-
-for b in $(git for-each-ref --format='%(refname:short)' refs/heads 2>/dev/null | grep -E '^ps(-story)?/'); do
+for b in $(git for-each-ref --format='%(refname:short)' refs/heads 2>/dev/null | grep -E '^(task|ps-story|ps)/'); do
   st=$(pr_state "$b")
   case $st in MERGED|CLOSED) ;; *) continue ;; esac
   found=$((found + 1))
-  wt=$(printf '%s\n' "$WT" | awk -F'\t' -v b="$b" '$1 == b { print $2; exit }')
   if [ "$MODE" != sweep ]; then
+    wt=$(wt_of "$b")
     printf '  ~   %s (PR %s) — would remove %s\n' "$b" "$st" "${wt:-branch only}"
     continue
   fi
-  if [ -n "$wt" ]; then
-    # The dep links `warm` created point outside the worktree; git removes the links,
-    # never what they point at.
-    if git worktree remove "$wt" 2>/dev/null; then
-      printf '  ok  removed worktree %s\n' "$wt"
-    else
-      printf '  !   worktree %s refused removal (uncommitted changes?) — left alone\n' "$wt"
-      LEFT=$((LEFT + 1))
-      continue
-    fi
+  if [ "$st" = MERGED ]; then
+    drop_branch "$b"
+  else
+    wt=$(wt_of "$b")
+    [ -z "$wt" ] || printf '  ~   worktree %s kept (PR closed, not merged)\n' "$wt"
+    printf '  ~   branch %s kept (PR closed, not merged)\n' "$b"
   fi
-  [ "$st" = MERGED ] || { printf '  ~   branch %s kept (PR closed, not merged)\n' "$b"; continue; }
-  git branch -D "$b" >/dev/null 2>&1 && printf '  ok  deleted local branch %s\n' "$b"
 done
-[ "$MODE" = sweep ] && git worktree prune 2>/dev/null
 
-for r in $(git for-each-ref --format='%(refname:short)' refs/remotes 2>/dev/null | grep -E '/ps(-story)?/'); do
+for r in $(git for-each-ref --format='%(refname:short)' refs/remotes 2>/dev/null | grep -E '/(task|ps-story|ps)/'); do
   remote=${r%%/*}
   b=${r#*/}
   [ "$(pr_state "$b")" = MERGED ] || continue

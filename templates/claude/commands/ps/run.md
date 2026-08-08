@@ -1,92 +1,78 @@
 ---
-description: Run a whole story - one worktree, tasks in order, one commit each on the story branch, ending in one PR to review. Usage - /ps:run <story-slug>
+description: Execute one refined prompt - a worktree on task/<slug>, one semantic commit per step, one PR. Usage - /ps:run <yymmdd-hhmm | pasted prompt>
 effort: medium
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash(git:*), Bash(gh:*), Bash(glab:*), Bash(sh .claude/ps-check.sh:*), Bash(npm:*), Bash(pnpm:*), Bash(yarn:*), Bash(npx:*), Bash(make:*), Bash(cargo:*), Bash(go:*), Bash(pytest:*), Bash(uv:*)
 ---
 
-Target: "$ARGUMENTS" is the story slug (the `.squad/stories/<slug>` directory name, or
-enough of it to match one). Empty → list the slugs and ask; never guess.
+"$ARGUMENTS" is **either** an id matching `.squad/tasks/<id>.prompt.md` (read that file)
+**or** the prompt text itself, pasted straight in — that is the fresh-session path, and
+it needs no file on disk. Empty → list `.squad/tasks/` and ask; never guess.
 
-Everything here runs in **this chat**, in order, one task at a time. That is the design,
-not a limitation: you are already warm with the story's context, and a cold subagent per
-task pays to rebuild what you are holding. The only cold context in this workflow is
+**The prompt is already refined. Do not re-interview.** `/ps:task` paid for the
+questions, the exemplars and the verified commands. Re-deriving them here is the one
+cost this workflow exists to avoid. Stop only if executing would require inventing a
+decision the prompt does not contain.
+
+Everything runs in **this chat**, serially. The only cold context in this workflow is
 `/ps:review`, where not knowing what the author intended is the whole point.
 
 ## 1. Set up, once
 
-Record the branch you are on — the **target branch**, where this story eventually lands.
+Record the branch you are on — the **target branch**, where this lands.
 
-    sh .claude/ps-check.sh status <story-slug>   # what is already done, if this is a resume
+The title is the prompt's `# ` line; the slug is that title in kebab-case.
 
-Read `story.md`, then the task files still open. A task `status` reports as done is
-history — skip its file. If every task is done, say so and stop; the story PR may
-already be waiting for `/ps:review`.
-
-Then one worktree for the whole story:
-
-    git worktree add ../<repo>--ps/<story-slug> -b ps-story/<story-slug>
-    sh .claude/ps-check.sh warm ../<repo>--ps/<story-slug>
+    git worktree add ../<repo>--ps/<slug> -b task/<slug>
+    sh .claude/ps-check.sh warm ../<repo>--ps/<slug>
 
 `warm` shares this checkout's installed dependencies instead of installing them again.
-Once per story now, not once per task. **If a task changes a lockfile, delete the link
-it names and run the project's real install first** — the directory is shared with the
-main checkout, so installing through the link corrupts it.
+**If a step changes a lockfile, delete the link it names and run the project's real
+install first** — the directory is shared with the main checkout, so installing through
+the link corrupts it.
 
-One branch for the whole story, `ps-story/<slug>`, and one commit per task on it. There
-are no task branches and no task PRs: a task branch squash-merged into the story left
-exactly one commit behind, so committing straight to the story branch lands the same
-history without the push, the PR body and the merge that nobody read.
+## 2. Each step, in order
 
-## 2. Each task, in filename order
+Work inside the worktree, on `task/<slug>`.
 
-Work inside the worktree, on `ps-story/<story-slug>`. For task `NN-<task-slug>.md`:
+1. Implement. The prompt's `## Context` carries the exemplar, the symbol and the
+   commands — open what it names, write the code. It states the outcome and the
+   boundaries; designing the implementation is still your job, with the code in front
+   of you.
+2. Commit that step, alone, in **conventional-commit** form:
+   `feat(scope): ...`, `fix(scope): ...`, `refactor(scope): ...`, `test(scope): ...`,
+   `chore(scope): ...`. One idea per commit, subject in the imperative.
 
-1. **Read that task file now**, not earlier. One task's contract at a time is what
-   keeps this chat from carrying five tasks' worth of detail it does not need yet.
-2. Implement. The task carries its own `## Context` — the exemplar, the symbol, the
-   commands, found once at plan time. **Do not re-derive it**: no repo survey, no norm
-   hunt. Open what Context names, apply `.squad/learnings.md`, write the code. It states
-   the outcome and the boundaries; designing the implementation is still your job, with
-   the code in front of you.
-3. Run the task's `Verify` commands once, at the end. If it names none, fall back to the
-   repo's standard lint/test/build. Never weaken a check to make it pass.
-4. Tick this task's box in `story.md` and commit it **with the work, in one commit**:
-   `<story-slug> NN/N — <task title>`, with the repo's commit convention in front where
-   it has one. One commit, so the tick and the code it claims can never disagree — a run
-   that dies leaves either both or neither.
+Run the prompt's `## Verify` commands once, after the last step. If it names none, fall
+back to the repo's standard lint/test/build. **Never weaken a check to make it pass.**
 
-Report one line per task and keep moving:
+Report one line per step:
 
 ```
-▸ 01 pending → committed 3f2a1c9
-▸ 02 pending → committed 8b40e77
-! 03 parked — scope question: <one line>
+▸ 1 add parser entry point        → a1b2c3d
+▸ 2 wire it into the CLI          → e4f5g6h
+! 3 parked — scope question: <one line>
 ```
 
-A task that hits a scope decision, or fails its own verification twice, **parks**. Its
-half-finished work must not ride along in the next task's commit, so stash it — named,
-so it can be found later — and leave the story branch green:
+A step that hits a scope decision, or fails verification twice, **parks**. Stash its
+half-finished work so the branch stays green, say so in one line, and stop — later steps
+usually depend on it:
 
-    git stash push -u -m "parked <story-slug> NN-<task-slug>"
+    git stash push -u -m "parked <slug> step <n>"
 
-Then say so in one line and go to the next task. Never invent the decision. A refused
-permission parks the same way and names the exact refused call.
+Never invent the decision. A refused permission parks the same way and names the exact
+refused call.
 
-## 3. When the tasks are done
+## 3. Open the PR
 
-Push the story branch — once, now, not once per task:
+    git push -u origin task/<slug>
 
-    git push -u origin ps-story/<story-slug>
+Then from the main checkout (`ExitWorktree`, or run from its path), open **one PR** into
+the target branch you recorded in section 1.
 
-Then from the main checkout (`ExitWorktree`, or run from its path), open **one PR** from
-`ps-story/<story-slug>` to the target branch you recorded in section 1. Body per
-`.squad/templates/pr.md` ("Story PR") — this is the one a human reads, so write it for
-someone who was not here.
-
-Title: `<story-slug> — <story title>`, with the repo's commit convention in front where
-it has one.
+- **Title:** the task title, verbatim.
+- **Body:** `.squad/templates/pr.md`, **in the prompt's language**.
 
 ## 4. Report
 
-The story PR's URL, the tasks that parked and why, and `/ps:review <pr>` as the next
-step. The story branch and its worktree stay until `/ps:publish` sweeps them.
+The PR URL, anything that parked and why, and `/ps:review <pr>` as the next step. The
+branch and its worktree stay until `/ps:publish` sweeps them.

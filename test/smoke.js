@@ -27,7 +27,7 @@ try {
   // that never reaches the transcript, and generation is the wall-clock. A command
   // with no `effort` inherits the session's, which is how a checkbox tick ends up
   // costing the same deliberation as a decomposition.
-  for (const cmd of ["story", "review", "publish", "init", "run", "prune"]) {
+  for (const cmd of ["sync", "task", "run", "review", "publish"]) {
     const file = path.join(dir, ".claude", "commands", "ps", `${cmd}.md`);
     assert.ok(fs.existsSync(file), `install should create the namespaced /ps:${cmd} command`);
     const fm = fs.readFileSync(file, "utf8").split("---")[1] || "";
@@ -39,17 +39,15 @@ try {
     assert.match(fm, /^allowed-tools:/m, `/ps:${cmd} must declare allowed-tools`);
   }
 
-  // The review prompts live outside the command so the main chat never retypes them
-  // into a dispatch. /ps:review points at these paths — missing, the dispatch is a
-  // subagent told to read a file that isn't there.
-  for (const prompt of ["ps-review.md", "ps-verify.md"]) {
-    assert.ok(
-      fs.existsSync(path.join(dir, ".claude", prompt)),
-      `install should create .claude/${prompt}`
-    );
-  }
+  // The review prompt lives outside the command so the main chat never retypes it into
+  // a dispatch. /ps:review points at this path — missing, the dispatch is a subagent
+  // told to read a file that isn't there.
+  assert.ok(
+    fs.existsSync(path.join(dir, ".claude", "ps-review.md")),
+    "install should create .claude/ps-review.md"
+  );
 
-  // Session-wide permissions are what let a long /ps:pipe run finish — a command's
+  // Session-wide permissions are what let a long /ps:run finish — a command's
   // `allowed-tools` grant clears on the owner's next message. Broad rules would be
   // suspended by auto mode's classifier, so every allow rule has to stay prefixed.
   const settings = JSON.parse(
@@ -70,61 +68,57 @@ try {
     );
   }
 
-  // Subagents are where most of a story's tokens are generated, and a command's own
+  // Subagents are where most of a task's tokens are generated, and a command's own
   // frontmatter never reaches one. The agent definition is the only place their model
   // and effort can be pinned, so a missing file means the step silently runs at the
   // session's level — which is the failure this whole file exists to make loud.
-  for (const [agent, expect] of [
-    ["ps-review", /^effort: high$/m],
-    ["ps-verify", /^effort: low$/m],
-  ]) {
-    const file = path.join(dir, ".claude", "agents", `${agent}.md`);
-    assert.ok(fs.existsSync(file), `install should create the ${agent} subagent`);
-    const fm = fs.readFileSync(file, "utf8").split("---")[1] || "";
-    assert.match(fm, expect, `${agent} must pin its effort, or it inherits the session's`);
-    assert.match(fm, /^model: /m, `${agent} must state its model, even when it inherits`);
-    assert.match(fm, new RegExp(`^name: ${agent}$`, "m"), `${agent}'s name must match its dispatch`);
-  }
+  const agent = path.join(dir, ".claude", "agents", "ps-review.md");
+  assert.ok(fs.existsSync(agent), "install should create the ps-review subagent");
+  const agentFm = fs.readFileSync(agent, "utf8").split("---")[1] || "";
+  assert.match(agentFm, /^effort: high$/m, "ps-review must pin its effort, or it inherits the session's");
+  assert.match(agentFm, /^model: /m, "ps-review must state its model, even when it inherits");
+  assert.match(agentFm, /^name: ps-review$/m, "ps-review's name must match its dispatch");
   assert.ok(
-    !/Write|Edit/.test(fs.readFileSync(path.join(dir, ".claude", "agents", "ps-review.md"), "utf8")
-      .split("---")[1].match(/^tools: .*/m)[0]),
+    !/Write|Edit/.test(agentFm.match(/^tools: .*/m)[0]),
     "ps-review must not get write tools — a reviewer that fixes what it finds stops reporting it"
   );
 
-  // Everything a past version shipped and v2.0 does not. /ps:load and /ps:pipe died
-  // when execution moved into the main chat, and ps-task with them — there are no
-  // execution subagents left, only review ones.
+  // Everything a past version shipped and v4.0 does not. /ps:story and /ps:init were
+  // renamed to /ps:task and /ps:sync; learnings, debt and /ps:prune died because a rule
+  // read alongside CLAUDE.md and ARCHITECTURE.md was noise, and a debt ledger was a
+  // place to defer the fix to; the verification round died with the second round.
   for (const gone of [
+    path.join(".claude", "commands", "ps", "init.md"),
+    path.join(".claude", "commands", "ps", "story.md"),
+    path.join(".claude", "commands", "ps", "prune.md"),
     path.join(".claude", "commands", "ps", "load.md"),
     path.join(".claude", "commands", "ps", "pipe.md"),
+    path.join(".claude", "commands", "ps", "status.md"),
+    path.join(".claude", "agents", "ps-verify.md"),
     path.join(".claude", "agents", "ps-task.md"),
     path.join(".claude", "agents", "backend-junior.md"),
     path.join(".claude", "agents", "techlead.md"),
-    path.join(".claude", "skills"),
+    path.join(".claude", "ps-verify.md"),
     path.join(".claude", "techlead.md"),
-    path.join(".claude", "commands", "ps", "status.md"),
+    path.join(".claude", "skills"),
+    path.join(".squad", "learnings.md"),
+    path.join(".squad", "debt.md"),
+    path.join(".squad", "templates", "story.md"),
+    path.join(".squad", "templates", "task.md"),
     path.join(".squad", "project-context.md"),
   ]) {
     assert.ok(!fs.existsSync(path.join(dir, gone)), `${gone} must not ship`);
   }
 
-  // The window machinery went with the topology: only whole stories reach the target
-  // branch now, so an intermediate state cannot be a regression there.
-  for (const f of [
-    path.join(dir, ".squad", "templates", "task.md"),
-    path.join(dir, ".claude", "ps-check.sh"),
-    path.join(dir, ".claude", "commands", "ps", "publish.md"),
-  ]) {
-    assert.ok(
-      !/window:/i.test(fs.readFileSync(f, "utf8")),
-      `${path.basename(f)} still mentions the removed degradation-window field`
-    );
+  // Learnings and debt are gone from the prose too, not just from disk: a command that
+  // still tells the model to append to .squad/learnings.md sends it to write a file
+  // nothing ships and nothing reads.
+  for (const f of walk(path.join(dir, ".claude")).concat(walk(path.join(dir, ".squad")))) {
+    if (!f.endsWith(".md") && !f.endsWith(".sh")) continue;
+    const body = fs.readFileSync(f, "utf8");
+    assert.ok(!/learnings\.md|debt\.md/.test(body), `${path.basename(f)} still references learnings/debt`);
+    assert.ok(!/ps:story|ps:init|ps:prune/.test(body), `${path.basename(f)} still references a renamed command`);
   }
-
-  assert.ok(
-    fs.existsSync(path.join(dir, ".squad", "learnings.md")),
-    "install should create .squad/learnings.md"
-  );
 
   // The mechanical checks the commands delegate to. A syntax error here would fail
   // silently mid-publish, which is the exact failure the script exists to prevent.
@@ -132,7 +126,7 @@ try {
   assert.ok(fs.existsSync(check), "install should create .claude/ps-check.sh");
   execFileSync("sh", ["-n", check]);
 
-  for (const tpl of ["story", "task", "pr"]) {
+  for (const tpl of ["prompt", "pr"]) {
     assert.ok(
       fs.existsSync(path.join(dir, ".squad", "templates", `${tpl}.md`)),
       `install should create .squad/templates/${tpl}.md`
@@ -168,19 +162,33 @@ try {
     "removing an orphan must not take the shipped files sharing its directory"
   );
 
-  // Knowledge files never get nagging .new copies: customize learnings, update again.
-  fs.appendFileSync(path.join(dir, ".squad", "learnings.md"), "- [all] test rule (added 2026-07-14)\n");
-  execFileSync("node", [CLI, "update"], { cwd: dir });
-  assert.ok(
-    !fs.existsSync(path.join(dir, ".squad", "learnings.md.new")),
-    "update must not write .new for knowledge files (.squad/)"
-  );
+  // A v3 project updating to v4: its learnings file was edited (it held real rules), so
+  // it is no longer identical to what v3 shipped. It must survive the update — deleting
+  // a file the owner wrote is the one thing this CLI may never do — and be reported.
+  const stale = path.join(dir, ".squad", "learnings.md");
+  fs.writeFileSync(stale, "- [all] a real rule someone wrote\n");
+  const m2 = JSON.parse(fs.readFileSync(MANIFEST, "utf8"));
+  m2.files["squad/learnings.md"] = sha(Buffer.from("what v3 shipped\n"));
+  fs.writeFileSync(MANIFEST, JSON.stringify(m2, null, 2));
+  const out = execFileSync("node", [CLI, "update"], { cwd: dir }).toString();
+  assert.ok(fs.existsSync(stale), "update must never delete a knowledge file the owner edited");
+  assert.match(out, /obsolete\s+\.squad\/learnings\.md/, "an edited orphan must be reported, not silently kept");
+  fs.rmSync(stale);
 
   psCheckModes();
   settingsMerge();
   console.log("smoke test passed");
 } finally {
   fs.rmSync(dir, { recursive: true, force: true });
+}
+
+function walk(root, out = []) {
+  if (!fs.existsSync(root)) return out;
+  for (const e of fs.readdirSync(root, { withFileTypes: true })) {
+    const full = path.join(root, e.name);
+    e.isDirectory() ? walk(full, out) : out.push(full);
+  }
+  return out;
 }
 
 /**
@@ -237,10 +245,10 @@ function settingsMerge() {
 }
 
 /**
- * The ps-check.sh modes the commands hand their mechanical work to. `sh -n` above
- * only proves it parses; these prove the three modes with real logic in them do what
- * /ps:run and /ps:publish assume. A mode that silently does nothing looks
- * exactly like a mode that worked.
+ * The ps-check.sh modes the commands hand their mechanical work to. `sh -n` above only
+ * proves it parses; these prove the modes with real logic in them do what /ps:run and
+ * /ps:publish assume. A mode that silently does nothing looks exactly like one that
+ * worked.
  */
 function psCheckModes() {
   const repo = fs.mkdtempSync(path.join(os.tmpdir(), "pocket-squad-repo-"));
@@ -256,51 +264,44 @@ function psCheckModes() {
     git("commit", "-qm", "seed");
 
     const ps = path.join(repo, ".claude", "ps-check.sh");
-    const story = path.join(repo, ".squad", "stories", "2026-01-01-demo");
-    fs.mkdirSync(path.join(story, "tasks"), { recursive: true });
-    fs.writeFileSync(
-      path.join(story, "story.md"),
-      "# Demo\n\n## Tasks\n- [x] tasks/01-ticked.md — already merged\n- [ ] tasks/02-pending.md — not yet\n"
-    );
-    fs.writeFileSync(path.join(story, "tasks", "01-ticked.md"), "# Ticked\n");
-    fs.writeFileSync(path.join(story, "tasks", "02-pending.md"), "# Pending\n");
 
-    // status — /ps:run skips what this calls done and /ps:publish gates learnings on
-    // `remaining`. With no story branch yet it reads the boxes in this checkout.
-    const status = execFileSync("sh", [ps, "status", "demo"], { cwd: repo }).toString();
-    assert.match(status, /done\s+tasks\/01-ticked\.md/, "status must read a ticked box as done");
-    assert.match(status, /todo\s+tasks\/02-pending\.md/, "status must read an unticked box as todo");
-    assert.match(status, /remaining: 1/, "status must report what is left, or publish cannot gate on it");
-
-    // A story in flight has its ticks on the story branch and nowhere else — they
-    // reach this checkout only when the story PR merges. Reading story.md from here
-    // would call a finished task todo, and /ps:run would do it a second time.
-    const storyMd = path.join(story, "story.md");
-    const before = fs.readFileSync(storyMd, "utf8");
-    git("add", "-A");
-    git("commit", "-qm", "story");
-    git("switch", "-q", "-c", "ps-story/2026-01-01-demo");
-    fs.writeFileSync(storyMd, before.replace("- [ ] tasks/02", "- [x] tasks/02"));
-    git("commit", "-qam", "02 done");
-    git("switch", "-q", "main");
-    const inFlight = execFileSync("sh", [ps, "status", "demo"], { cwd: repo }).toString();
-    assert.match(
-      inFlight,
-      /done\s+tasks\/02-pending\.md/,
-      "status must read the ticks off the story branch, not this checkout"
+    // An unknown mode must fail loudly. `report`/`status` were real modes up to v3 and
+    // a stale command still calling them would otherwise look like it swept clean.
+    assert.throws(
+      () => execFileSync("sh", [ps, "status", "demo"], { cwd: repo, stdio: "pipe" }),
+      "an unknown mode must exit non-zero, not silently do nothing"
     );
-    assert.match(inFlight, /remaining: 0/, "a story whose branch ticks every box has nothing left");
+
+    // publish refuses before it touches anything when the checkout is dirty — the
+    // failure it prevents is a merge that lands and then a checkout that cannot move.
+    fs.appendFileSync(path.join(repo, "seed.txt"), "dirty\n");
+    let dirty = "";
+    try {
+      execFileSync("sh", [ps, "publish", "1"], { cwd: repo, stdio: "pipe" });
+      assert.fail("publish must refuse a dirty checkout");
+    } catch (e) {
+      dirty = (e.stdout || Buffer.alloc(0)).toString();
+    }
+    assert.match(dirty, /ABORT|needs the gh CLI/, "publish must abort, and say why, before merging anything");
+    git("checkout", "--", "seed.txt");
 
     // warm — a fresh worktree with no deps is what made every task pay a full install.
     fs.mkdirSync(path.join(repo, "node_modules", "left-pad"), { recursive: true });
     fs.writeFileSync(path.join(repo, "node_modules", "left-pad", "index.js"), "module.exports=1\n");
-    git("worktree", "add", "--quiet", wt, "-b", "ps/demo/pending");
+    git("worktree", "add", "--quiet", wt, "-b", "task/demo");
     const warm = execFileSync("sh", [ps, "warm", wt], { cwd: repo }).toString();
     assert.match(warm, /node_modules ->/, "warm must link node_modules into the worktree");
     assert.ok(
       fs.existsSync(path.join(wt, "node_modules", "left-pad", "index.js")),
       "the linked node_modules must resolve from inside the worktree"
     );
+
+    // sweep with no provider must remove nothing and say so — silence would read as
+    // "swept clean" and the branch would look gone when it is not.
+    const sweep = execFileSync("sh", [ps, "sweep"], { cwd: repo, env: { ...process.env, PATH: "/usr/bin:/bin" } })
+      .toString();
+    assert.match(sweep, /SUMMARY/, "sweep must always end with a SUMMARY line");
+    assert.ok(fs.existsSync(wt), "sweep must not remove a worktree whose PR state it cannot read");
 
     // The link points at the main checkout. Tearing the worktree down must unlink it,
     // never follow it — otherwise every sweep deletes the shared dependencies.

@@ -2,7 +2,6 @@
   "permissions": {
     "allow": [
       "Bash(sh .claude/ps-check.sh:*)",
-
       "Bash(git status:*)",
       "Bash(git diff:*)",
       "Bash(git log:*)",
@@ -18,7 +17,6 @@
       "Bash(git pull --rebase:*)",
       "Bash(git push:*)",
       "Bash(git worktree:*)",
-
       "Bash(gh pr view:*)",
       "Bash(gh pr diff:*)",
       "Bash(gh pr list:*)",
@@ -26,7 +24,6 @@
       "Bash(gh pr review:*)",
       "Bash(gh pr merge:*)",
       "Bash(glab mr:*)",
-
       "Bash(npm test:*)",
       "Bash(npm run:*)",
       "Bash(npm ci:*)",
@@ -36,7 +33,9 @@
       "Bash(make:*)",
       "Bash(pytest:*)",
       "Bash(cargo test:*)",
-      "Bash(go test:*)"
+      "Bash(go test:*)",
+      "Bash(git merge:*)",
+      "Bash(git stash:*)"
     ],
     "deny": [
       "Bash(git push --force:*)",
