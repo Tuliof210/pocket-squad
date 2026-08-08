@@ -22,9 +22,10 @@ Two sources, in this order:
    Its `## Outcome` is the contract, `## Scope` says what may be touched, `## Verify`
    names the checks, `## Forbidden` says what must not appear. A PR that does something
    the prompt never asked for is a finding, even when the something is good.
-2. **The repo's norms** — `CLAUDE.md` (or `AGENTS.md`), and everything it mandates
-   reading: `.squad/PRODUCT.md` and `.squad/ARCHITECTURE.md`, including the exemplar
-   file paths ARCHITECTURE names.
+2. **The repo's norms** — whatever `CLAUDE.md` (or `AGENTS.md`) mandates reading. That
+   file is a pointer, so follow it: normally `.squad/PRODUCT.md` (what the product is)
+   and `.squad/ARCHITECTURE.md` (stack, commands, conventions, boundaries), including
+   the exemplar file paths ARCHITECTURE names.
 
 You review against those, not against generic good practice.
 

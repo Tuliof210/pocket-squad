@@ -38,6 +38,13 @@ workflow with none of its permissions.
 `/ps:sync` → `/ps:task` → `/ps:run` → `/ps:review` → `/ps:publish`. One request becomes
 one prompt file, one branch, one PR, one review round.
 
+In a project that ran `/ps:sync`, `CLAUDE.md` is a **pointer and nothing else**: every
+rule lives in `.squad/PRODUCT.md` (what/who/why) or `.squad/ARCHITECTURE.md` (stack,
+commands, conventions, do-not-touch). The only line allowed to join the pointer is the
+optional merge authorization the auto-mode classifier needs, because the classifier reads
+`CLAUDE.md` and does not follow pointers. This repo's own `CLAUDE.md` has not been synced
+yet and is still a full document.
+
 ## Conventions
 - CommonJS, Node built-ins only. No transpilation, no `import`.
 - Non-destructive by default: no file operation may silently overwrite user content —

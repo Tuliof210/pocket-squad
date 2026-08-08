@@ -70,8 +70,8 @@ What does **not** belong in the file:
   signature, a payload shape — never a function body, markup or styles.
 - A hand-measured number. If a decision depends on a measurement, name the command that
   takes it at execution time.
-- Anything already in `CLAUDE.md`, `.squad/PRODUCT.md` or `.squad/ARCHITECTURE.md` —
-  all three load anyway.
+- Anything already in `.squad/PRODUCT.md` or `.squad/ARCHITECTURE.md` — both load
+  anyway, on every message.
 
 ## 5. Commit it
 

@@ -15,12 +15,13 @@ npx pocket-squad status     # managed vs customized files
 /ps:sync                 once per project, and again whenever the rules drift. Sweeps
                          the repo for product and architecture rules already written
                          somewhere — README, CONTRIBUTING, docs, a bloated CLAUDE.md —
-                         and MOVES them into .squad/PRODUCT.md (what/who/why) and
-                         .squad/ARCHITECTURE.md (how it is built, conventions, exemplar
-                         paths). Then interviews only the gaps the repo cannot answer.
-                         Writes into CLAUDE.md/AGENTS.md a mandatory first rule: read
-                         those two files before answering anything, /ps:* or not.
-                         Proposes everything and waits for your confirmation.
+                         and MOVES them into just two files: .squad/PRODUCT.md
+                         (what/who/why) and .squad/ARCHITECTURE.md (stack, commands,
+                         conventions, exemplar paths, do-not-touch). Then interviews
+                         only the gaps the repo cannot answer. CLAUDE.md/AGENTS.md is
+                         emptied down to a pointer — read those two files before
+                         answering anything, /ps:* or not. Proposes everything and
+                         waits for your confirmation.
 
 /ps:task ["request"]     turns a rough request into ONE refined prompt. Asks only the
                          non-obvious and ambiguous questions, each with a suggested
@@ -217,8 +218,16 @@ not a story slug.
 **`/ps:init` became `/ps:sync`**, and its job flipped. It no longer mainly interviews you
 — it moves product and architecture rules that already exist in the repo into
 `.squad/PRODUCT.md` and `.squad/ARCHITECTURE.md`, and only then asks about what is left.
-It also writes the mandatory-first-read rule into `CLAUDE.md`/`AGENTS.md`. Run it once
-after updating.
+**The 3-way split became a 2-way one:** `CLAUDE.md` no longer keeps "the operational
+essentials" — stack, commands and do-not-touch move to `ARCHITECTURE.md` with everything
+else, and `CLAUDE.md` is emptied down to the rule that points at the other two. Keeping
+essentials there is how it grew into a document the first time. Run `/ps:sync` once after
+updating; it shows you the diff before emptying anything.
+
+The one exception is a single optional line under that rule, authorizing the squash-merge
+`/ps:publish` ends with: the auto-mode classifier reads `CLAUDE.md` and does not follow
+the pointer, so without it publish asks permission every time. `/ps:sync` proposes it and
+you can decline.
 
 **Branch names changed** from `ps-story/<slug>` to `task/<slug>`, and commits are
 conventional (`feat(scope): …`) instead of `<slug> NN/N — <title>`. `ps-check.sh sweep`
