@@ -1,7 +1,7 @@
 ---
 description: Turn a rough request into one refined, self-contained prompt saved at .squad/tasks/<yymmdd-hhmm>.prompt.md. Usage - /ps:task ["your request"]
 effort: high
-allowed-tools: Task, Agent, Read, Write, Edit, Grep, Glob, Bash(git:*), Bash(date:*), Bash(wc:*), Bash(ls:*)
+allowed-tools: Task, Agent, Read, Write, Edit, Grep, Glob, Bash(git:*), Bash(date:*), Bash(ls:*)
 ---
 
 The owner's request: "$ARGUMENTS" — may be empty; ask for it if so.
@@ -61,8 +61,20 @@ Length is a correctness property, in both directions:
 - **Too terse** and every gap becomes an invention. If a reader could reasonably build
   two different things, it is not finished.
 
-Then `wc -l` it: **over 80 lines is a decomposition error**, not a formatting one — go
-back to step 2 and split the request.
+The test is scope, never line count. Check the prompt against these — **any one that
+holds is a decomposition error**: go back to step 2 and split the request.
+
+- Two observable outcomes a reviewer could accept or reject independently.
+- A step that can only start once another step's result has been *reviewed* — a
+  migration and the code that depends on the new shape.
+- Two verification recipes that never overlap: different suites, different surfaces.
+- More steps than one branch can carry as readable conventional commits.
+
+None holds → the prompt is one task and is exactly as long as its contract requires. A
+long prompt made of *contract* — signatures, payload shapes, edge cases, exact commands,
+file paths — is correct and must not be trimmed. A long prompt made of prose —
+restatement, rationale, encouragement, anything already in `.squad/ARCHITECTURE.md` — is
+the actual defect: cut the prose, keep every line that changes what gets built.
 
 What does **not** belong in the file:
 
