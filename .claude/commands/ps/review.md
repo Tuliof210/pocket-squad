@@ -77,14 +77,16 @@ already settled by `.claude/ps-review.md`. You renumber and unite; you do not re
 **Follow `.claude/ps-report.md`. It is the whole final message.** The verdict is on the
 PR; this is the owner's one-screen version of it, not a second copy:
 
-    ── review · <title>
-    ▸ run lens   <APPROVED | n findings>       ✓ <the check that mattered>
-    ▸ read lens  <APPROVED | n findings>
-    ✓ fixed  #1 <finding>                      f7a8b9c
-    ·  minor #3 <finding> — declined, your call
+    **review · <title>**
 
-    ✓ done · <PR url> approved at <sha>
-    → /ps:publish <pr>
+    - run lens — <APPROVED | n findings>, <the check that mattered>
+    - read lens — <APPROVED | n findings>
+    - fixed #1 <finding> — `f7a8b9c`
+    - ~~#3 <finding>~~ minor, declined — your call
+
+    **✓ done** · <PR url> approved at `<sha>`
+
+    → `/ps:publish <pr>`
 
 **Route by severity yourself**: blocker and major already bought their fix, minor is
 already declined — neither is a question. `? decide` is for what severity does not settle:

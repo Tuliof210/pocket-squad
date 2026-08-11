@@ -117,13 +117,15 @@ leaves the commit local, which is fine; say so.
 
 **Follow `.claude/ps-report.md`. It is the whole final message.** Your lines:
 
-    ── task · <title>
-    ▸ <step 1, one line>          R1
-    ▸ <step 2, one line>          R2 R3
-    ! <a contract `## Design` settles — the owner should see the shape without opening the file>
+    **task · <title>**
 
-    ✓ done · .squad/tasks/<id>.prompt.md
-    → /ps:run <id>
+    - <step 1, one line> — R1
+    - <step 2, one line> — R2 R3
+    - **<note>** <a contract `## Design` settles, in one line>
+
+    **✓ done** · `.squad/tasks/<id>.prompt.md`
+
+    → `/ps:run <id>`
 
 A scope decision that surfaced and is still open is a `? decide` line with its default —
 never invent it, and never bury it in prose above the report.

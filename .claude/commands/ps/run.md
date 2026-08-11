@@ -79,13 +79,15 @@ the target branch you recorded in section 1.
 
 **Follow `.claude/ps-report.md`. It is the whole final message.** Your lines:
 
-    ── run · <title>
-    ▸ 1 <step>                        a1b2c3d   R1
-    ▸ 2 <step>                        e4f5g6h   R2 R3
-    ✓ <verify command> — <what it printed>       R1 R2 R3
+    **run · <title>**
 
-    ✓ done · <PR url>
-    → /ps:review <pr>
+    - 1 <step> — `a1b2c3d` R1
+    - 2 <step> — `e4f5g6h` R2 R3
+    - <verify command> — <what it printed>
+
+    **✓ done** · <PR url>
+
+    → `/ps:review <pr>`
 
 A parked step ends the run at `! stopped` instead — which step, why, and that the work is
 stashed. The branch and its worktree stay until `/ps:publish` removes them; that is not
