@@ -35,21 +35,24 @@ the link corrupts it.
 Work inside the worktree, on `task/<slug>`.
 
 1. Implement. The prompt's `## Context` carries the exemplar, the symbol and the
-   commands — open what it names, write the code. It states the outcome and the
-   boundaries; designing the implementation is still your job, with the code in front
-   of you.
+   commands — open what it names, write the code. `## Design`, when it is not `none`, is
+   settled: build that contract verbatim, names included, and do not improve it — the
+   reviewer was told the same shape. Everything it does not fix is yours to design, with
+   the code in front of you.
 2. Commit that step, alone, in **conventional-commit** form:
    `feat(scope): ...`, `fix(scope): ...`, `refactor(scope): ...`, `test(scope): ...`,
    `chore(scope): ...`. One idea per commit, subject in the imperative.
 
-Run the prompt's `## Verify` commands once, after the last step. If it names none, fall
-back to the repo's standard lint/test/build. **Never weaken a check to make it pass.**
+Run every `## Verify` line once, after the last step, and say which criterion each one
+proved. A criterion left without a passing check is a parked task, not a finished one. If
+the prompt names no command, fall back to the repo's standard lint/test/build. **Never
+weaken a check to make it pass.**
 
-Report one line per step:
+Report one line per step, carrying the criteria it served:
 
 ```
-▸ 1 add parser entry point        → a1b2c3d
-▸ 2 wire it into the CLI          → e4f5g6h
+▸ 1 add parser entry point        → a1b2c3d   R1
+▸ 2 wire it into the CLI          → e4f5g6h   R2 R3
 ! 3 parked — scope question: <one line>
 ```
 
@@ -75,4 +78,4 @@ the target branch you recorded in section 1.
 ## 4. Report
 
 The PR URL, anything that parked and why, and `/ps:review <pr>` as the next step. The
-branch and its worktree stay until `/ps:publish` sweeps them.
+branch and its worktree stay until `/ps:publish` removes them.

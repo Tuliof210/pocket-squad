@@ -35,7 +35,10 @@
       "Bash(cargo test:*)",
       "Bash(go test:*)",
       "Bash(git merge:*)",
-      "Bash(git stash:*)"
+      "Bash(git stash:*)",
+      "Bash(npx:*)",
+      "Bash(yarn run:*)",
+      "Bash(uv run:*)"
     ],
     "deny": [
       "Bash(git push --force:*)",

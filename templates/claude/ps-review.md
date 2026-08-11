@@ -19,9 +19,11 @@ the repo.
 Two sources, in this order:
 
 1. **The task prompt** (`.squad/tasks/<id>.prompt.md`, or pasted into your dispatch).
-   Its `## Outcome` is the contract, `## Scope` says what may be touched, `## Verify`
-   names the checks, `## Forbidden` says what must not appear. A PR that does something
-   the prompt never asked for is a finding, even when the something is good.
+   Its `## Outcome` is the contract, numbered `R1..Rn`; `## Design` records the shape and
+   the decisions that were settled before coding; `## Scope` says what may be touched;
+   `## Verify` names the checks; `## Forbidden` says what must not appear. Cite criteria
+   by number in your verdict. A PR that does something the prompt never asked for is a
+   finding, even when the something is good.
 2. **The repo's norms** — whatever `CLAUDE.md` (or `AGENTS.md`) mandates reading. That
    file is a pointer, so follow it: normally `.squad/PRODUCT.md` (what the product is)
    and `.squad/ARCHITECTURE.md` (stack, commands, conventions, boundaries), including
@@ -44,8 +46,9 @@ shortcut is off.
 
 You are the only one who runs anything. Never trust the PR's claims.
 
-- **Every bullet in the prompt's `## Outcome`.** Run the matching `## Verify` command
-  yourself. A test that passes vacuously counts as a missing test.
+- **Every criterion in the prompt's `## Outcome`, by number.** Run the `## Verify` line
+  that cites it. A criterion with no passing check is unmet, whatever the diff suggests,
+  and a test that passes vacuously counts as a missing test.
 - **Correctness** in the touched code paths — broken contracts, regressions.
 - **Security** — injection, authorization on objects, secrets in code, unsafe input.
 - **The seams between steps.** Step 3 may have quietly broken what step 1 built.
@@ -76,6 +79,10 @@ exemplar.
   ARCHITECTURE.md and compare against what wasn't.
 - **Duplication** — does this reimplement something the repo already has (grep before
   assuming), or repeat a block that belongs in shared code? Name the symbol.
+- **`## Design`, when the prompt has one** — the shipped surface must be the surface the
+  prompt settled: same signature, same payload keys, same column and route names. A
+  deviation is a finding even if it is an improvement, because two agents downstream were
+  told the other shape. Do not re-argue a `Chose X over Y` line; it was already decided.
 - **Scope creep** — measured against the prompt's `## Scope`, not against taste.
 - **Over-engineering** — reinvented stdlib, speculative abstraction, an interface with
   one implementation, a dependency where a few lines would do.
@@ -98,7 +105,7 @@ Then either:
     APPROVED — <lens> lens, SHA <sha>
 
     Ran:
-      - <command> — <what it printed>
+      - R1 · <command> — <what it printed>
     Did not run, and why:
       - <thing> — <reason>
 
@@ -106,7 +113,7 @@ or:
 
     FINDINGS — <lens> lens, SHA <sha>
 
-    1. [blocker] src/parser/csv.ts:42 — <what is wrong, one plain sentence>
+    1. [blocker] src/parser/csv.ts:42 (R2) — <what is wrong, one plain sentence>
        Why: <what breaks, concretely>
        Fixed when: <the observable thing that has to become true>
 

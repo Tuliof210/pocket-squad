@@ -1,7 +1,7 @@
 ---
 description: Turn a rough request into one refined, self-contained prompt saved at .squad/tasks/<yymmdd-hhmm>.prompt.md. Usage - /ps:task ["your request"]
 effort: high
-allowed-tools: Task, Agent, Read, Write, Edit, Grep, Glob, Bash(git:*), Bash(date:*), Bash(ls:*)
+allowed-tools: Task, Agent, Read, Write, Edit, Grep, Glob, Bash(git:*), Bash(date:*), Bash(mkdir:*)
 ---
 
 The owner's request: "$ARGUMENTS" — may be empty; ask for it if so.
@@ -9,8 +9,9 @@ The owner's request: "$ARGUMENTS" — may be empty; ask for it if so.
 **This command produces one file and nothing else.** Nothing is implemented, no branch
 is cut, no PR opens — that is `/ps:run`.
 
-Your product is a **prompt**. Everything found here is written down once and read by two
-agents that would otherwise re-derive it: the executor and the reviewer.
+Your product is a **spec**: one file carrying the requirements, the design decisions and
+the plan. Everything found here is written down once and read by two agents that would
+otherwise re-derive it: the executor and the reviewer.
 
 ## 1. Context
 
@@ -24,6 +25,11 @@ Read what `CLAUDE.md` / `AGENTS.md` mandates — `.squad/PRODUCT.md` and
   do not interrogate. Never fabricate a decision to avoid asking.
 - Cover at minimum: real scope and boundaries, the observable outcome, technical
   constraints, risk surface (auth / migrations / public contracts).
+- **Does this task create surface that does not exist yet** — a route, a table, a public
+  signature, a payload, a CLI flag, a component API? Then its shape is a decision, and
+  the owner gets it as a proposal before it is code. Propose one shape, name the
+  alternative you are not taking. This is the only design gate in the workflow; after
+  this the executor codes against what you wrote.
 - A request bundling independent deliverables becomes separate prompts — propose the
   split. Iterate; stop when nothing material is open.
 
@@ -53,6 +59,19 @@ That timestamp is the filename: `.squad/tasks/<yymmdd-hhmm>.prompt.md`. Fill
 **Write it in the language this conversation is happening in** — headings included. The
 PR body and the review verdict will follow the same language, because they are read by
 the same person.
+
+Two sections carry the spec and both fail in a specific way:
+
+- **`## Outcome` is numbered `R1..Rn`**, and every step and every `## Verify` line cites
+  the criteria it serves. A criterion nothing cites is untested or was never a criterion;
+  a step that cites nothing is scope creep with a commit message attached. Fix the thread,
+  not the numbering.
+- **`## Design` is where a spec earns its name, and where it rots into a document nobody
+  reads.** Write it only for surface that does not exist yet — the exact contract, the
+  flow when failure or ordering is not obvious from that contract, and one line per
+  alternative ruled out. A task that follows a pattern already in the repo writes `none`;
+  that is the common case and it is not a weaker spec. `## Context` already quoted the
+  exemplar — restating it here is the rot.
 
 Length is a correctness property, in both directions:
 
@@ -97,4 +116,6 @@ leaves the commit local, which is fine; say so.
 ## 6. Report
 
 The file path, the title, the steps in one line each, and `/ps:run <id>` as the next
-step. A scope decision that surfaced goes to the owner — never invent it.
+step. Any contract `## Design` settles goes in the report too — the owner should see the
+shape they are about to get without opening the file. A scope decision that surfaced goes
+to the owner — never invent it.

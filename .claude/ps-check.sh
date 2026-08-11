@@ -154,14 +154,14 @@ fi
 #
 # `ps-story/*` and `ps/*` are still matched so branches left by v3 and earlier get
 # swept too.
-if [ "$MODE" != sweep ] && [ "$MODE" != report ]; then
+if [ "$MODE" != sweep ]; then
   echo "usage: sh .claude/ps-check.sh warm <path> | publish <pr> | sweep"
   exit 1
 fi
 
 # One provider call, every state. Lines are "<head-branch><TAB><STATE>".
 PRS=
-[ "$MODE" = sweep ] && git fetch --prune --quiet 2>/dev/null
+git fetch --prune --quiet 2>/dev/null
 case $PROVIDER in
   gh)
     PRS=$(gh pr list --state all --limit 300 --json state,headRefName \
@@ -199,11 +199,6 @@ for b in $(git for-each-ref --format='%(refname:short)' refs/heads 2>/dev/null |
   st=$(pr_state "$b")
   case $st in MERGED|CLOSED) ;; *) continue ;; esac
   found=$((found + 1))
-  if [ "$MODE" != sweep ]; then
-    wt=$(wt_of "$b")
-    printf '  ~   %s (PR %s) — would remove %s\n' "$b" "$st" "${wt:-branch only}"
-    continue
-  fi
   if [ "$st" = MERGED ]; then
     drop_branch "$b"
   else
@@ -218,9 +213,7 @@ for r in $(git for-each-ref --format='%(refname:short)' refs/remotes 2>/dev/null
   b=${r#*/}
   [ "$(pr_state "$b")" = MERGED ] || continue
   found=$((found + 1))
-  if [ "$MODE" != sweep ]; then
-    printf '  ~   %s (PR merged) — would delete on the remote\n' "$r"
-  elif git push --quiet "$remote" --delete "$b" 2>/dev/null; then
+  if git push --quiet "$remote" --delete "$b" 2>/dev/null; then
     printf '  ok  deleted remote branch %s\n' "$r"
   else
     printf '  !   could not delete remote branch %s\n' "$r"
