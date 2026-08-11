@@ -47,6 +47,17 @@ try {
     "install should create .claude/ps-review.md"
   );
 
+  // Same reason, one step later: the three commands that talk to the owner end by
+  // following a single report shape instead of each inventing one. A pointer to a file
+  // that did not ship is a command that falls back to freeform prose — which is the
+  // failure the shared shape exists to end.
+  const report = path.join(dir, ".claude", "ps-report.md");
+  assert.ok(fs.existsSync(report), "install should create .claude/ps-report.md");
+  for (const cmd of ["task", "run", "review"]) {
+    const body = fs.readFileSync(path.join(dir, ".claude", "commands", "ps", `${cmd}.md`), "utf8");
+    assert.match(body, /ps-report\.md/, `/ps:${cmd} must point at the shared report shape`);
+  }
+
   // Session-wide permissions are what let a long /ps:run finish — a command's
   // `allowed-tools` grant clears on the owner's next message. Broad rules would be
   // suspended by auto mode's classifier, so every allow rule has to stay prefixed.

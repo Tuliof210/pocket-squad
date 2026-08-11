@@ -115,7 +115,15 @@ leaves the commit local, which is fine; say so.
 
 ## 6. Report
 
-The file path, the title, the steps in one line each, and `/ps:run <id>` as the next
-step. Any contract `## Design` settles goes in the report too — the owner should see the
-shape they are about to get without opening the file. A scope decision that surfaced goes
-to the owner — never invent it.
+**Follow `.claude/ps-report.md`. It is the whole final message.** Your lines:
+
+    ── task · <title>
+    ▸ <step 1, one line>          R1
+    ▸ <step 2, one line>          R2 R3
+    ! <a contract `## Design` settles — the owner should see the shape without opening the file>
+
+    ✓ done · .squad/tasks/<id>.prompt.md
+    → /ps:run <id>
+
+A scope decision that surfaced and is still open is a `? decide` line with its default —
+never invent it, and never bury it in prose above the report.

@@ -7,7 +7,8 @@
 - Distribution: an `npx`-installable CLI. `bin.pocket-squad -> bin/pocket-squad.js`.
 - Shipped content, copied into a target project: markdown under `templates/` — 5
   `/ps:*` commands, the review subagent (`.claude/agents/ps-review.md`), the review
-  prompt (`.claude/ps-review.md`), `.claude/settings.json` and the
+  prompt (`.claude/ps-review.md`), the report shape (`.claude/ps-report.md`),
+  `.claude/settings.json` and the
   `.squad/templates/{prompt,pr}.md` scaffolds — plus `templates/claude/ps-check.sh`,
   the one executable in the package.
 
@@ -84,6 +85,10 @@ yet and is still a full document.
   a junior — plain sentences, exact file and command names — and are **short enough to
   be read**. `.squad/templates/{prompt,pr}.md` are the shapes; `ps-review.md` carries
   the verdict format.
+- What `/ps:task`, `/ps:run` and `/ps:review` say **in chat** is `ps-report.md` and
+  nothing else: a detail block, exactly one status line (`✓ done` / `? decide` /
+  `! stopped`), and a last line naming the literal next command. The report is the whole
+  final message — a command that explains itself above the report has undone it.
 - The repo dogfoods itself: `templates/claude/*` ≡ `.claude/*`. After editing templates,
   run `node bin/pocket-squad.js update` at the repo root to re-sync the dogfood.
 - `.squad/PRODUCT.md`, `.squad/ARCHITECTURE.md` and `.squad/tasks/` are never shipped

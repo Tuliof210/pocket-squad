@@ -48,12 +48,12 @@ proved. A criterion left without a passing check is a parked task, not a finishe
 the prompt names no command, fall back to the repo's standard lint/test/build. **Never
 weaken a check to make it pass.**
 
-Report one line per step, carrying the criteria it served:
+Keep one line per step as you go, carrying the criteria it served — this is the detail
+block of the final report:
 
 ```
-▸ 1 add parser entry point        → a1b2c3d   R1
-▸ 2 wire it into the CLI          → e4f5g6h   R2 R3
-! 3 parked — scope question: <one line>
+▸ 1 add parser entry point        a1b2c3d   R1
+▸ 2 wire it into the CLI          e4f5g6h   R2 R3
 ```
 
 A step that hits a scope decision, or fails verification twice, **parks**. Stash its
@@ -77,5 +77,16 @@ the target branch you recorded in section 1.
 
 ## 4. Report
 
-The PR URL, anything that parked and why, and `/ps:review <pr>` as the next step. The
-branch and its worktree stay until `/ps:publish` removes them.
+**Follow `.claude/ps-report.md`. It is the whole final message.** Your lines:
+
+    ── run · <title>
+    ▸ 1 <step>                        a1b2c3d   R1
+    ▸ 2 <step>                        e4f5g6h   R2 R3
+    ✓ <verify command> — <what it printed>       R1 R2 R3
+
+    ✓ done · <PR url>
+    → /ps:review <pr>
+
+A parked step ends the run at `! stopped` instead — which step, why, and that the work is
+stashed. The branch and its worktree stay until `/ps:publish` removes them; that is not
+news and does not go in the report.

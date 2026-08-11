@@ -90,6 +90,9 @@ name — and the checks that found them are re-run inline. A further round is yo
                                one step worth paying for
   ps-review.md                 the review prompt, read by that subagent itself — so the
                                main chat never retypes it into a dispatch
+  ps-report.md                 how /ps:task, /ps:run and /ps:review end: one status line
+                               and one literal next command, so "is it my turn?" is
+                               answered by position instead of by prose
   ps-check.sh                  the mechanical half: worktree warming, the deterministic
                                publish, sweeping stale refs. Never read into context,
                                and at most ONE network call per invocation
