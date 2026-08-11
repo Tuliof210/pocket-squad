@@ -5,7 +5,7 @@
 - ZERO runtime and ZERO dev dependencies by design — Node built-ins only (`fs`,
   `path`, `crypto`). Adding a dependency is a design decision, never casual.
 - Distribution: an `npx`-installable CLI. `bin.pocket-squad -> bin/pocket-squad.js`.
-- Shipped content, copied into a target project: markdown under `templates/` — 5
+- Shipped content, copied into a target project: markdown under `templates/` — 6
   `/ps:*` commands, the review subagent (`.claude/agents/ps-review.md`), the review
   prompt (`.claude/ps-review.md`), the report shape (`.claude/ps-report.md`),
   `.claude/settings.json` and the
@@ -37,7 +37,9 @@ workflow with none of its permissions.
 
 ## The workflow it ships (v4)
 `/ps:sync` → `/ps:task` → `/ps:run` → `/ps:review` → `/ps:publish`. One request becomes
-one prompt file, one branch, one PR, one review round.
+one prompt file, one branch, one PR, one review round. `/ps:teach` sits outside the
+chain: it explains the project to someone new to it and is the one command that writes
+nothing — no file, no branch, not even a fix for something it finds while reading.
 
 In a project that ran `/ps:sync`, `CLAUDE.md` is a **pointer and nothing else**: every
 rule lives in `.squad/PRODUCT.md` (what/who/why) or `.squad/ARCHITECTURE.md` (stack,

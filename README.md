@@ -1,7 +1,8 @@
 # Pocket Squad
 
-A lean Claude Code workflow, in your pocket. One `npx` installs five slash commands that
-take a request from "what I actually want" to a merged, reviewed pull request.
+A lean Claude Code workflow, in your pocket. One `npx` installs six slash commands: five
+take a request from "what I actually want" to a merged, reviewed pull request, and one
+explains the project back to you.
 
 ```bash
 npx pocket-squad            # install into the current project
@@ -55,6 +56,19 @@ npx pocket-squad status     # managed vs customized files
                          same script again.
 ```
 
+Off the chain, and the only command that writes nothing:
+
+```
+/ps:teach "question"     explains any part of the project — the product, a decision, a
+                         file, a word you did not know — pitched at someone new to it.
+                         Reads PRODUCT.md and ARCHITECTURE.md, then the code that
+                         actually implements them, and answers with the one-sentence
+                         version first, every claim anchored to a real path:line, one
+                         analogy with the line where it stops being true, and something
+                         you can run to see it happen. Says so when the docs and the
+                         code disagree. Use it before /ps:task when the area is new.
+```
+
 ### The branch shape
 
 ```
@@ -86,6 +100,7 @@ name — and the checks that found them are re-run inline. A further round is yo
 ```
 .claude/
   commands/ps/                 sync.md  task.md  run.md  review.md  publish.md
+                               teach.md
   agents/ps-review.md          the only subagent, pinning the model and effort of the
                                one step worth paying for
   ps-review.md                 the review prompt, read by that subagent itself — so the
@@ -162,7 +177,7 @@ effort is declared per step instead of inherited from the session:
 |---|---|---|
 | `commands/ps/task.md` | the interview, the investigation, the prompt | `high` |
 | `agents/ps-review.md` | both review lenses — the quality gate | `high` |
-| the other four commands | judgment inside boundaries something else drew | `medium` |
+| the other five commands | judgment inside boundaries something else drew | `medium` |
 
 A command's frontmatter never reaches a subagent it dispatches, so the review agent
 carries its own. That is why `/ps:review` dispatches `ps-review` by name instead of

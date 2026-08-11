@@ -27,7 +27,7 @@ try {
   // that never reaches the transcript, and generation is the wall-clock. A command
   // with no `effort` inherits the session's, which is how a checkbox tick ends up
   // costing the same deliberation as a decomposition.
-  for (const cmd of ["sync", "task", "run", "review", "publish"]) {
+  for (const cmd of ["sync", "task", "run", "review", "publish", "teach"]) {
     const file = path.join(dir, ".claude", "commands", "ps", `${cmd}.md`);
     assert.ok(fs.existsSync(file), `install should create the namespaced /ps:${cmd} command`);
     const fm = fs.readFileSync(file, "utf8").split("---")[1] || "";

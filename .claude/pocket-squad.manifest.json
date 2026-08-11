@@ -1,6 +1,6 @@
 {
   "version": "4.0.0",
-  "installedAt": "2026-08-11T12:24:03.140Z",
+  "installedAt": "2026-08-11T12:38:44.919Z",
   "files": {
     "claude/agents/ps-review.md": "fac3bd3b63b0c2c461313d7ed2dda8c4fe4d9ebce5934774524b188457a18b19",
     "claude/commands/ps/publish.md": "a3d2abb736509caefd337f0071873f58bc0b03c1e4a0323a343fe9e4deb2784e",
@@ -8,6 +8,7 @@
     "claude/commands/ps/run.md": "73cff089b95753fcebfc89caa334d2f7adf00cf7ab4abd2595a73e4eb7b356d5",
     "claude/commands/ps/sync.md": "3ee8229a34f223c815e321a860475b170d34790584641813178b2399f8f7a30e",
     "claude/commands/ps/task.md": "9e1186f960a95c9ce131e10d4d25dadb486792ec0bcf7ea7091d96cc417c8e81",
+    "claude/commands/ps/teach.md": "f0f587a065f4b3584b12ac6a54e59e50918ab0dc9cdadd5f7d72d53ae5a16c3a",
     "claude/ps-check.sh": "5cffa6fb2d2dd02e0903157aeca466313788045699ffb7d4e845af5e32972fee",
     "claude/ps-report.md": "ab4acdb753537c132f1d6149d73600b6a69d7fec7e3dac8cfb3a2027bd143ac8",
     "claude/ps-review.md": "8a632ba39ad46048cda5707bab62de0e8bc9ce924708a4c7ca5a548ed3b995f4",
