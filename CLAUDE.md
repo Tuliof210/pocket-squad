@@ -87,10 +87,13 @@ yet and is still a full document.
   a junior — plain sentences, exact file and command names — and are **short enough to
   be read**. `.squad/templates/{prompt,pr}.md` are the shapes; `ps-review.md` carries
   the verdict format.
-- What `/ps:task`, `/ps:run` and `/ps:review` say **in chat** is `ps-report.md` and
-  nothing else: a detail block, exactly one status line (`✓ done` / `? decide` /
-  `! stopped`), and a last line naming the literal next command. The report is the whole
-  final message — a command that explains itself above the report has undone it.
+- How `/ps:task`, `/ps:run` and `/ps:review` **end** is `ps-report.md`: a detail block,
+  exactly one status line (`✓ done` / `? decide` / `! stopped`), then the literal `→`
+  line(s). Only that ending is fixed — the block is as long as the work was, n artifacts
+  get n `→` lines, and a non-blocking question rides above a `✓ done` instead of being
+  dropped. **The shape reports the work and never decides it**: trimming what was done,
+  or omitting a fact, to fit the layout is the failure the file exists to prevent. Above
+  the report goes substance the owner must act on and nothing that restates an item.
 - The repo dogfoods itself: `templates/claude/*` ≡ `.claude/*`. After editing templates,
   run `node bin/pocket-squad.js update` at the repo root to re-sync the dogfood.
 - `.squad/PRODUCT.md`, `.squad/ARCHITECTURE.md` and `.squad/tasks/` are never shipped

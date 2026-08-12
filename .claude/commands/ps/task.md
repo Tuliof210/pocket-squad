@@ -6,8 +6,11 @@ allowed-tools: Task, Agent, Read, Write, Edit, Grep, Glob, Bash(git:*), Bash(dat
 
 The owner's request: "$ARGUMENTS" — may be empty; ask for it if so.
 
-**This command produces one file and nothing else.** Nothing is implemented, no branch
-is cut, no PR opens — that is `/ps:run`.
+**This command writes prompt files and nothing else.** Nothing is implemented, no branch
+is cut, no PR opens — that is `/ps:run`. One prompt is the common case; a request holding
+independent deliverables gets one prompt each, and **every one of them is written in this
+run** — proposing a split and then delivering the first of it is the failure this note
+exists to name.
 
 Your product is a **spec**: one file carrying the requirements, the design decisions and
 the plan. Everything found here is written down once and read by two agents that would
@@ -55,6 +58,12 @@ reviewer to do it a second time — which is the cost this step exists to pay on
 
 That timestamp is the filename: `.squad/tasks/<yymmdd-hhmm>.prompt.md`. Fill
 `.squad/templates/prompt.md`.
+
+Split into n prompts → n files, written in the order they must run. The id has
+minute resolution, so two files written in the same minute would collide: increment the
+minute for each extra prompt (`...-1430`, `...-1431`). Each file is self-contained — a
+prompt that depends on an earlier one says so in its `## Context`, by id and by what it
+can then assume exists.
 
 **Write it in the language this conversation is happening in** — headings included. The
 PR body and the review verdict will follow the same language, because they are read by
@@ -109,7 +118,7 @@ What does **not** belong in the file:
     git add .squad/tasks/<id>.prompt.md
     git commit -m "chore(task): <id> <title>"
 
-The prompt has to exist in git history: `/ps:run` cuts a worktree from here and
+One commit per prompt file. The prompt has to exist in git history: `/ps:run` cuts a worktree from here and
 `/ps:review` reads the file to judge against it. Push best-effort — a protected branch
 leaves the commit local, which is fine; say so.
 
@@ -127,5 +136,11 @@ leaves the commit local, which is fine; say so.
 
     → `/ps:run <id>`
 
-A scope decision that surfaced and is still open is a `? decide` line with its default —
-never invent it, and never bury it in prose above the report.
+Split into n prompts → one item per prompt saying what it delivers, all n paths on the
+`✓ done` line, and one `→` line each in the order they must run. Report every prompt you
+wrote; never leave the rest for the owner to ask for.
+
+A scope decision still open is a `? decide` line with its default — never invent it, and
+never bury it in prose above the report. A call the owner could make but that does not
+block you — a fourth prompt worth writing, scope you left out — is a question line above
+a `✓ done`, not silence.
