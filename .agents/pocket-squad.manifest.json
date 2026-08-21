@@ -1,0 +1,18 @@
+{
+  "version": "4.0.0",
+  "installedAt": "2026-08-21T05:14:00.777Z",
+  "files": {
+    "agents/agents/ps-review.md": "b984f61edfca8e650b582a07f586412b48f28673c16c071c4c6c6f136e417877",
+    "agents/commands/ps-review.md": "bfa1ebae9730448f3c4c392173b9d8aa7349b0c3f156778e9d07d9810b6c7b18",
+    "agents/commands/ps-run.md": "15f3010ff034f98b02399b34ab9255e3a98ea76bdf2f22f08cef16d47ecd2e88",
+    "agents/commands/ps-sync.md": "4b28796eb4dd344baef1de116d015b12e579753ec7dff318ef8e5dfd71908243",
+    "agents/commands/ps-task.md": "23beaef8fd58aadacb742114f21e1f3a20d33845d19904d7f6a5e270fa814d3e",
+    "agents/commands/ps-teach.md": "a1c5edea8f16fb6663a24c3b698d0e92aaec075260a90393fd2d958cee8ab056",
+    "agents/ps-check.sh": "2f8890ca118590318d9190934cb81c76c76dd131c925ebad1e171b16d09aeb21",
+    "agents/ps-report.md": "d45c6f0006ae47fdc51104b03a0a20cd2e0ab460fe545c1518000b2edbbf6b62",
+    "agents/ps-review.md": "a5dfa71a8a077de7aa7738bf3aefa5226c0a648c6135c2a1fed1e3d4c11741bc",
+    "agents/settings.json": "6d319a4a4d49582d9e3ed875947fd0d0852e7615d0b3f88a0ade367ca76ae3f0",
+    "squad/templates/pr.md": "6668f074a3f0774d4ca285e660f7bbb2842b3a2b6fa47dae11da82bf3659ee16",
+    "squad/templates/prompt.md": "5d5412cb82e81456bf51d44d1aaae02004c9d4780fb2903fac5d57466174f1cb"
+  }
+}

@@ -1,5 +1,5 @@
 ---
-description: Turn a rough request into one refined, self-contained prompt saved at .squad/tasks/<yymmdd-hhmm>.prompt.md. Usage - /ps:task ["your request"]
+description: Turn a rough request into one refined, self-contained prompt saved at .squad/tasks/<yymmdd-hhmm>.prompt.md. Usage - /ps-task ["your request"]
 effort: high
 allowed-tools: Task, Agent, Read, Write, Edit, Grep, Glob, Bash(git:*), Bash(date:*), Bash(mkdir:*)
 ---
@@ -7,7 +7,7 @@ allowed-tools: Task, Agent, Read, Write, Edit, Grep, Glob, Bash(git:*), Bash(dat
 The owner's request: "$ARGUMENTS" — may be empty; ask for it if so.
 
 **This command writes prompt files and nothing else.** Nothing is implemented, no branch
-is cut, no PR opens — that is `/ps:run`. One prompt is the common case; a request holding
+is cut, no PR opens — that is `/ps-run`. One prompt is the common case; a request holding
 independent deliverables gets one prompt each, and **every one of them is written in this
 run** — proposing a split and then delivering the first of it is the failure this note
 exists to name.
@@ -18,8 +18,8 @@ otherwise re-derive it: the executor and the reviewer.
 
 ## 1. Context
 
-Read what `CLAUDE.md` / `AGENTS.md` mandates — `.squad/PRODUCT.md` and
-`.squad/ARCHITECTURE.md`. Missing → suggest `/ps:sync` first; you may proceed without.
+Read what `AGENTS.md` mandates — `.squad/PRODUCT.md` and `.squad/ARCHITECTURE.md`.
+Missing → suggest `/ps-sync` first; you may proceed without.
 
 ## 2. Ask only what is not obvious
 
@@ -118,13 +118,13 @@ What does **not** belong in the file:
     git add .squad/tasks/<id>.prompt.md
     git commit -m "chore(task): <id> <title>"
 
-One commit per prompt file. The prompt has to exist in git history: `/ps:run` cuts a worktree from here and
-`/ps:review` reads the file to judge against it. Push best-effort — a protected branch
+One commit per prompt file. The prompt has to exist in git history: `/ps-run` cuts a worktree from here and
+`/ps-review` reads the file to judge against it. Push best-effort — a protected branch
 leaves the commit local, which is fine; say so.
 
 ## 6. Report
 
-**Follow `.claude/ps-report.md`. It is the whole final message.** Your lines:
+**Follow `.agents/ps-report.md`. It is the whole final message.** Your lines:
 
     **task · <title>**
 
@@ -134,7 +134,7 @@ leaves the commit local, which is fine; say so.
 
     **✓ done** · `.squad/tasks/<id>.prompt.md`
 
-    → `/ps:run <id>`
+    → `/ps-run <id>`
 
 Split into n prompts → one item per prompt saying what it delivers, all n paths on the
 `✓ done` line, and one `→` line each in the order they must run. Report every prompt you

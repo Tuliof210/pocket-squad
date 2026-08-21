@@ -1,5 +1,5 @@
 ---
-description: Explain any part of this project - product, architecture, stack, a single file - to someone who is new to it. Usage - /ps:teach "your question"
+description: Explain any part of this project - product, architecture, stack, a single file - to someone who is new to it. Usage - /ps-teach "your question"
 effort: medium
 allowed-tools: Task, Agent, Read, Grep, Glob, Bash(git log:*), Bash(git show:*), Bash(ls:*)
 ---
@@ -8,9 +8,9 @@ The question: "$ARGUMENTS" — may be empty; ask what they want to understand.
 
 **This command changes nothing.** No file is written, no branch, no PR, no fix — even
 when you spot something broken while reading. Spotted something? Say it in one line at
-the end and let the owner decide. It is the only `/ps:*` command that is pure reading,
-and it sits outside the `sync → task → run → review → publish` chain: use it before
-`/ps:task` when the area is unfamiliar, or any time someone asks "how does this work?".
+the end and let the owner decide. It is the only `/ps-*` command that is pure reading,
+and it sits outside the `sync → task → run → review` chain: use it before
+`/ps-task` when the area is unfamiliar, or any time someone asks "how does this work?".
 
 Your product is **someone understanding**. Not a summary, not a file tour.
 
@@ -86,7 +86,7 @@ between them believing you and them knowing.
 ## 5. Size
 
 Match the question. "What is `ps-check.sh`?" is a paragraph and one reference. "How does
-the whole workflow fit together?" is the **spine first** — the five steps, one line each,
+the whole workflow fit together?" is the **spine first** — the four steps, one line each,
 and what each one hands the next — then the offer to go deeper on any of them. Never dump
 the whole repo because the question was broad; a wall of text teaches nothing, and the
 `→` line exists exactly so the reader can pick the next piece.

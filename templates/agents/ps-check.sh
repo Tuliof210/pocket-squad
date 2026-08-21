@@ -1,12 +1,12 @@
 #!/bin/sh
 # pocket-squad — the mechanical half of the workflow. Meant to be RUN, never read
-# into a model's context: the /ps:* commands call it and quote its output.
+# into a model's context: the /ps-* commands call it and quote its output.
 #
-#   sh .claude/ps-check.sh warm <path>     share this checkout's installed deps with a
+#   sh .agents/ps-check.sh warm <path>     share this checkout's installed deps with a
 #                                          fresh worktree — no install per task
-#   sh .claude/ps-check.sh publish <pr>    squash-merge, delete the branch everywhere,
+#   sh .agents/ps-check.sh publish <pr>    squash-merge, delete the branch everywhere,
 #                                          remove the worktree, go home and pull
-#   sh .claude/ps-check.sh sweep           remove worktrees/branches of merged PRs
+#   sh .agents/ps-check.sh sweep           remove worktrees/branches of merged PRs
 #
 # Provider-agnostic: plain git, plus gh or glab if the machine happens to have one.
 # Without a provider CLI it can read merge state from nowhere, so it removes nothing
@@ -99,16 +99,16 @@ if [ "$MODE" = warm ]; then
 fi
 
 # --------------------------------------------------------------------- publish
-# The whole terminal step of a task, deterministic. /ps:publish decides one thing —
-# whether the review approved — and then calls this. Exit 2 means CONFLICT and nothing
-# was merged: resolve it on the branch and run this again, unchanged.
+# The whole terminal step of a task, deterministic. Call this by hand after /ps-review
+# approves (or any time you want the same squash-merge cleanup). Exit 2 means CONFLICT
+# and nothing was merged: resolve it on the branch and run this again, unchanged.
 if [ "$MODE" = publish ]; then
   [ -n "$ARG" ] || { echo "ps-check: publish needs a PR number"; exit 1; }
   [ "$PROVIDER" = gh ] || { echo "ps-check: publish needs the gh CLI (GitHub); merge by hand"; exit 1; }
 
   # Uncommitted work in the main checkout would be caught by the checkout/pull below,
   # halfway through, with the merge already done. Untracked files are fine — a fresh
-  # `.squad/tasks/*.prompt.md` is untracked until /ps:task commits it.
+  # `.squad/tasks/*.prompt.md` is untracked until /ps-task commits it.
   if ! git diff --quiet || ! git diff --cached --quiet; then
     echo "ABORT  main checkout has uncommitted changes to tracked files — commit or stash first"
     exit 1
@@ -155,7 +155,7 @@ fi
 # `ps-story/*` and `ps/*` are still matched so branches left by v3 and earlier get
 # swept too.
 if [ "$MODE" != sweep ]; then
-  echo "usage: sh .claude/ps-check.sh warm <path> | publish <pr> | sweep"
+  echo "usage: sh .agents/ps-check.sh warm <path> | publish <pr> | sweep"
   exit 1
 fi
 

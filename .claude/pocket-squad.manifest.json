@@ -1,19 +1,19 @@
 {
   "version": "4.0.0",
-  "installedAt": "2026-08-12T13:39:24.420Z",
+  "harness": "claude",
+  "installedAt": "2026-08-21T05:02:35.140Z",
   "files": {
-    "claude/agents/ps-review.md": "fac3bd3b63b0c2c461313d7ed2dda8c4fe4d9ebce5934774524b188457a18b19",
-    "claude/commands/ps/publish.md": "a3d2abb736509caefd337f0071873f58bc0b03c1e4a0323a343fe9e4deb2784e",
-    "claude/commands/ps/review.md": "b5e4099c660f3f15a2fff0a44b61c16c906772ebb5eae84af0624b3d092371c1",
-    "claude/commands/ps/run.md": "a08b3f9e0c0360ad052cc63c973475b243e4ef8e83955ff24433e9a3d33701d0",
-    "claude/commands/ps/sync.md": "3ee8229a34f223c815e321a860475b170d34790584641813178b2399f8f7a30e",
-    "claude/commands/ps/task.md": "5d46bf9ecc2b4298c3bea7b7ff941b2e60502290a4c2e021df0aa8d238e4bd9b",
-    "claude/commands/ps/teach.md": "f0f587a065f4b3584b12ac6a54e59e50918ab0dc9cdadd5f7d72d53ae5a16c3a",
-    "claude/ps-check.sh": "5cffa6fb2d2dd02e0903157aeca466313788045699ffb7d4e845af5e32972fee",
-    "claude/ps-report.md": "052c484e28f771c2c250511b076af52424cf153532033796173101a15dc06cab",
-    "claude/ps-review.md": "8a632ba39ad46048cda5707bab62de0e8bc9ce924708a4c7ca5a548ed3b995f4",
-    "claude/settings.json": "bb6a9ef3ab999ca5c85675ec5f1a43e46532bd323d127e7b506bdbd25c970c79",
+    "harness/agents/ps-review.md": "ea8f8308dedbb70e4b46defa575d1ef5c8916656d58fe2e7cd92bdbbaf34a1b7",
+    "harness/commands/ps-review.md": "b9290257fa628a3452b853264528edff5fff6357259d94d3e5f8801c52b8e1bb",
+    "harness/commands/ps-run.md": "77f378c32fa08100ff28619855bb1caac065a8708ccea06c0eeb5b21a8d9c4c7",
+    "harness/commands/ps-sync.md": "f0f255b4ebd2920711e62a1ba5283f11c8904e26e04eec007a4a1cd2c60041ee",
+    "harness/commands/ps-task.md": "3af961c6807ddffb34211cd1f6fa893ce2b2344ff4f4b6d7684bd32e60dfad04",
+    "harness/commands/ps-teach.md": "a1c5edea8f16fb6663a24c3b698d0e92aaec075260a90393fd2d958cee8ab056",
+    "harness/ps-check.sh": "5e3a397d8244fa4edf8cfb1539a4017ceb09745ea08f976b529afefcbf01c072",
+    "harness/ps-report.md": "d45c6f0006ae47fdc51104b03a0a20cd2e0ab460fe545c1518000b2edbbf6b62",
+    "harness/ps-review.md": "a5dfa71a8a077de7aa7738bf3aefa5226c0a648c6135c2a1fed1e3d4c11741bc",
+    "harness/settings.json": "d739ede8f419e347cc1671882213437691c02dd8c21fefbb95f57a96f1f4d04f",
     "squad/templates/pr.md": "6668f074a3f0774d4ca285e660f7bbb2842b3a2b6fa47dae11da82bf3659ee16",
-    "squad/templates/prompt.md": "9a2bd050eb5e44370d7cb8e06542720a987cc3ee7f38463fc7b4a42a1d0c49a6"
+    "squad/templates/prompt.md": "5d5412cb82e81456bf51d44d1aaae02004c9d4780fb2903fac5d57466174f1cb"
   }
 }

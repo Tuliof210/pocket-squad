@@ -1,6 +1,6 @@
 # Report shape
 
-How `/ps:task`, `/ps:run` and `/ps:review` end. The same shape in all three, so that "is
+How `/ps-task`, `/ps-run` and `/ps-review` end. The same shape in all three, so that "is
 it finished, and is it my turn?" is answered by **position**, not by reading prose.
 
 ## The rule above every other rule
@@ -20,7 +20,7 @@ protects. When the two conflict, the layout yields and you say so in an item.
 
     **✓ done** · <what exists now>
 
-    → `/ps:<next command> <arg>`
+    → `/ps-<next command> <arg>`
 
 Only the ending is fixed: **one status line, then the `→` line or lines, in that order,
 at the end.** Everything above them is as long as the work was.
@@ -79,14 +79,14 @@ still change the work. It reaches the report only as the one-line question point
 
 ## 3. The `→` line — always last, always literal
 
-``→ `/ps:review 42` ``, never "review it next". It is the only line that says what happens
+``→ `/ps-review 42` ``, never "review it next". It is the only line that says what happens
 next, so nothing else in the message may propose a step.
 
 - **More than one artifact → one `→` line each**, in the order they should run. Two
   prompts written means two `→` lines, not a choice between them.
 - **Nothing to run** → `→ nothing to run`.
 - **The next move is the owner's** (`? decide`, or a question above a `✓ done`) → the
-  `→` line names that instead of a command: `→ answer above, then `/ps:run <id>``.
+  `→` line names that instead of a command: `→ answer above, then `/ps-run <id>``.
 
 ## 4. Everything else in the message
 

@@ -1,7 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "Bash(sh .claude/ps-check.sh:*)",
+      "Bash(sh .agents/ps-check.sh:*)",
 
       "Bash(git status:*)",
       "Bash(git diff:*)",

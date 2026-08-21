@@ -1,7 +1,7 @@
 # Prompt shape
 
-The file `/ps:task` writes to `.squad/tasks/<yymmdd-hhmm>.prompt.md`, and the raw text
-`/ps:run` executes. One prompt, one branch, one PR.
+The file `/ps-task` writes to `.squad/tasks/<yymmdd-hhmm>.prompt.md`, and the raw text
+`/ps-run` executes. One prompt, one branch, one PR.
 
 It is a **spec**: requirements, design and plan in one file. Three files would mean three
 approval rounds and three chances to drift for work that one branch delivers.

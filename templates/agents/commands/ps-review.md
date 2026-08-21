@@ -1,5 +1,5 @@
 ---
-description: One-round fresh-eyes review of a task PR against the repo norms and the prompt that produced it. Usage - /ps:review [pr-number]
+description: One-round fresh-eyes review of a task PR against the repo norms and the prompt that produced it. Usage - /ps-review [pr-number]
 effort: medium
 allowed-tools: Task, Agent, Read, Write, Edit, Grep, Glob, Bash(gh:*), Bash(glab:*), Bash(git:*), Bash(npm:*), Bash(pnpm:*), Bash(yarn:*), Bash(npx:*), Bash(make:*), Bash(cargo:*), Bash(go:*), Bash(pytest:*), Bash(uv:*)
 ---
@@ -13,8 +13,8 @@ call, never this command's.
 
 ## Fresh eyes rule
 
-You wrote this code — `/ps:run` runs in this same chat. You do NOT review it. The prompt
-lives in `.claude/ps-review.md` and the subagents read it themselves. Your dispatch
+You wrote this code — `/ps-run` runs in this same chat. You do NOT review it. The prompt
+lives in `.agents/ps-review.md` and the subagents read it themselves. Your dispatch
 carries the PR number, the repo path, the lens and the path of the task prompt, and
 nothing else: no summary, no defense. That omission is the whole mechanism.
 
@@ -28,10 +28,10 @@ dispatch instead, and say so.
 Dispatch **two `ps-review` subagents** in a single message:
 
 > Review PR #\<n> in \<repo path>. The task prompt is `.squad/tasks/<id>.prompt.md`.
-> Read `.claude/ps-review.md` and follow it for the `run` lens.
+> Read `.agents/ps-review.md` and follow it for the `run` lens.
 
 > Review PR #\<n> in \<repo path>. The task prompt is `.squad/tasks/<id>.prompt.md`.
-> Read `.claude/ps-review.md` and follow it for the `read` lens.
+> Read `.agents/ps-review.md` and follow it for the `read` lens.
 
 `run` executes — the prompt's Outcome and Verify, correctness, security. `read` compares
 against the norms and the exemplar — absences, duplication, scope creep,
@@ -70,11 +70,11 @@ has; none → say so and keep it in chat). It is the only searchable record this
 leaves.
 
 Post the merged verdict as the subagents wrote it — language, wording and severities are
-already settled by `.claude/ps-review.md`. You renumber and unite; you do not rewrite.
+already settled by `.agents/ps-review.md`. You renumber and unite; you do not rewrite.
 
 ## Report
 
-**Follow `.claude/ps-report.md`. It is the whole final message.** The verdict is on the
+**Follow `.agents/ps-report.md`. It is the whole final message.** The verdict is on the
 PR; this is the owner's one-screen version of it, not a second copy:
 
     **review · <title>**
@@ -86,7 +86,7 @@ PR; this is the owner's one-screen version of it, not a second copy:
 
     **✓ done** · <PR url> approved at `<sha>`
 
-    → `/ps:publish <pr>`
+    → nothing to run
 
 **Route by severity yourself**: blocker and major already bought their fix, minor is
 already declined — neither is a question. `? decide` is for what severity does not settle:

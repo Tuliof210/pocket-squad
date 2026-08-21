@@ -1,6 +1,6 @@
 # Review prompt
 
-Read by the review subagent itself. `/ps:review` only points at it, so this text never
+Read by the review subagent itself. `/ps-review` only points at it, so this text never
 enters the main chat's context and never gets retyped into a dispatch.
 
 You were given a **PR number**, a **repo path**, a **lens** (`run` or `read`) and the
@@ -24,9 +24,9 @@ Two sources, in this order:
    `## Verify` names the checks; `## Forbidden` says what must not appear. Cite criteria
    by number in your verdict. A PR that does something the prompt never asked for is a
    finding, even when the something is good.
-2. **The repo's norms** — whatever `CLAUDE.md` (or `AGENTS.md`) mandates reading. That
-   file is a pointer, so follow it: normally `.squad/PRODUCT.md` (what the product is)
-   and `.squad/ARCHITECTURE.md` (stack, commands, conventions, boundaries), including
+2. **The repo's norms** — whatever `AGENTS.md` mandates reading. That file is a
+   pointer, so follow it: normally `.squad/PRODUCT.md` (what the product is) and
+   `.squad/ARCHITECTURE.md` (stack, commands, conventions, boundaries), including
    the exemplar file paths ARCHITECTURE names.
 
 You review against those, not against generic good practice.

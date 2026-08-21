@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Pocket Squad — a lean Claude Code workflow, in your pocket.
+ * Pocket Squad — a lean multi-harness workflow, in your pocket.
  *
  * Usage:
  *   npx pocket-squad            # install into the current project
@@ -15,7 +15,8 @@ const PKG_ROOT = path.resolve(__dirname, "..");
 const TEMPLATES = path.join(PKG_ROOT, "templates");
 const VERSION = require(path.join(PKG_ROOT, "package.json")).version;
 const CWD = process.cwd();
-const MANIFEST_PATH = path.join(CWD, ".claude", "pocket-squad.manifest.json");
+const MANIFEST_PATH = path.join(CWD, ".agents", "pocket-squad.manifest.json");
+const USAGE = "Usage: npx pocket-squad [install|update|status]";
 
 const sha = (buf) => crypto.createHash("sha256").update(buf).digest("hex");
 
@@ -28,22 +29,38 @@ function walk(dir, base = dir, out = []) {
   return out;
 }
 
-/** Map a template-relative path to its destination in the target project. */
+/**
+ * Map a template-relative path to its destination in the target project.
+ * Legacy `harness/` and `claude/` keys (pre-rename manifests) also map into `.agents/`.
+ */
 function destFor(rel) {
-  if (rel.startsWith("claude" + path.sep)) {
-    return path.join(CWD, ".claude", rel.slice(("claude" + path.sep).length));
+  const agentsPrefix = "agents" + path.sep;
+  const harnessPrefix = "harness" + path.sep;
+  const legacyPrefix = "claude" + path.sep;
+  const squadPrefix = "squad" + path.sep;
+  if (rel.startsWith(agentsPrefix)) {
+    return path.join(CWD, ".agents", rel.slice(agentsPrefix.length));
   }
-  return path.join(CWD, ".squad", rel.slice(("squad" + path.sep).length));
+  if (rel.startsWith(harnessPrefix)) {
+    return path.join(CWD, ".agents", rel.slice(harnessPrefix.length));
+  }
+  if (rel.startsWith(legacyPrefix)) {
+    return path.join(CWD, ".agents", rel.slice(legacyPrefix.length));
+  }
+  if (rel.startsWith(squadPrefix)) {
+    return path.join(CWD, ".squad", rel.slice(squadPrefix.length));
+  }
+  return path.join(CWD, ".squad", rel);
 }
 
-const SETTINGS_REL = path.join("claude", "settings.json");
+const SETTINGS_REL = path.join("agents", "settings.json");
 
 /**
- * The one file that has to land in EVERY project, pre-existing settings or not: without
- * its allow rules a long `/ps:run` stalls on a permission prompt halfway through. So it
- * is merged instead of skipped — our permission lists are unioned into whatever is
- * already there, every other key the project set is left untouched, and nothing is ever
- * removed. Returns the hash of the file on disk afterwards, for the manifest.
+ * Without its allow rules a long `/ps-run` stalls on a permission prompt halfway
+ * through. So it is merged instead of skipped — our permission lists are unioned into
+ * whatever is already there, every other key the project set is left untouched, and
+ * nothing is ever removed. Returns the hash of the file on disk afterwards, for the
+ * manifest.
  */
 function mergeSettings() {
   const dst = destFor(SETTINGS_REL);
@@ -108,7 +125,10 @@ function install() {
   let created = 0, skipped = 0, kept = 0;
 
   for (const rel of rels) {
-    if (rel === SETTINGS_REL) { hashes[rel] = mergeSettings(); continue; }
+    if (rel === SETTINGS_REL) {
+      hashes[rel] = mergeSettings();
+      continue;
+    }
     const src = path.join(TEMPLATES, rel);
     const dst = destFor(rel);
     const content = fs.readFileSync(src);
@@ -131,11 +151,11 @@ function install() {
   console.log(`\nPocket Squad v${VERSION} installed.`);
   console.log(`  ${created} created, ${kept} unchanged, ${skipped} pre-existing (untouched).`);
   console.log(`\nNext steps:`);
-  console.log(`  1. Open Claude Code in this project.`);
-  console.log(`  2. Run /ps:sync once — moves product/architecture rules into .squad/PRODUCT.md + .squad/ARCHITECTURE.md, writes after you confirm.`);
-  console.log(`  3. Run /ps:task "your request" — refines it into .squad/tasks/<yymmdd-hhmm>.prompt.md.`);
-  console.log(`  4. Run /ps:run <id> — worktree on task/<slug>, one commit per step, one PR.`);
-  console.log(`  5. Then /ps:review (fresh eyes, one round) and /ps:publish (merge + cleanup).`);
+  console.log(`  1. Open this project in your agent harness.`);
+  console.log(`  2. Run /ps-sync once — moves product/architecture rules into .squad/PRODUCT.md + .squad/ARCHITECTURE.md, writes AGENTS.md after you confirm.`);
+  console.log(`  3. Run /ps-task "your request" — refines it into .squad/tasks/<yymmdd-hhmm>.prompt.md.`);
+  console.log(`  4. Run /ps-run <id> — worktree on task/<slug>, one commit per step, one PR.`);
+  console.log(`  5. Then /ps-review (fresh eyes, one round).`);
   if (manifest) console.log(`\n(Previous manifest found — this was a re-install. Use "update" to upgrade managed files.)`);
 }
 
@@ -150,7 +170,10 @@ function update() {
   let updated = 0, added = 0, conflicted = 0, unchanged = 0;
 
   for (const rel of rels) {
-    if (rel === SETTINGS_REL) { hashes[rel] = mergeSettings(); continue; }
+    if (rel === SETTINGS_REL) {
+      hashes[rel] = mergeSettings();
+      continue;
+    }
     const src = path.join(TEMPLATES, rel);
     const dst = destFor(rel);
     const content = fs.readFileSync(src);
@@ -167,8 +190,14 @@ function update() {
     }
     const curHash = sha(fs.readFileSync(dst));
     if (curHash === newHash) { unchanged++; continue; }
-    if (oldHash && curHash === oldHash) {
-      // User never touched it — safe to upgrade in place.
+    // Untouched relative to what we last shipped for this dest — including a
+    // template-key rename (claude/|harness/ → agents/) that kept the same on-disk path.
+    const priorHash =
+      oldHash ||
+      Object.entries(manifest.files).find(
+        ([prevRel, h]) => prevRel !== rel && destFor(prevRel) === dst && h === curHash
+      )?.[1];
+    if (priorHash && curHash === priorHash) {
       fs.writeFileSync(dst, content);
       updated++;
       console.log(`  ^ updated      ${path.relative(CWD, dst)}`);
@@ -181,15 +210,17 @@ function update() {
   }
 
   // Files we managed that no longer ship (e.g. renamed commands): delete if untouched.
+  // Skip when another shipped rel still lands on the same path.
   let removed = 0;
   const shipped = new Set(rels);
+  const shippedDests = new Set(rels.map((r) => destFor(r)));
   for (const [rel, oldHash] of Object.entries(manifest.files)) {
     if (shipped.has(rel)) continue;
     const dst = destFor(rel);
     if (!fs.existsSync(dst)) continue;
+    if (shippedDests.has(dst)) continue;
     if (sha(fs.readFileSync(dst)) === oldHash) {
       fs.unlinkSync(dst);
-      // Climb up removing now-empty dirs (rmdir throws on non-empty — safe stop).
       for (let dir = path.dirname(dst); dir !== CWD; dir = path.dirname(dir)) {
         try { fs.rmdirSync(dir); } catch { break; }
       }
@@ -224,6 +255,6 @@ if (cmd === "install") install();
 else if (cmd === "update") update();
 else if (cmd === "status") status();
 else {
-  console.error(`Unknown command: ${cmd}\nUsage: npx pocket-squad [install|update|status]`);
+  console.error(`Unknown command: ${cmd}\n${USAGE}`);
   process.exit(1);
 }

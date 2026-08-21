@@ -1,20 +1,20 @@
 ---
-description: Execute one refined prompt - a worktree on task/<slug>, one semantic commit per step, one PR. Usage - /ps:run <yymmdd-hhmm | pasted prompt>
+description: Execute one refined prompt - a worktree on task/<slug>, one semantic commit per step, one PR. Usage - /ps-run <yymmdd-hhmm | pasted prompt>
 effort: medium
-allowed-tools: Read, Write, Edit, Glob, Grep, Bash(git:*), Bash(gh:*), Bash(glab:*), Bash(sh .claude/ps-check.sh:*), Bash(npm:*), Bash(pnpm:*), Bash(yarn:*), Bash(npx:*), Bash(make:*), Bash(cargo:*), Bash(go:*), Bash(pytest:*), Bash(uv:*)
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash(git:*), Bash(gh:*), Bash(glab:*), Bash(sh .agents/ps-check.sh:*), Bash(npm:*), Bash(pnpm:*), Bash(yarn:*), Bash(npx:*), Bash(make:*), Bash(cargo:*), Bash(go:*), Bash(pytest:*), Bash(uv:*)
 ---
 
 "$ARGUMENTS" is **either** an id matching `.squad/tasks/<id>.prompt.md` (read that file)
 **or** the prompt text itself, pasted straight in — that is the fresh-session path, and
 it needs no file on disk. Empty → list `.squad/tasks/` and ask; never guess.
 
-**The prompt is already refined. Do not re-interview.** `/ps:task` paid for the
+**The prompt is already refined. Do not re-interview.** `/ps-task` paid for the
 questions, the exemplars and the verified commands. Re-deriving them here is the one
 cost this workflow exists to avoid. Stop only if executing would require inventing a
 decision the prompt does not contain.
 
 Everything runs in **this chat**, serially. The only cold context in this workflow is
-`/ps:review`, where not knowing what the author intended is the whole point.
+`/ps-review`, where not knowing what the author intended is the whole point.
 
 ## 1. Set up, once
 
@@ -23,7 +23,7 @@ Record the branch you are on — the **target branch**, where this lands.
 The title is the prompt's `# ` line; the slug is that title in kebab-case.
 
     git worktree add ../<repo>--ps/<slug> -b task/<slug>
-    sh .claude/ps-check.sh warm ../<repo>--ps/<slug>
+    sh .agents/ps-check.sh warm ../<repo>--ps/<slug>
 
 `warm` shares this checkout's installed dependencies instead of installing them again.
 **If a step changes a lockfile, delete the link it names and run the project's real
@@ -77,7 +77,7 @@ the target branch you recorded in section 1.
 
 ## 4. Report
 
-**Follow `.claude/ps-report.md`. It is the whole final message.** Your lines:
+**Follow `.agents/ps-report.md`. It is the whole final message.** Your lines:
 
     **run · <title>**
 
@@ -87,8 +87,9 @@ the target branch you recorded in section 1.
 
     **✓ done** · <PR url>
 
-    → `/ps:review <pr>`
+    → `/ps-review <pr>`
 
 A parked step ends the run at `! stopped` instead — which step, why, and that the work is
-stashed. The branch and its worktree stay until `/ps:publish` removes them; that is not
-news and does not go in the report.
+stashed. The branch and its worktree stay until you merge and clean up (or run
+`sh .agents/ps-check.sh publish <pr>` / `sweep` by hand); that is not news and does not
+go in the report.

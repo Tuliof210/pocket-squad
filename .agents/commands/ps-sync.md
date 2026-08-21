@@ -1,14 +1,15 @@
 ---
-description: Move every product and architecture rule scattered around the repo into .squad/PRODUCT.md and .squad/ARCHITECTURE.md, then interview to fill what is still missing. Usage - /ps:sync
+description: Move every product and architecture rule scattered around the repo into .squad/PRODUCT.md and .squad/ARCHITECTURE.md, then interview to fill what is still missing. Usage - /ps-sync
 effort: medium
 allowed-tools: Task, Agent, Read, Write, Edit, Grep, Glob, Bash(git:*), Bash(ls:*), Bash(cat:*)
 ---
 
 ## The split
 
-- **CLAUDE.md** (or `AGENTS.md` — whichever this repo uses) — **a pointer, not a
-  document.** It holds the mandatory-read rule below and nothing else. Every rule it
-  used to carry moves out.
+- **AGENTS.md** — **a pointer, not a document.** It holds the mandatory-read rule
+  below and nothing else. Every rule it used to carry moves out. Pocket Squad does
+  not use `CLAUDE.md`; if that file exists, leave it alone or empty it only when the
+  owner confirms the rules already live in PRODUCT/ARCHITECTURE.
 - **.squad/PRODUCT.md** — what the product is, who it is for, why it exists, the core
   domain concepts.
 - **.squad/ARCHITECTURE.md** — everything about how it is built: stack, the exact
@@ -18,11 +19,11 @@ allowed-tools: Task, Agent, Read, Write, Edit, Grep, Glob, Bash(git:*), Bash(ls:
 Two files, so that everything loaded is either *what* or *how*. A third file saying a
 bit of both is the state this command exists to end.
 
-## 1. Empty CLAUDE.md, then fill the other two
+## 1. Empty AGENTS.md, then fill the other two
 
 **This command's primary job is a move, not an interview.** Product and architecture
 rules are almost never missing — they are scattered. Sweep the repo read-only
-(`CLAUDE.md`, `AGENTS.md`, `README.md`, `CONTRIBUTING.md`, `docs/`, `.cursorrules`,
+(`AGENTS.md`, `CLAUDE.md`, `README.md`, `CONTRIBUTING.md`, `docs/`, `.cursorrules`,
 ADRs, long comment blocks) and route every rule you find:
 
 - what the product does, for whom, a domain term → `.squad/PRODUCT.md`
@@ -33,7 +34,7 @@ There is no third bucket. If a line does not fit either, it is not a rule — sa
 drop it.
 
 **Move means the source line is deleted.** A rule living in two files is a rule that
-will disagree with itself, and `CLAUDE.md` keeping "just the essentials" is how it grew
+will disagree with itself, and `AGENTS.md` keeping "just the essentials" is how it grew
 into a document the first time. The exception is a README paragraph a human reader
 needs: that one is quoted, not moved, and you say which you did.
 
@@ -63,30 +64,23 @@ content in the repo's language.
 
 `.squad/PRODUCT.md` and `.squad/ARCHITECTURE.md` (≤ ~60 lines each) get everything.
 
-`CLAUDE.md`/`AGENTS.md` gets **this and nothing else** — replace its entire contents:
+`AGENTS.md` gets **this and nothing else** — replace its entire contents (create it if
+missing):
 
 ```markdown
 ## Mandatory first step
 
-Before answering anything in this repository — a `/ps:*` command or an ordinary
+Before answering anything in this repository — a `/ps-*` command or an ordinary
 question, every session, every message — read `.squad/PRODUCT.md` and
 `.squad/ARCHITECTURE.md`. They are the norm this project is judged against.
 ```
 
-If the repo has both `CLAUDE.md` and `AGENTS.md`, the rule goes in both. If it has
-neither, create `CLAUDE.md`. Show the diff of what left it — the owner is watching a
-file they wrote get emptied, and has to be able to see where each line went.
+Show the diff of what left it — the owner is watching a file they wrote get emptied,
+and has to be able to see where each line went. Do not create or dual-write `CLAUDE.md`.
 
 ## 6. Check what can stop a run
 
-- **`.claude/settings.json`** ships with this package and pre-approves the git / gh /
+- **`.agents/settings.json`** ships with this package and pre-approves the git / gh /
   test calls the workflow is made of, for the whole session. `install` merges our rules
   into an existing one — confirm they are there. A command's `allowed-tools` frontmatter
   is not a substitute: it grants only for the turn that invoked the command.
-- **The auto-mode classifier reads `CLAUDE.md` and stops there** — it does not follow
-  the pointer into `.squad/`. So the one line that tells it squash-merging a reviewed
-  `task/*` PR and deleting that branch is this project's routine terminal step has to
-  live in `CLAUDE.md` itself, under the rule above, or `/ps:publish` asks permission
-  every single time. That is the only line allowed to join it. **Propose it, and let the
-  owner reject it** — it loosens a safety check, and a publish that prompts is a working
-  publish.

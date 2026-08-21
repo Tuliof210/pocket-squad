@@ -1,7 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "Bash(sh .claude/ps-check.sh:*)",
+      "Bash(sh .agents/ps-check.sh:*)",
 
       "Bash(git status:*)",
       "Bash(git diff:*)",
@@ -26,7 +26,6 @@
       "Bash(gh pr list:*)",
       "Bash(gh pr create:*)",
       "Bash(gh pr review:*)",
-      "Bash(gh pr merge:*)",
       "Bash(glab mr:*)",
 
       "Bash(npm test:*)",
