@@ -1,12 +1,12 @@
 #!/bin/sh
 # pocket-squad — the mechanical half of the workflow. Meant to be RUN, never read
-# into a model's context: the /ps-* commands call it and quote its output.
+# into a model's context: the /ps-* skills call it and quote its output.
 #
-#   sh .agents/ps-check.sh warm <path>     share this checkout's installed deps with a
-#                                          fresh worktree — no install per task
-#   sh .agents/ps-check.sh publish <pr>    squash-merge, delete the branch everywhere,
-#                                          remove the worktree, go home and pull
-#   sh .agents/ps-check.sh sweep           remove worktrees/branches of merged PRs
+#   sh .agents/pocket-squad-check.sh warm <path>     share this checkout's installed deps with a
+#                                                    fresh worktree — no install per task
+#   sh .agents/pocket-squad-check.sh publish <pr>    squash-merge, delete the branch everywhere,
+#                                                    remove the worktree, go home and pull
+#   sh .agents/pocket-squad-check.sh sweep           remove worktrees/branches of merged PRs
 #
 # Provider-agnostic: plain git, plus gh or glab if the machine happens to have one.
 # Without a provider CLI it can read merge state from nowhere, so it removes nothing
@@ -19,7 +19,7 @@ set -u
 MODE=${1:-}
 ARG=${2:-}
 
-git rev-parse --git-dir >/dev/null 2>&1 || { echo "ps-check: not a git repository"; exit 1; }
+git rev-parse --git-dir >/dev/null 2>&1 || { echo "pocket-squad-check: not a git repository"; exit 1; }
 
 # The main checkout, even when invoked from inside a worktree: it is where the task
 # prompts and the installed dependencies live, and where publish ends up.
@@ -73,10 +73,10 @@ drop_branch() {
 # guard for the caller instead. Upgrade path if it ever bites: `cp -c` (APFS clone) on
 # macOS, `cp --reflink=auto` on Linux.
 if [ "$MODE" = warm ]; then
-  [ -n "$ARG" ] || { echo "ps-check: warm needs a worktree path"; exit 1; }
-  [ -d "$ARG" ] || { echo "ps-check: no such worktree: $ARG"; exit 1; }
+  [ -n "$ARG" ] || { echo "pocket-squad-check: warm needs a worktree path"; exit 1; }
+  [ -d "$ARG" ] || { echo "pocket-squad-check: no such worktree: $ARG"; exit 1; }
   wt=$(cd "$ARG" && pwd)
-  [ "$wt" = "$MAIN" ] && { echo "ps-check: refusing to warm the main checkout"; exit 1; }
+  [ "$wt" = "$MAIN" ] && { echo "pocket-squad-check: refusing to warm the main checkout"; exit 1; }
   echo "WARM $wt"
   linked=0
   for dep in node_modules .venv venv vendor target .next .nuxt; do
@@ -103,8 +103,8 @@ fi
 # approves (or any time you want the same squash-merge cleanup). Exit 2 means CONFLICT
 # and nothing was merged: resolve it on the branch and run this again, unchanged.
 if [ "$MODE" = publish ]; then
-  [ -n "$ARG" ] || { echo "ps-check: publish needs a PR number"; exit 1; }
-  [ "$PROVIDER" = gh ] || { echo "ps-check: publish needs the gh CLI (GitHub); merge by hand"; exit 1; }
+  [ -n "$ARG" ] || { echo "pocket-squad-check: publish needs a PR number"; exit 1; }
+  [ "$PROVIDER" = gh ] || { echo "pocket-squad-check: publish needs the gh CLI (GitHub); merge by hand"; exit 1; }
 
   # Uncommitted work in the main checkout would be caught by the checkout/pull below,
   # halfway through, with the merge already done. Untracked files are fine — a fresh
@@ -155,7 +155,7 @@ fi
 # `ps-story/*` and `ps/*` are still matched so branches left by v3 and earlier get
 # swept too.
 if [ "$MODE" != sweep ]; then
-  echo "usage: sh .agents/ps-check.sh warm <path> | publish <pr> | sweep"
+  echo "usage: sh .agents/pocket-squad-check.sh warm <path> | publish <pr> | sweep"
   exit 1
 fi
 

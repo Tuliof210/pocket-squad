@@ -1,17 +1,17 @@
 {
   "version": "4.0.0",
-  "installedAt": "2026-08-21T05:14:00.777Z",
+  "installedAt": "2026-08-21T12:50:50.681Z",
   "files": {
-    "agents/agents/ps-review.md": "b984f61edfca8e650b582a07f586412b48f28673c16c071c4c6c6f136e417877",
-    "agents/commands/ps-review.md": "bfa1ebae9730448f3c4c392173b9d8aa7349b0c3f156778e9d07d9810b6c7b18",
-    "agents/commands/ps-run.md": "15f3010ff034f98b02399b34ab9255e3a98ea76bdf2f22f08cef16d47ecd2e88",
-    "agents/commands/ps-sync.md": "4b28796eb4dd344baef1de116d015b12e579753ec7dff318ef8e5dfd71908243",
-    "agents/commands/ps-task.md": "23beaef8fd58aadacb742114f21e1f3a20d33845d19904d7f6a5e270fa814d3e",
-    "agents/commands/ps-teach.md": "a1c5edea8f16fb6663a24c3b698d0e92aaec075260a90393fd2d958cee8ab056",
-    "agents/ps-check.sh": "2f8890ca118590318d9190934cb81c76c76dd131c925ebad1e171b16d09aeb21",
-    "agents/ps-report.md": "d45c6f0006ae47fdc51104b03a0a20cd2e0ab460fe545c1518000b2edbbf6b62",
-    "agents/ps-review.md": "a5dfa71a8a077de7aa7738bf3aefa5226c0a648c6135c2a1fed1e3d4c11741bc",
-    "agents/settings.json": "6d319a4a4d49582d9e3ed875947fd0d0852e7615d0b3f88a0ade367ca76ae3f0",
+    "agents/agents/pocket-squad-review.md": "c2a981a9df1030aba5a809ec817b7582422a9843eef726be8c7bf7645b8171af",
+    "agents/pocket-squad-check.sh": "3517c978fd1eed1793f0fc1be00b72302df9f4225e3632c9310a665ae2d48395",
+    "agents/pocket-squad-report.md": "35c1f35ece0c1d04c5793dca26a77e975ca394d30770b880f3a12e54ea6941d8",
+    "agents/pocket-squad-review.md": "a5dfa71a8a077de7aa7738bf3aefa5226c0a648c6135c2a1fed1e3d4c11741bc",
+    "agents/settings.json": "104dd46a64ac826b27492ca458fe587d3c4c4ea66872a8d7192685ddb054afcb",
+    "agents/skills/ps-review/SKILL.md": "d72ff8d7d4269b25d80f2b7cec22f26aa2ac54d799a429fc147f95f4d1dfe060",
+    "agents/skills/ps-run/SKILL.md": "9bb189669faef9b40d995e84777f7d351a2c9ffcf8cda96d8a09df5f4a9da915",
+    "agents/skills/ps-sync/SKILL.md": "97f365393069be97cacd2e92c76389ce85dfd3674e63b5c4d112cac4771eaf86",
+    "agents/skills/ps-task/SKILL.md": "b42451d33cab472347446becfdd5cee6afe3136a2dd02fc2bc0f22554b915e32",
+    "agents/skills/ps-teach/SKILL.md": "73c18069bf0a5c3e8139da8008ae2804716dadc2d8d37f208969b60ba980ef2f",
     "squad/templates/pr.md": "6668f074a3f0774d4ca285e660f7bbb2842b3a2b6fa47dae11da82bf3659ee16",
     "squad/templates/prompt.md": "5d5412cb82e81456bf51d44d1aaae02004c9d4780fb2903fac5d57466174f1cb"
   }

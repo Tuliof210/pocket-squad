@@ -1,4 +1,5 @@
 ---
+name: ps-sync
 description: Move every product and architecture rule scattered around the repo into .squad/PRODUCT.md and .squad/ARCHITECTURE.md, then interview to fill what is still missing. Usage - /ps-sync
 effort: medium
 allowed-tools: Task, Agent, Read, Write, Edit, Grep, Glob, Bash(git:*), Bash(ls:*), Bash(cat:*)
@@ -17,11 +18,11 @@ allowed-tools: Task, Agent, Read, Write, Edit, Grep, Glob, Bash(git:*), Bash(ls:
   and the do-not-touch list.
 
 Two files, so that everything loaded is either *what* or *how*. A third file saying a
-bit of both is the state this command exists to end.
+bit of both is the state this skill exists to end.
 
 ## 1. Empty AGENTS.md, then fill the other two
 
-**This command's primary job is a move, not an interview.** Product and architecture
+**This skill's primary job is a move, not an interview.** Product and architecture
 rules are almost never missing — they are scattered. Sweep the repo read-only
 (`AGENTS.md`, `CLAUDE.md`, `README.md`, `CONTRIBUTING.md`, `docs/`, `.cursorrules`,
 ADRs, long comment blocks) and route every rule you find:
@@ -70,7 +71,7 @@ missing):
 ```markdown
 ## Mandatory first step
 
-Before answering anything in this repository — a `/ps-*` command or an ordinary
+Before answering anything in this repository — a `/ps-*` skill or an ordinary
 question, every session, every message — read `.squad/PRODUCT.md` and
 `.squad/ARCHITECTURE.md`. They are the norm this project is judged against.
 ```
@@ -82,5 +83,5 @@ and has to be able to see where each line went. Do not create or dual-write `CLA
 
 - **`.agents/settings.json`** ships with this package and pre-approves the git / gh /
   test calls the workflow is made of, for the whole session. `install` merges our rules
-  into an existing one — confirm they are there. A command's `allowed-tools` frontmatter
-  is not a substitute: it grants only for the turn that invoked the command.
+  into an existing one — confirm they are there. A skill's `allowed-tools` frontmatter
+  is not a substitute: it grants only for the turn that invoked the skill.

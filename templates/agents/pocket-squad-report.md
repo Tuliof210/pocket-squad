@@ -13,14 +13,14 @@ protects. When the two conflict, the layout yields and you say so in an item.
 
 ## The shape
 
-    **<command> · <title>**
+    **<skill> · <title>**
 
     - <one line per unit of work>
     - <...>
 
     **✓ done** · <what exists now>
 
-    → `/ps-<next command> <arg>`
+    → `/ps-<next skill> <arg>`
 
 Only the ending is fixed: **one status line, then the `→` line or lines, in that order,
 at the end.** Everything above them is as long as the work was.
@@ -86,7 +86,7 @@ next, so nothing else in the message may propose a step.
   prompts written means two `→` lines, not a choice between them.
 - **Nothing to run** → `→ nothing to run`.
 - **The next move is the owner's** (`? decide`, or a question above a `✓ done`) → the
-  `→` line names that instead of a command: `→ answer above, then `/ps-run <id>``.
+  `→` line names that instead of a skill: `→ answer above, then `/ps-run <id>``.
 
 ## 4. Everything else in the message
 
@@ -102,4 +102,4 @@ report, in full, with a question line pointing at it. Losing it is not concision
 
 None of this governs the messages before the last one. Interview questions, proposals and
 progress have their own shape and their own length; this file is for the message that
-ends the command.
+ends the skill.

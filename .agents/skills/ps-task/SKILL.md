@@ -1,12 +1,13 @@
 ---
+name: ps-task
 description: Turn a rough request into one refined, self-contained prompt saved at .squad/tasks/<yymmdd-hhmm>.prompt.md. Usage - /ps-task ["your request"]
 effort: high
 allowed-tools: Task, Agent, Read, Write, Edit, Grep, Glob, Bash(git:*), Bash(date:*), Bash(mkdir:*)
 ---
 
-The owner's request: "$ARGUMENTS" — may be empty; ask for it if so.
+The request is whatever follows `/ps-task` in this message (may be empty; ask for it if so).
 
-**This command writes prompt files and nothing else.** Nothing is implemented, no branch
+**This skill writes prompt files and nothing else.** Nothing is implemented, no branch
 is cut, no PR opens — that is `/ps-run`. One prompt is the common case; a request holding
 independent deliverables gets one prompt each, and **every one of them is written in this
 run** — proposing a split and then delivering the first of it is the failure this note
@@ -124,7 +125,7 @@ leaves the commit local, which is fine; say so.
 
 ## 6. Report
 
-**Follow `.agents/ps-report.md`. It is the whole final message.** Your lines:
+**Follow `.agents/pocket-squad-report.md`. It is the whole final message.** Your lines:
 
     **task · <title>**
 

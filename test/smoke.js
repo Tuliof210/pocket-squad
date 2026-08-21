@@ -24,9 +24,10 @@ try {
   assert.ok(fs.existsSync(MANIFEST), "install should create .agents/pocket-squad.manifest.json");
 
   for (const cmd of ["sync", "task", "run", "review", "teach"]) {
-    const file = path.join(dir, ".agents", "commands", `ps-${cmd}.md`);
-    assert.ok(fs.existsSync(file), `install should create the /ps-${cmd} command`);
+    const file = path.join(dir, ".agents", "skills", `ps-${cmd}`, "SKILL.md");
+    assert.ok(fs.existsSync(file), `install should create the /ps-${cmd} skill`);
     const fm = fs.readFileSync(file, "utf8").split("---")[1] || "";
+    assert.match(fm, new RegExp(`^name: ps-${cmd}$`, "m"), `/ps-${cmd} name must match its directory`);
     assert.match(
       fm,
       /^effort: (low|medium|high|xhigh|max)$/m,
@@ -35,24 +36,24 @@ try {
     assert.match(fm, /^allowed-tools:/m, `/ps-${cmd} must declare allowed-tools`);
   }
   assert.ok(
-    !fs.existsSync(path.join(dir, ".agents", "commands", "ps-publish.md")),
+    !fs.existsSync(path.join(dir, ".agents", "commands")),
+    "commands/ must not ship — the workflow is skills now"
+  );
+  assert.ok(
+    !fs.existsSync(path.join(dir, ".agents", "skills", "ps-publish")),
     "ps-publish must not ship"
   );
-  assert.ok(
-    !fs.existsSync(path.join(dir, ".agents", "commands", "ps")),
-    "commands must be flat under commands/, not namespaced under commands/ps/"
-  );
 
   assert.ok(
-    fs.existsSync(path.join(dir, ".agents", "ps-review.md")),
-    "install should create .agents/ps-review.md"
+    fs.existsSync(path.join(dir, ".agents", "pocket-squad-review.md")),
+    "install should create .agents/pocket-squad-review.md"
   );
 
-  const report = path.join(dir, ".agents", "ps-report.md");
-  assert.ok(fs.existsSync(report), "install should create .agents/ps-report.md");
+  const report = path.join(dir, ".agents", "pocket-squad-report.md");
+  assert.ok(fs.existsSync(report), "install should create .agents/pocket-squad-report.md");
   for (const cmd of ["task", "run", "review"]) {
-    const body = fs.readFileSync(path.join(dir, ".agents", "commands", `ps-${cmd}.md`), "utf8");
-    assert.match(body, /ps-report\.md/, `/ps-${cmd} must point at the shared report shape`);
+    const body = fs.readFileSync(path.join(dir, ".agents", "skills", `ps-${cmd}`, "SKILL.md"), "utf8");
+    assert.match(body, /pocket-squad-report\.md/, `/ps-${cmd} must point at the shared report shape`);
     assert.ok(!body.includes(".claude/"), `${cmd} must not reference .claude/ paths`);
   }
 
@@ -60,8 +61,8 @@ try {
     fs.readFileSync(path.join(dir, ".agents", "settings.json"), "utf8")
   );
   assert.ok(
-    settings.permissions.allow.includes("Bash(sh .agents/ps-check.sh:*)"),
-    "settings.json must pre-approve ps-check.sh, or /ps-run stalls under auto mode"
+    settings.permissions.allow.includes("Bash(sh .agents/pocket-squad-check.sh:*)"),
+    "settings.json must pre-approve pocket-squad-check.sh, or /ps-run stalls under auto mode"
   );
   assert.ok(
     !settings.permissions.allow.includes("Bash(gh pr merge:*)"),
@@ -78,15 +79,15 @@ try {
     );
   }
 
-  const agent = path.join(dir, ".agents", "agents", "ps-review.md");
-  assert.ok(fs.existsSync(agent), "install should create the ps-review subagent");
+  const agent = path.join(dir, ".agents", "agents", "pocket-squad-review.md");
+  assert.ok(fs.existsSync(agent), "install should create the pocket-squad-review subagent");
   const agentFm = fs.readFileSync(agent, "utf8").split("---")[1] || "";
-  assert.match(agentFm, /^effort: high$/m, "ps-review must pin its effort, or it inherits the session's");
-  assert.match(agentFm, /^model: /m, "ps-review must state its model, even when it inherits");
-  assert.match(agentFm, /^name: ps-review$/m, "ps-review's name must match its dispatch");
+  assert.match(agentFm, /^effort: high$/m, "pocket-squad-review must pin its effort, or it inherits the session's");
+  assert.match(agentFm, /^model: /m, "pocket-squad-review must state its model, even when it inherits");
+  assert.match(agentFm, /^name: pocket-squad-review$/m, "pocket-squad-review's name must match its dispatch");
   assert.ok(
     !/Write|Edit/.test(agentFm.match(/^tools: .*/m)[0]),
-    "ps-review must not get write tools — a reviewer that fixes what it finds stops reporting it"
+    "pocket-squad-review must not get write tools — a reviewer that fixes what it finds stops reporting it"
   );
 
   for (const gone of [
@@ -103,8 +104,12 @@ try {
     path.join(".agents", "agents", "backend-junior.md"),
     path.join(".agents", "agents", "techlead.md"),
     path.join(".agents", "ps-verify.md"),
+    path.join(".agents", "ps-check.sh"),
+    path.join(".agents", "ps-report.md"),
+    path.join(".agents", "ps-review.md"),
+    path.join(".agents", "agents", "ps-review.md"),
     path.join(".agents", "techlead.md"),
-    path.join(".agents", "skills"),
+    path.join(".agents", "skills", "ps-backend-api"),
     path.join(".squad", "learnings.md"),
     path.join(".squad", "debt.md"),
     path.join(".squad", "templates", "story.md"),
@@ -122,8 +127,8 @@ try {
     assert.ok(!body.includes(".claude/"), `${path.relative(dir, f)} still references .claude/`);
   }
 
-  const check = path.join(dir, ".agents", "ps-check.sh");
-  assert.ok(fs.existsSync(check), "install should create .agents/ps-check.sh");
+  const check = path.join(dir, ".agents", "pocket-squad-check.sh");
+  assert.ok(fs.existsSync(check), "install should create .agents/pocket-squad-check.sh");
   execFileSync("sh", ["-n", check]);
 
   for (const tpl of ["prompt", "pr"]) {
@@ -150,11 +155,15 @@ try {
   execFileSync("node", [CLI, "update"], { cwd: dir });
   assert.ok(!fs.existsSync(orphan), "update should delete untouched orphaned files");
   assert.ok(
-    !fs.existsSync(path.join(dir, ".agents", "skills")),
+    !fs.existsSync(path.join(dir, ".agents", "skills", "ps-backend-api")),
     "update should remove the emptied directory tree of an orphan"
   );
   assert.ok(
-    fs.existsSync(path.join(dir, ".agents", "agents", "ps-review.md")),
+    fs.existsSync(path.join(dir, ".agents", "skills", "ps-task", "SKILL.md")),
+    "removing an orphan must not take the shipped skills sharing its directory"
+  );
+  assert.ok(
+    fs.existsSync(path.join(dir, ".agents", "agents", "pocket-squad-review.md")),
     "removing an orphan must not take the shipped files sharing its directory"
   );
 
@@ -206,7 +215,7 @@ function settingsMerge() {
       "merging must keep every rule the project already had"
     );
     assert.ok(
-      merged.permissions.allow.includes("Bash(sh .agents/ps-check.sh:*)") &&
+      merged.permissions.allow.includes("Bash(sh .agents/pocket-squad-check.sh:*)") &&
         merged.permissions.deny.includes("Bash(git push --force:*)"),
       "install must add our rules to a pre-existing settings.json, not skip the file"
     );
@@ -239,7 +248,7 @@ function psCheckModes() {
     git("add", "-A");
     git("commit", "-qm", "seed");
 
-    const ps = path.join(repo, ".agents", "ps-check.sh");
+    const ps = path.join(repo, ".agents", "pocket-squad-check.sh");
 
     assert.throws(
       () => execFileSync("sh", [ps, "status", "demo"], { cwd: repo, stdio: "pipe" }),

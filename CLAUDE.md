@@ -6,10 +6,11 @@
   `path`, `crypto`). Adding a dependency is a design decision, never casual.
 - Distribution: an `npx`-installable CLI. `bin.pocket-squad -> bin/pocket-squad.js`.
 - Shipped content, copied into a target project: markdown under `templates/` — 5
-  `/ps-*` commands, the review subagent (`.agents/agents/ps-review.md`), the review
-  prompt (`.agents/ps-review.md`), the report shape (`.agents/ps-report.md`),
-  `.agents/settings.json` and the `.squad/templates/{prompt,pr}.md` scaffolds — plus
-  `templates/agents/ps-check.sh`, the one executable in the package.
+  `/ps-*` skills, the review subagent (`.agents/agents/pocket-squad-review.md`), the
+  review prompt (`.agents/pocket-squad-review.md`), the report shape
+  (`.agents/pocket-squad-report.md`), `.agents/settings.json` and the
+  `.squad/templates/{prompt,pr}.md` scaffolds — plus
+  `templates/agents/pocket-squad-check.sh`, the one executable in the package.
 
 ## Commands
 - test: `npm test` — zero-dep smoke test (`node test/smoke.js`), also runs on
@@ -35,9 +36,9 @@ key alone.
 
 ## The workflow it ships
 `/ps-sync` → `/ps-task` → `/ps-run` → `/ps-review`. One request becomes one prompt file,
-one branch, one PR, one review round. Merge is manual (or `ps-check.sh publish` by hand).
-`/ps-teach` sits outside the chain: it explains the project to someone new to it and is
-the one command that writes nothing.
+one branch, one PR, one review round. Merge is manual (or `pocket-squad-check.sh publish`
+by hand). `/ps-teach` sits outside the chain: it explains the project to someone new to
+it and is the one skill that writes nothing.
 
 In a project that ran `/ps-sync`, `AGENTS.md` is a **pointer and nothing else**: every
 rule lives in `.squad/PRODUCT.md` (what/who/why) or `.squad/ARCHITECTURE.md` (stack,
@@ -49,23 +50,25 @@ a synced pointer).
 - CommonJS, Node built-ins only. No transpilation, no `import`.
 - Non-destructive by default: no file operation may silently overwrite user content —
   mirror the hash-guarded logic in `install()`/`update()`.
-- Command templates live in `templates/agents/commands/ps-*.md` so they surface as
-  `/ps-*` slash commands. Exemplar: `templates/agents/commands/ps-task.md`.
-  Every command declares `allowed-tools` in its frontmatter — a missing one means a
-  permission prompt mid-run, which is a stall, not a safety feature.
-- Anything mechanical and repeated belongs in `ps-check.sh`, never in a command's
-  prose. The script costs at most ONE network call per invocation (`$PRS` is the cache).
-- A subagent prompt lives in its own file (`templates/agents/ps-review.md`) and the
-  command points at it. Never inline one as a blockquote the main chat has to retype
-  into a dispatch.
-- Every step declares its cost. A command sets `effort` in its own frontmatter; a
+- Skill templates live in `templates/agents/skills/ps-*/SKILL.md` so they surface as
+  `/ps-*` skills. Exemplar: `templates/agents/skills/ps-task/SKILL.md`.
+  Every skill declares `name` and `allowed-tools` in its frontmatter — a missing
+  `allowed-tools` means a permission prompt mid-run, which is a stall, not a safety
+  feature.
+- Anything mechanical and repeated belongs in `pocket-squad-check.sh`, never in a
+  skill's prose. The script costs at most ONE network call per invocation (`$PRS` is
+  the cache).
+- A subagent prompt lives in its own file (`templates/agents/pocket-squad-review.md`)
+  and the skill points at it. Never inline one as a blockquote the main chat has to
+  retype into a dispatch.
+- Every step declares its cost. A skill sets `effort` in its own frontmatter; a
   **subagent's** cost can only be set in its `templates/agents/agents/*.md` definition.
-  A dispatch that names `general-purpose` instead of `ps-review` is a silent cost
-  regression. The smoke test fails on a missing `effort`.
+  A dispatch that names `general-purpose` instead of `pocket-squad-review` is a silent
+  cost regression. The smoke test fails on a missing `effort`.
 - Execution runs in the main chat, serially. Subagents exist for **review only**.
 - One branch per task, `task/<kebab-case title>`, one conventional commit per step, one
-  PR whose title is the task title. `ps-check.sh` matches `task/*` in `publish` and
-  `sweep`, so renaming the scheme breaks both.
+  PR whose title is the task title. `pocket-squad-check.sh` matches `task/*` in
+  `publish` and `sweep`, so renaming the scheme breaks both.
 - The unit of work is one refined prompt at `.squad/tasks/<yymmdd-hhmm>.prompt.md`,
   written by `/ps-task` and executed verbatim by `/ps-run`.
 - **No learnings file, no debt ledger.** A durable rule goes in `.squad/ARCHITECTURE.md`;
@@ -73,9 +76,9 @@ a synced pointer).
 - Prompts, PR bodies and review verdicts follow the **task's language**, written for a
   junior — plain sentences, exact file and command names — and **short enough to be
   read**.
-- How `/ps-task`, `/ps-run` and `/ps-review` **end** is `ps-report.md`: a detail block,
-  exactly one status line (`✓ done` / `? decide` / `! stopped`), then the literal `→`
-  line(s). **The shape reports the work and never decides it.**
+- How `/ps-task`, `/ps-run` and `/ps-review` **end** is `pocket-squad-report.md`: a
+  detail block, exactly one status line (`✓ done` / `? decide` / `! stopped`), then
+  the literal `→` line(s). **The shape reports the work and never decides it.**
 - The repo dogfoods itself: `templates/agents/*` ≡ `.agents/*`. After editing templates,
   run `node bin/pocket-squad.js update` at the repo root to re-sync the dogfood.
 - `.squad/PRODUCT.md`, `.squad/ARCHITECTURE.md` and `.squad/tasks/` are never shipped
@@ -85,9 +88,9 @@ a synced pointer).
   `! customized`, `· managed`).
 - `files` allowlist in `package.json` is the packaging contract — only what's listed
   ships to npm. `HANDOFF.md` stays out of the tarball.
-- Squash-merging a `task/*` PR remains available as `ps-check.sh publish`, but is no
-  longer a slash command. Force pushes, hard resets, `gh release` and `npm publish`
-  stay denied in `.agents/settings.json`.
+- Squash-merging a `task/*` PR remains available as `pocket-squad-check.sh publish`,
+  but is no longer a slash command. Force pushes, hard resets, `gh release` and
+  `npm publish` stay denied in `.agents/settings.json`.
 
 ## Do-not-touch
 - `.agents/pocket-squad.manifest.json` — generated; never hand-edit.

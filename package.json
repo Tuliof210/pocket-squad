@@ -1,7 +1,7 @@
 {
   "name": "pocket-squad",
   "version": "4.0.0",
-  "description": "A lean agent workflow in your pocket: /ps-sync (AGENTS.md + PRODUCT.md + ARCHITECTURE.md), /ps-task (refine a request into one prompt file), /ps-run (worktree, semantic commits, one PR), /ps-review (fresh eyes, two parallel lenses, one round). Installs into .agents/.",
+  "description": "A lean agent workflow in your pocket: /ps-sync (AGENTS.md + PRODUCT.md + ARCHITECTURE.md), /ps-task (refine a request into one prompt file), /ps-run (worktree, semantic commits, one PR), /ps-review (fresh eyes, two parallel lenses, one round). Installs skills into .agents/.",
   "bin": { "pocket-squad": "bin/pocket-squad.js" },
   "files": ["bin", "templates", "README.md"],
   "scripts": { "test": "node test/smoke.js", "prepublishOnly": "node test/smoke.js" },

@@ -1,20 +1,21 @@
 ---
+name: ps-review
 description: One-round fresh-eyes review of a task PR against the repo norms and the prompt that produced it. Usage - /ps-review [pr-number]
 effort: medium
 allowed-tools: Task, Agent, Read, Write, Edit, Grep, Glob, Bash(gh:*), Bash(glab:*), Bash(git:*), Bash(npm:*), Bash(pnpm:*), Bash(yarn:*), Bash(npx:*), Bash(make:*), Bash(cargo:*), Bash(go:*), Bash(pytest:*), Bash(uv:*)
 ---
 
-Target: "$ARGUMENTS" is the PR number; empty → the current branch's PR. Neither → list
-the open PRs and ask the owner which one.
+The target is whatever follows `/ps-review` in this message: a PR number; empty → the
+current branch's PR. Neither → list the open PRs and ask the owner which one.
 
 **One round. There is no second.** A blocker or major is fixed under the contract below
 and the checks that found it are re-run — by you, inline. A further round is the owner's
-call, never this command's.
+call, never this skill's.
 
 ## Fresh eyes rule
 
 You wrote this code — `/ps-run` runs in this same chat. You do NOT review it. The prompt
-lives in `.agents/ps-review.md` and the subagents read it themselves. Your dispatch
+lives in `.agents/pocket-squad-review.md` and the subagents read it themselves. Your dispatch
 carries the PR number, the repo path, the lens and the path of the task prompt, and
 nothing else: no summary, no defense. That omission is the whole mechanism.
 
@@ -25,20 +26,20 @@ Find the task prompt first: `.squad/tasks/<id>.prompt.md`, the one this PR imple
 No file — the prompt was pasted in a fresh session — then paste its text into the
 dispatch instead, and say so.
 
-Dispatch **two `ps-review` subagents** in a single message:
+Dispatch **two `pocket-squad-review` subagents** in a single message:
 
 > Review PR #\<n> in \<repo path>. The task prompt is `.squad/tasks/<id>.prompt.md`.
-> Read `.agents/ps-review.md` and follow it for the `run` lens.
+> Read `.agents/pocket-squad-review.md` and follow it for the `run` lens.
 
 > Review PR #\<n> in \<repo path>. The task prompt is `.squad/tasks/<id>.prompt.md`.
-> Read `.agents/ps-review.md` and follow it for the `read` lens.
+> Read `.agents/pocket-squad-review.md` and follow it for the `read` lens.
 
 `run` executes — the prompt's Outcome and Verify, correctness, security. `read` compares
 against the norms and the exemplar — absences, duplication, scope creep,
 over-engineering — and runs nothing. Disjoint ground, neither waits on the other, and
 the suite runs exactly once.
 
-The agent type is not interchangeable with `general-purpose`: `ps-review` pins the
+The agent type is not interchangeable with `general-purpose`: `pocket-squad-review` pins the
 effort this step is worth, ships without write tools, and boots with its own small
 system prompt.
 
@@ -70,11 +71,11 @@ has; none → say so and keep it in chat). It is the only searchable record this
 leaves.
 
 Post the merged verdict as the subagents wrote it — language, wording and severities are
-already settled by `.agents/ps-review.md`. You renumber and unite; you do not rewrite.
+already settled by `.agents/pocket-squad-review.md`. You renumber and unite; you do not rewrite.
 
 ## Report
 
-**Follow `.agents/ps-report.md`. It is the whole final message.** The verdict is on the
+**Follow `.agents/pocket-squad-report.md`. It is the whole final message.** The verdict is on the
 PR; this is the owner's one-screen version of it, not a second copy:
 
     **review · <title>**

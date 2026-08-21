@@ -2,7 +2,6 @@
   "permissions": {
     "allow": [
       "Bash(sh .agents/ps-check.sh:*)",
-
       "Bash(git status:*)",
       "Bash(git diff:*)",
       "Bash(git log:*)",
@@ -20,14 +19,12 @@
       "Bash(git pull --rebase:*)",
       "Bash(git push:*)",
       "Bash(git worktree:*)",
-
       "Bash(gh pr view:*)",
       "Bash(gh pr diff:*)",
       "Bash(gh pr list:*)",
       "Bash(gh pr create:*)",
       "Bash(gh pr review:*)",
       "Bash(glab mr:*)",
-
       "Bash(npm test:*)",
       "Bash(npm run:*)",
       "Bash(npm ci:*)",
@@ -40,7 +37,8 @@
       "Bash(pytest:*)",
       "Bash(uv run:*)",
       "Bash(cargo test:*)",
-      "Bash(go test:*)"
+      "Bash(go test:*)",
+      "Bash(sh .agents/pocket-squad-check.sh:*)"
     ],
     "deny": [
       "Bash(git push --force:*)",

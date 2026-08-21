@@ -1,6 +1,6 @@
 # Pocket Squad
 
-A lean agent workflow, in your pocket. One `npx` installs five slash commands into
+A lean agent workflow, in your pocket. One `npx` installs five skills into
 `.agents/`: four take a request from "what I actually want" to a reviewed pull request,
 and one explains the project back to you.
 
@@ -47,11 +47,11 @@ npx pocket-squad status     # managed vs customized files
                          and whatever AGENTS.md mandates — and nothing else about what
                          the change was meant to do. Fresh eyes by construction. The
                          verdict posts on the PR, in the prompt's language, short.
-                         Merge is yours (or `sh .agents/ps-check.sh publish <pr>`
+                         Merge is yours (or `sh .agents/pocket-squad-check.sh publish <pr>`
                          by hand).
 ```
 
-Off the chain, and the only command that writes nothing:
+Off the chain, and the only skill that writes nothing:
 
 ```
 /ps-teach "question"     explains any part of the project — the product, a decision, a
@@ -94,12 +94,15 @@ name — and the checks that found them are re-run inline. A further round is yo
 
 ```
 .agents/
-  commands/                            ps-sync.md  ps-task.md  ps-run.md
-                                       ps-review.md  ps-teach.md
-  agents/ps-review.md                  the only subagent, pinning the model and effort
-  ps-review.md                         the review prompt, read by that subagent itself
-  ps-report.md                         how /ps-task, /ps-run and /ps-review end
-  ps-check.sh                          warm, optional publish, sweep
+  skills/ps-sync/SKILL.md              /ps-sync
+  skills/ps-task/SKILL.md              /ps-task
+  skills/ps-run/SKILL.md               /ps-run
+  skills/ps-review/SKILL.md            /ps-review
+  skills/ps-teach/SKILL.md             /ps-teach
+  agents/pocket-squad-review.md        the only subagent, pinning the model and effort
+  pocket-squad-review.md               the review prompt, read by that subagent itself
+  pocket-squad-report.md               how /ps-task, /ps-run and /ps-review end
+  pocket-squad-check.sh                warm, optional publish, sweep
   settings.json                        session permissions (merged on install/update)
   pocket-squad.manifest.json           hashes for non-destructive updates
 .squad/
@@ -149,14 +152,14 @@ effort is declared per step instead of inherited from the session:
 
 | where | what | effort |
 |---|---|---|
-| `commands/ps-task.md` | the interview, the investigation, the prompt | `high` |
-| `agents/ps-review.md` | both review lenses — the quality gate | `high` |
-| the other four commands | judgment inside boundaries something else drew | `medium` |
+| `skills/ps-task/SKILL.md` | the interview, the investigation, the prompt | `high` |
+| `agents/pocket-squad-review.md` | both review lenses — the quality gate | `high` |
+| the other four skills | judgment inside boundaries something else drew | `medium` |
 
 ### Why a long run stalls, and what actually fixes it
 
-- **`allowed-tools` in a command's frontmatter** grants permission for the turn that
-  invoked the command, and the grant clears on your next message.
+- **`allowed-tools` in a skill's frontmatter** grants permission for the turn that
+  invoked the skill, and the grant clears on your next message.
 - **`permissions.allow` in `.agents/settings.json`** lasts the whole session. That file
   is the one `install` and `update` **merge** instead of leaving alone.
 
@@ -167,8 +170,15 @@ refusal as a **park**.
 ## Migrating from `.claude/` or harness flags
 
 Run `npx pocket-squad` (install) to land files under `.agents/`. Old `.claude/` copies
-are yours to delete. Commands are `/ps-*` (flat `commands/ps-<name>.md`). `/ps-publish`
-is gone — merge by hand or with `ps-check.sh publish`. Pointer file is `AGENTS.md` only.
+are yours to delete. Skills are `/ps-*` (`.agents/skills/ps-<name>/SKILL.md`). `/ps-publish`
+is gone — merge by hand or with `pocket-squad-check.sh publish`. Pointer file is `AGENTS.md` only.
+
+## Migrating from slash commands
+
+Run `npx pocket-squad update`. Untouched `commands/ps-*.md` files are removed; the five
+skills land at `.agents/skills/ps-*/SKILL.md`. `ps-check.sh`, `ps-report.md` and
+`ps-review.md` (the prompt, not the skill) become `pocket-squad-*`. Customized copies
+are left in place and reported as `! obsolete`.
 
 ## Migrating from v3.0
 
