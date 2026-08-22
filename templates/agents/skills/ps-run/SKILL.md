@@ -24,7 +24,7 @@ Record the branch you are on — the **target branch**, where this lands.
 
 The title is the prompt's `# ` line; the slug is that title in kebab-case.
 
-    git worktree add ../<repo>--ps/<slug> -b task/<slug>
+    git worktree add .squad/worktrees/<repo>--ps/<slug> -b task/<slug>
     sh .agents/pocket-squad-check.sh warm ../<repo>--ps/<slug>
 
 `warm` shares this checkout's installed dependencies instead of installing them again.
