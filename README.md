@@ -87,8 +87,8 @@ generated 36% of a session's output, up to 79% on a parallel run. The only cold 
 left is `/ps-review`, where not knowing what the author intended is the entire point.
 
 **Why one review round.** Two rounds meant the second one re-read a fix nobody disputed.
-Blockers and majors are fixed under a bounded contract — only the files the findings
-name — and the checks that found them are re-run inline. A further round is your call.
+Every finding is fixed under a bounded contract — only the files it names — and the
+checks that found it are re-run inline. A further round is your call.
 
 ## What gets installed
 

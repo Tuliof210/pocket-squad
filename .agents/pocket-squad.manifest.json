@@ -1,14 +1,14 @@
 {
   "version": "4.0.0",
-  "installedAt": "2026-08-21T12:50:50.681Z",
+  "installedAt": "2026-09-03T12:21:33.541Z",
   "files": {
     "agents/agents/pocket-squad-review.md": "c2a981a9df1030aba5a809ec817b7582422a9843eef726be8c7bf7645b8171af",
     "agents/pocket-squad-check.sh": "3517c978fd1eed1793f0fc1be00b72302df9f4225e3632c9310a665ae2d48395",
     "agents/pocket-squad-report.md": "35c1f35ece0c1d04c5793dca26a77e975ca394d30770b880f3a12e54ea6941d8",
-    "agents/pocket-squad-review.md": "a5dfa71a8a077de7aa7738bf3aefa5226c0a648c6135c2a1fed1e3d4c11741bc",
+    "agents/pocket-squad-review.md": "6d3fb742052869fa78715ba99c9e676b3c479ad02213920ddea40a5f7700005c",
     "agents/settings.json": "104dd46a64ac826b27492ca458fe587d3c4c4ea66872a8d7192685ddb054afcb",
-    "agents/skills/ps-review/SKILL.md": "d72ff8d7d4269b25d80f2b7cec22f26aa2ac54d799a429fc147f95f4d1dfe060",
-    "agents/skills/ps-run/SKILL.md": "9bb189669faef9b40d995e84777f7d351a2c9ffcf8cda96d8a09df5f4a9da915",
+    "agents/skills/ps-review/SKILL.md": "f58e389455d40a9dd03f0de3c6b15b1a4d66fdb5364cec0002421a68beabf0a7",
+    "agents/skills/ps-run/SKILL.md": "1567b8cc449abcf03dd7b17a3f6f66f8fe38b18450a2f50c3fc91cef48e7e757",
     "agents/skills/ps-sync/SKILL.md": "97f365393069be97cacd2e92c76389ce85dfd3674e63b5c4d112cac4771eaf86",
     "agents/skills/ps-task/SKILL.md": "b42451d33cab472347446becfdd5cee6afe3136a2dd02fc2bc0f22554b915e32",
     "agents/skills/ps-teach/SKILL.md": "73c18069bf0a5c3e8139da8008ae2804716dadc2d8d37f208969b60ba980ef2f",

@@ -8,9 +8,9 @@ allowed-tools: Task, Agent, Read, Write, Edit, Grep, Glob, Bash(gh:*), Bash(glab
 The target is whatever follows `/ps-review` in this message: a PR number; empty → the
 current branch's PR. Neither → list the open PRs and ask the owner which one.
 
-**One round. There is no second.** A blocker or major is fixed under the contract below
-and the checks that found it are re-run — by you, inline. A further round is the owner's
-call, never this skill's.
+**One round. There is no second.** A finding — blocker, major or minor — is fixed under
+the contract below and the checks that found it are re-run — by you, inline. A further
+round is the owner's call, never this skill's.
 
 ## Fresh eyes rule
 
@@ -48,7 +48,7 @@ findings, renumbered, each keeping its severity and the head SHA it was found at
 
 ## The fix — a contract, not a free hand
 
-Fix in the worktree, on `task/<slug>` directly. Every blocker/major fix is bounded:
+Fix in the worktree, on `task/<slug>` directly. Every finding's fix is bounded:
 
 - **Touch only the files the findings name.** A pre-existing lint, a neighbouring bug, a
   tidy-up you noticed — owner's call, never a quiet commit riding along.
@@ -60,8 +60,6 @@ Fix in the worktree, on `task/<slug>` directly. Every blocker/major fix is bound
 - One conventional commit per finding: `fix(review): #2 <what>`. Never "review fixes".
   Then `git push` — the verdict you are about to post names findings that must already be
   closed on the PR, not in a worktree only you can see.
-
-Minors are not fixed here. They are recorded in the posted verdict and the owner decides.
 
 ## After the verdict
 
@@ -83,12 +81,12 @@ PR; this is the owner's one-screen version of it, not a second copy:
     - run lens — <APPROVED | n findings>, <the check that mattered>
     - read lens — <APPROVED | n findings>
     - fixed #1 <finding> — `f7a8b9c`
-    - ~~#3 <finding>~~ minor, declined — your call
+    - fixed #3 <finding> — `c4d5e6f`
 
     **✓ done** · <PR url> approved at `<sha>`
 
     → nothing to run
 
-**Route by severity yourself**: blocker and major already bought their fix, minor is
-already declined — neither is a question. `? decide` is for what severity does not settle:
-a scope question, or a verdict still not APPROVED after the fixes.
+**Every finding already bought its fix** — blocker, major and minor alike. None of them
+is a question. `? decide` is for what severity does not settle: a scope question, or a
+verdict still not APPROVED after the fixes.

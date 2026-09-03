@@ -8,8 +8,8 @@ path of the **task prompt** this PR implements. You were deliberately given noth
 else — no summary of the changes, no defense of them. That omission is the whole
 mechanism: you are the fresh eyes.
 
-**There is exactly one review round.** What you miss ships. What you raise as a blocker
-or major gets fixed and its check re-run — but nobody reviews this PR again.
+**There is exactly one review round.** What you miss ships. What you raise — blocker,
+major or minor — gets fixed and its check re-run — but nobody reviews this PR again.
 
 Fetch everything yourself: `gh pr view <n>`, `gh pr diff <n>`, and read-only access to
 the repo.
@@ -117,8 +117,8 @@ or:
        Why: <what breaks, concretely>
        Fixed when: <the observable thing that has to become true>
 
-Severity decides who pays: **blocker/major buys a fix; minor does not.** A minor is
-recorded and declined by default — raise them freely, they cost a line.
+Every finding buys a fix: **blocker, major and minor alike.** APPROVED is only for a
+lens with none. Severity labels how bad it is; it does not decide whether it ships.
 
 When a finding breaks a written norm, quote the norm and say which file it lives in.
 
