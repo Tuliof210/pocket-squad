@@ -1,0 +1,6 @@
+interface:
+  display_name: "Pocket Squad Start"
+  short_description: "Initialize repository governance"
+  default_prompt: "Use $ps-start to initialize governance for this repository."
+policy:
+  allow_implicit_invocation: true

@@ -1,62 +1,63 @@
-# Prompt shape
+# Change plan template
 
-The file `/ps-task` writes to `.squad/tasks/<yymmdd-hhmm>.prompt.md`, and the raw text
-`/ps-run` executes. One prompt, one branch, one PR.
+Use this template only for risk-bearing changes or when materially different implementations remain
+possible. Small, localized changes do not need a committed plan.
 
-It is a **spec**: requirements, design and plan in one file. Three files would mean three
-approval rounds and three chances to drift for work that one branch delivers.
-
-**Written in the language of the conversation that produced it** — headings included.
-The title is the `# ` line: it becomes the branch (`task/<kebab-case title>`) and the
-PR title, so keep it short and imperative.
-
-Every section is mandatory. `## Design` is the only one that may say `none`. Anywhere
-else, nothing to say means the interview stopped early.
-
----
+Write the plan in the language of the conversation. Replace every placeholder and remove guidance
+that does not apply.
 
 ```markdown
-# <Short imperative title>
+---
+schema: pocket-squad/change-plan/v1
+id: <yymmdd-hhmm-short-slug>
+base_branch: <branch>
+base_sha: <sha>
+risk_class: risk-bearing
+risk_level: <medium|high>
+protocols: [P001, P002, ...]
+---
+
+# <Short outcome-oriented title>
 
 ## Outcome
-<1..5 numbered criteria. Each observable from outside the code, each acceptable or
-rejectable on its own. What becomes true, never how.>
-R1. <given/when …, the system …>
-R2. <…>
 
-## Context
-<Found once, so nobody surveys the repo again. Carry the finding, not its address:>
-- **Imitate** `<path/to/exemplar.ext>` — the 3..10 lines from it that matter, quoted,
-  so nobody has to guess which part is the pattern.
-- **Reuse** `<symbol>` in `<path>` — its signature, verbatim.
-- **Watch out for** <the hidden coupling / invariant / edge case the investigation
-  turned up>.
+R1. <Observable, independently acceptable result.>
+R2. <Observable result.>
 
-## Design
-<The decisions that must not be re-taken while coding. `none` when the task only follows
-a pattern that already exists — that is the common case, and writing `none` is not a
-failure. Never restate what `## Context` already quoted.>
-- **Contract** — <the new surface, written out exactly: signature, payload shape,
-  table and column names, route, event name, CLI flag. Shapes, never function bodies.>
-- **Flow** — <only when order or failure is not obvious from the contract: who calls
-  what, what happens when it fails, what has to be atomic.>
-- **Chose <X> over <Y>** — <one line of reason. This is what stops the executor from
-  redesigning and the reviewer from re-litigating.>
+## Context and evidence
+
+- **Imitate** `<path>` — <specific pattern and why it applies>.
+- **Reuse** `<symbol>` in `<path>` — `<signature>`.
+- **Constraint** — <product, architecture or protocol constraint and its source>.
+
+## Decisions
+
+- **Contract** — <new or changed public shape; omit when none>.
+- **Flow** — <ordering, atomicity or failure behavior when not obvious>.
+- **Chose X over Y** — <reason that changes implementation>.
+
+## Risks
+
+- **<Risk>** — likelihood: <low|medium|high>; impact: <...>; mitigation: <...>.
 
 ## Steps
-1. <one step = one commit. Say the outcome, not the code.> → R1
-2. <...> → R2, R3
 
-## Verify
-<exact, copy-pasteable commands, confirmed to exist in this repo, one line per criterion.
-Plus anything to measure at execution time instead of assuming.>
-- R1: `<command>` — <what a pass looks like>
-- R2: `<command>` — <...>
+1. <Reviewable implementation outcome> → R1 · P00X
+2. <Reviewable implementation outcome> → R2 · P00Y
+
+## Verification
+
+- R1 · P005: `<exact command or manual procedure>` — <passing evidence>.
+- R2 · P005: `<exact command or manual procedure>` — <passing evidence>.
+
+## Rollout and rollback
+
+- **Rollout** — <deployment, migration or activation sequence; `none` when not applicable>.
+- **Rollback** — <safe reversal path and data caveat; `revert commits` when sufficient>.
 
 ## Scope
-- In: <paths or areas this may touch>
-- Out: <what a reader would assume is included and must not be touched>
 
-## Forbidden
-<contracts not to break, patterns not to introduce, files not to touch>
+- **In** — <paths and behaviors>.
+- **Out** — <adjacent work deliberately excluded>.
+- **Forbidden** — <contracts, files or approaches that must not change>.
 ```

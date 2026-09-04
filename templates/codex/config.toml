@@ -1,0 +1,16 @@
+# Pocket Squad Codex adapter. If this project already has .codex/config.toml, merge
+# these agent declarations into it; the installer never overwrites local configuration.
+[agents]
+max_concurrent_threads_per_session = 4
+
+[agents.review_reader]
+description = "Read-only reviewer for scope, architecture, maintainability, and protocol compliance."
+config_file = "agents/review-reader.toml"
+
+[agents.review_runner]
+description = "Behavioral reviewer that verifies a task in its exact recorded worktree and head SHA."
+config_file = "agents/review-runner.toml"
+
+[agents.fix_verifier]
+description = "Targeted fresh-context verifier for fixes made after review findings."
+config_file = "agents/fix-verifier.toml"

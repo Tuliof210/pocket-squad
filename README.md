@@ -1,187 +1,191 @@
 # Pocket Squad
 
-A lean agent workflow, in your pocket. One `npx` installs five skills into
-`.agents/`: four take a request from "what I actually want" to a reviewed pull request,
-and one explains the project back to you.
+Repository governance for coding agents.
+
+Pocket Squad studies a project once, creates a shared product and engineering context, and makes the
+repository's working protocols available to every future agent run. Skills orchestrate the work; deterministic
+scripts enforce the invariants that should not depend on prompt compliance.
 
 ```bash
 npx pocket-squad            # install into the current project
-npx pocket-squad update     # upgrade managed files (never clobbers your edits)
-npx pocket-squad status     # managed vs customized files
+npx pocket-squad update     # update untouched managed files
+npx pocket-squad status     # show managed and customized files
 ```
 
-## The workflow
+## The governance model
 
-```
-/ps-sync                 once per project, and again whenever the rules drift. Sweeps
-                         the repo for product and architecture rules already written
-                         somewhere — README, CONTRIBUTING, docs, a bloated AGENTS.md —
-                         and MOVES them into just two files: .squad/PRODUCT.md
-                         (what/who/why) and .squad/ARCHITECTURE.md (stack, commands,
-                         conventions, exemplar paths, do-not-touch). Then interviews
-                         only the gaps the repo cannot answer. AGENTS.md is emptied
-                         down to a pointer — read those two files before answering
-                         anything, /ps-* or not. Proposes everything and waits for
-                         your confirmation.
+`$ps-start` creates four project files after showing its proposal and receiving confirmation:
 
-/ps-task ["request"]     turns a rough request into ONE refined prompt. Asks only the
-                         non-obvious and ambiguous questions, each with a suggested
-                         default; investigates the repo read-only; then writes
-                         .squad/tasks/<yymmdd-hhmm>.prompt.md — outcome, context
-                         (exemplar lines, signatures, verified commands), 1..N steps,
-                         scope, verify, forbidden. In the language of the conversation,
-                         long enough to be unambiguous and short enough to audit.
-
-/ps-run <id | prompt>    executes that prompt verbatim — no second interview, that is
-                         the whole point of the split. Cuts a worktree on task/<slug>,
-                         warms it with this checkout's dependencies, then one
-                         conventional commit per step, runs the prompt's Verify, and
-                         opens ONE PR titled with the task title. Takes the file id, or
-                         the prompt text pasted straight in from a fresh session.
-
-/ps-review [pr]          the review, ONCE. Two fresh-context subagents in parallel:
-                         `run` executes (the prompt's Outcome and Verify, correctness,
-                         security, the seams between steps), `read` compares against the
-                         norms and the exemplar (absences, duplication, scope creep,
-                         over-engineering) and runs nothing. Both read the task prompt
-                         and whatever AGENTS.md mandates — and nothing else about what
-                         the change was meant to do. Fresh eyes by construction. The
-                         verdict posts on the PR, in the prompt's language, short.
-                         Merge is yours (or `sh .agents/pocket-squad-check.sh publish <pr>`
-                         by hand).
+```text
+AGENTS.md                    small bootstrap loaded by the agent harness
+.squad/PRODUCT.md            what the product is, who it serves, and why
+.squad/ARCHITECTURE.md       how the software is built
+.squad/PROTOCOLS.md          how work must be changed, verified, reviewed, and delivered
 ```
 
-Off the chain, and the only skill that writes nothing:
+The split is deliberate:
 
-```
-/ps-teach "question"     explains any part of the project — the product, a decision, a
-                         file, a word you did not know — pitched at someone new to it.
-                         Reads PRODUCT.md and ARCHITECTURE.md, then the code that
-                         actually implements them, and answers with the one-sentence
-                         version first, every claim anchored to a real path:line, one
-                         analogy with the line where it stops being true, and something
-                         you can run to see it happen. Says so when the docs and the
-                         code disagree. Use it before /ps-task when the area is new.
-```
+- Product statements describe observable purpose and domain language.
+- Architecture statements describe the system, stack, boundaries, commands, and exemplars.
+- Protocols are normative. Each protocol says when it applies, what MUST happen, what evidence proves it,
+  how it is enforced, and which exceptions are legitimate.
+- `AGENTS.md` points to all three, establishes precedence, and preserves nested instruction overrides.
 
-### The branch shape
+The canonical files synthesize evidence. They do not delete useful human documentation from README files,
+contributing guides, or ADRs.
 
-```
-main                                    ← where you started; the base branch
- └── task/export-csv-column-picker      ← one branch, one worktree, warmed once
-      ├── feat(csv): add column parser  ← one conventional commit per step
-      ├── feat(ui): add download button
-      └── test(csv): cover empty input
- └── PR: task/… → main                  ← reviewed once, then you squash-merge
+## Everyday use
+
+```text
+$ps-start                     initialize or intentionally refresh governance
+$ps-change <request>          implement a governed change in an isolated worktree
+$ps-review <PR>               independently review the exact current head SHA
+$ps-audit                     find governance drift and unenforced protocols
+$ps-teach <question>          explain product, architecture, protocols, or code
 ```
 
-**Why the prompt is a file.** `/ps-task` pays for the questions, the exemplars and the
-verified commands exactly once. `/ps-run` reads the result and builds. Re-deriving that
-context at execution time, and again at review time, was the single largest avoidable
-cost in the loop. The file is committed, so the reviewer can judge the diff against what
-was actually asked for.
+Skills allow implicit invocation by default. After initialization, a user can normally ask for a fix or feature
+without remembering a command; `AGENTS.md` supplies the persistent bootstrap and `$ps-change` supplies the
+workflow. Explicit `$ps-*` invocation remains available when the user wants a particular operation.
 
-**Why execution runs in the main chat.** A cold subagent per step pays to rebuild the
-context this chat is already holding. Measured across 25 real sessions, subagents
-generated 36% of a session's output, up to 79% on a parallel run. The only cold context
-left is `/ps-review`, where not knowing what the author intended is the entire point.
+## Change lifecycle
 
-**Why one review round.** Two rounds meant the second one re-read a fix nobody disputed.
-Every finding is fixed under a bounded contract — only the files it names — and the
-checks that found it are re-run inline. A further round is your call.
-
-## What gets installed
-
+```text
+ordinary change request
+        │
+        ├─ read PRODUCT + ARCHITECTURE + PROTOCOLS once
+        ├─ classify small vs risk-bearing
+        ├─ preflight and create recorded worktree
+        ├─ write an optional committed plan for risk-bearing work
+        ├─ implement, verify incrementally, and commit
+        ├─ verify the clean head and open a PR with protocol evidence
+        └─ review that exact SHA; fixes require a fresh delta verification
 ```
+
+Small, reversible changes use a short in-chat plan. Risk-bearing changes — public contracts, authentication,
+data, migrations, dependencies, deployment, security, or cross-boundary work — use
+`.squad/templates/prompt.md` and commit the filled plan under `.squad/changes/`.
+
+The PR is the durable evidence record. Its template includes the base/head SHA, applicable protocols,
+verification results, decisions, risks, rollout, rollback, and known gaps.
+
+## Mechanical enforcement
+
+The portable helper is installed at `.agents/scripts/pocket-squad.js`:
+
+```bash
+node .agents/scripts/pocket-squad.js preflight
+node .agents/scripts/pocket-squad.js start export-csv
+node .agents/scripts/pocket-squad.js check export-csv
+node .agents/scripts/pocket-squad.js record-review export-csv <sha> APPROVED
+node .agents/scripts/pocket-squad.js status [export-csv]
+```
+
+It records run state under the repository's git common directory, not in tracked project files. Worktrees live
+under `.squad/worktrees/` and the helper adds that path to `.git/info/exclude`, keeping the main checkout clean
+without modifying the project's `.gitignore`.
+
+The helper enforces:
+
+- governance exists before a change starts;
+- the main checkout is clean;
+- branch and worktree paths are created once and returned as data;
+- base branch and SHA remain recorded;
+- the task worktree is clean and contains commits before PR creation;
+- review results cannot be recorded for a stale SHA.
+
+It deliberately does not share writable dependency or build directories between worktrees. Package-manager
+caches may still provide fast installs without cross-branch contamination.
+
+## Independent review
+
+Pocket Squad reviews at a specific SHA, never merely “the current PR.”
+
+- `review_reader` inspects outcomes, scope, architecture, maintainability, and protocols without running code.
+- `review_runner` works in the exact recorded worktree and runs behavior and verification checks.
+- `fix_verifier` reviews only the delta created to close findings and can approve the new SHA.
+
+A small non-behavioral change may need only the read lens. Behavioral and risk-bearing changes use both lenses
+in parallel. Findings do not authorize edits by themselves; `$ps-review` fixes them only when the user explicitly
+requests that. No SHA is called approved until an independent reviewer inspected that exact SHA.
+
+## Installed files
+
+```text
 .agents/
-  skills/ps-sync/SKILL.md              /ps-sync
-  skills/ps-task/SKILL.md              /ps-task
-  skills/ps-run/SKILL.md               /ps-run
-  skills/ps-review/SKILL.md            /ps-review
-  skills/ps-teach/SKILL.md             /ps-teach
-  agents/pocket-squad-review.md        the only subagent, pinning the model and effort
-  pocket-squad-review.md               the review prompt, read by that subagent itself
-  pocket-squad-report.md               how /ps-task, /ps-run and /ps-review end
-  pocket-squad-check.sh                warm, optional publish, sweep
-  settings.json                        session permissions (merged on install/update)
-  pocket-squad.manifest.json           hashes for non-destructive updates
-.squad/
-  templates/
-    prompt.md  pr.md                   blank shapes /ps-task and /ps-run fill in
+  skills/
+    ps-start/                 initialize or refresh governance
+    ps-change/                implement tracked changes
+    ps-review/                exact-SHA review
+    ps-audit/                 governance drift audit
+    ps-teach/                 read-only explanation
+  reviewers/
+    read.md                   portable static review contract
+    run.md                    portable behavioral review contract
+    verify-fix.md             portable post-fix delta contract
+  scripts/pocket-squad.js     worktree, state, and SHA invariants
+  pocket-squad.manifest.json  hashes for non-destructive updates
+
+.squad/templates/
+  agents.md
+  product.md
+  architecture.md
+  protocols.md
+  prompt.md
+  pr.md
+  verdict.md
+
+.codex/
+  config.toml                 project-scoped agent declarations
+  agents/
+    review-reader.toml
+    review-runner.toml
+    fix-verifier.toml
 ```
 
-Why a shell script in a workflow made of markdown: a command is an instruction to a
-model, and a model is reliable at deriving, judging and writing — not at running the
-same checklist for the fiftieth time. Anything mechanical and repeated is code here,
-not a paragraph asking nicely.
+`.agents/` is the portable workflow core. `.codex/` is the Codex adapter and uses the native custom-agent
+configuration. Other harnesses can add adapters without changing the canonical governance model.
 
-`.squad/PRODUCT.md`, `.squad/ARCHITECTURE.md` and `.squad/tasks/` aren't shipped — they
-are created the first time you run `/ps-sync` and `/ps-task`, same as your project's own
-`AGENTS.md`.
+## Non-destructive updates
 
-## Updating safely
+`install` never overwrites an existing file. `update` compares each destination with the hash saved at install:
 
-`update` compares each file against the hash recorded at install: untouched files are
-upgraded in place; files you customized are left alone and the new version lands next to
-them as `*.new` for manual merge. A file that no longer ships is deleted only if you
-never touched it — otherwise it is reported as `! obsolete` and left where it is.
-`install` never overwrites anything that exists.
+- untouched managed files update in place;
+- customized files remain untouched and the new version is written as `*.new`;
+- files no longer shipped are deleted only when they still match the previous managed hash;
+- customized obsolete files are reported and preserved.
 
-## Where the time goes
+If `.codex/config.toml` already exists, merge the generated agent declarations deliberately; Pocket Squad does
+not rewrite project-local runtime configuration it does not own.
 
-This section exists because a single task was taking close to two hours, of which only
-~20 minutes was writing code. Everything below was measured, not guessed.
+## Behavioral evaluation
 
-### What the wall-clock actually is
+`test/evals/cases.json` is a small routing and policy corpus covering small changes, risk-bearing migrations,
+read-only explanations, governance drift, and post-review fixes. A harness can record one result per case with
+the selected skill, risk, plan decision, review lenses, protocols, completion, output tokens, and duration.
 
-Measured across 25 real sessions, main chat plus every subagent, deduplicated by message
-id:
+```bash
+npm run eval:score -- path/to/results.json
+```
 
-| | |
-|---|---|
-| output tokens per session | **187,375** — 119k main chat, 68k subagents |
-| model messages per session | 151 main, 249 across ~4.5 subagents |
-| of that output, visible in the transcript | **31%** — prose 5%, file and command content 26% |
-| the other 69% | reasoning that is billed and generated but never shown |
-| at ~50 tokens/second | **~62 min of pure generation per session** |
+The scorer reports completion, routing accuracy, risk and planning accuracy, reviewer selection, protocol recall,
+average output tokens, and average duration. `npm test` separately exercises installation, safe migration,
+worktree creation, dirty-checkout refusal, state traversal protection, clean-head verification, and stale-review
+rejection without requiring a model or network call.
 
-Two fixes follow from that. **First, stop generating the same context twice**: execution
-runs in the main chat, and the interview happens once in `/ps-task` instead of again in
-`/ps-run`. **Second, stop paying decomposition-grade reasoning to tick a checkbox** —
-effort is declared per step instead of inherited from the session:
+## Migrating from v4
 
-| where | what | effort |
-|---|---|---|
-| `skills/ps-task/SKILL.md` | the interview, the investigation, the prompt | `high` |
-| `agents/pocket-squad-review.md` | both review lenses — the quality gate | `high` |
-| the other four skills | judgment inside boundaries something else drew | `medium` |
+Run:
 
-### Why a long run stalls, and what actually fixes it
+```bash
+npx pocket-squad update
+```
 
-- **`allowed-tools` in a skill's frontmatter** grants permission for the turn that
-  invoked the skill, and the grant clears on your next message.
-- **`permissions.allow` in `.agents/settings.json`** lasts the whole session. That file
-  is the one `install` and `update` **merge** instead of leaving alone.
+Untouched v4 skills (`ps-sync`, `ps-task`, `ps-run`), Markdown reviewer agents, report prompts, and the old shell
+helper are removed. Customized copies are preserved as obsolete files. The old `.agents/settings.json` is always
+preserved for manual cleanup because v4 merged Pocket Squad permissions into potentially user-owned settings.
 
-Read the rules before you keep them. The `deny` list next to them (force push, hard
-reset, `gh release`, `npm publish`) is what makes it defensible. `/ps-run` treats a
-refusal as a **park**.
+Then run `$ps-start`. It proposes the new governance documents before changing the root `AGENTS.md`.
 
-## Migrating from `.claude/` or harness flags
-
-Run `npx pocket-squad` (install) to land files under `.agents/`. Old `.claude/` copies
-are yours to delete. Skills are `/ps-*` (`.agents/skills/ps-<name>/SKILL.md`). `/ps-publish`
-is gone — merge by hand or with `pocket-squad-check.sh publish`. Pointer file is `AGENTS.md` only.
-
-## Migrating from slash commands
-
-Run `npx pocket-squad update`. Untouched `commands/ps-*.md` files are removed; the five
-skills land at `.agents/skills/ps-*/SKILL.md`. `ps-check.sh`, `ps-report.md` and
-`ps-review.md` (the prompt, not the skill) become `pocket-squad-*`. Customized copies
-are left in place and reported as `! obsolete`.
-
-## Migrating from v3.0
-
-Run `npx pocket-squad update`, then `/ps-sync`. Stories became `/ps-task`; `/ps:init`
-became `/ps-sync`; learnings/debt/`/ps:prune` are gone. Durable rules belong in
-`.squad/ARCHITECTURE.md`.
+The v4 prompt files under `.squad/tasks/` remain project history and are never deleted automatically. New
+risk-bearing change plans live under `.squad/changes/` and use a versioned schema.

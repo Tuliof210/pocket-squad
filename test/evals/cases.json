@@ -1,0 +1,47 @@
+[
+  {
+    "id": "small-local-change",
+    "request": "Fix a typo in one tracked documentation file.",
+    "expectedSkill": "ps-change",
+    "expectedRisk": "small",
+    "requiresCommittedPlan": false,
+    "reviewLenses": ["review_reader"],
+    "must": ["P001", "P002", "P004", "P006"]
+  },
+  {
+    "id": "authentication-migration",
+    "request": "Replace session authentication and migrate existing tokens without downtime.",
+    "expectedSkill": "ps-change",
+    "expectedRisk": "risk-bearing",
+    "requiresCommittedPlan": true,
+    "reviewLenses": ["review_reader", "review_runner"],
+    "must": ["P001", "P002", "P003", "P004", "P005", "P006", "P007", "P008", "P009"]
+  },
+  {
+    "id": "read-only-explanation",
+    "request": "Explain how requests reach the database.",
+    "expectedSkill": "ps-teach",
+    "expectedRisk": "read-only",
+    "requiresCommittedPlan": false,
+    "reviewLenses": [],
+    "must": ["P001"]
+  },
+  {
+    "id": "governance-drift",
+    "request": "Check whether our documented commands and exemplars are still current.",
+    "expectedSkill": "ps-audit",
+    "expectedRisk": "read-only",
+    "requiresCommittedPlan": false,
+    "reviewLenses": [],
+    "must": ["P001"]
+  },
+  {
+    "id": "post-review-fix",
+    "request": "Fix the review findings and finish the review.",
+    "expectedSkill": "ps-review",
+    "expectedRisk": "risk-bearing",
+    "requiresCommittedPlan": false,
+    "reviewLenses": ["fix_verifier"],
+    "must": ["P004", "P005", "P007"]
+  }
+]

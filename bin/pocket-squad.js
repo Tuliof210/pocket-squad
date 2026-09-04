@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Pocket Squad — a lean multi-harness workflow, in your pocket.
+ * Pocket Squad — repository governance for coding agents.
  *
  * Usage:
  *   npx pocket-squad            # install into the current project
@@ -17,6 +17,9 @@ const VERSION = require(path.join(PKG_ROOT, "package.json")).version;
 const CWD = process.cwd();
 const MANIFEST_PATH = path.join(CWD, ".agents", "pocket-squad.manifest.json");
 const USAGE = "Usage: npx pocket-squad [install|update|status]";
+// v4 merged Pocket Squad rules into this file while preserving user-owned settings,
+// then hashed the combined result. Its hash therefore cannot prove sole ownership.
+const NEVER_DELETE_OBSOLETE = new Set([path.join("agents", "settings.json")]);
 
 const sha = (buf) => crypto.createHash("sha256").update(buf).digest("hex");
 
@@ -30,14 +33,16 @@ function walk(dir, base = dir, out = []) {
 }
 
 /**
- * Map a template-relative path to its destination in the target project.
- * Legacy `harness/` and `claude/` keys (pre-rename manifests) also map into `.agents/`.
+ * Map package templates to their runtime locations. `.agents/` is the portable core;
+ * `.codex/` contains the Codex adapter; `.squad/` contains project governance assets.
+ * Legacy `harness/` and `claude/` keys still resolve for non-destructive migration.
  */
 function destFor(rel) {
   const agentsPrefix = "agents" + path.sep;
   const harnessPrefix = "harness" + path.sep;
   const legacyPrefix = "claude" + path.sep;
   const squadPrefix = "squad" + path.sep;
+  const codexPrefix = "codex" + path.sep;
   if (rel.startsWith(agentsPrefix)) {
     return path.join(CWD, ".agents", rel.slice(agentsPrefix.length));
   }
@@ -50,56 +55,10 @@ function destFor(rel) {
   if (rel.startsWith(squadPrefix)) {
     return path.join(CWD, ".squad", rel.slice(squadPrefix.length));
   }
+  if (rel.startsWith(codexPrefix)) {
+    return path.join(CWD, ".codex", rel.slice(codexPrefix.length));
+  }
   return path.join(CWD, ".squad", rel);
-}
-
-const SETTINGS_REL = path.join("agents", "settings.json");
-
-/**
- * Without its allow rules a long `/ps-run` stalls on a permission prompt halfway
- * through. So it is merged instead of skipped — our permission lists are unioned into
- * whatever is already there, every other key the project set is left untouched, and
- * nothing is ever removed. Returns the hash of the file on disk afterwards, for the
- * manifest.
- */
-function mergeSettings() {
-  const dst = destFor(SETTINGS_REL);
-  const label = path.relative(CWD, dst);
-  const raw = fs.readFileSync(path.join(TEMPLATES, SETTINGS_REL));
-
-  if (!fs.existsSync(dst)) {
-    fs.mkdirSync(path.dirname(dst), { recursive: true });
-    fs.writeFileSync(dst, raw);
-    console.log(`  + created      ${label}`);
-    return sha(raw);
-  }
-
-  const cur = fs.readFileSync(dst);
-  let settings;
-  try {
-    settings = JSON.parse(cur);
-  } catch {
-    console.log(`  ! unreadable   ${label} (not valid JSON — permissions NOT merged, fix it by hand)`);
-    return sha(cur);
-  }
-
-  const perms = (settings.permissions = settings.permissions || {});
-  let added = 0;
-  for (const [list, rules] of Object.entries(JSON.parse(raw).permissions)) {
-    const have = Array.isArray(perms[list]) ? perms[list] : [];
-    const missing = rules.filter((r) => !have.includes(r));
-    added += missing.length;
-    perms[list] = [...have, ...missing];
-  }
-  if (!added) {
-    console.log(`  · managed      ${label} (permissions already present)`);
-    return sha(cur);
-  }
-
-  const out = Buffer.from(JSON.stringify(settings, null, 2) + "\n");
-  fs.writeFileSync(dst, out);
-  console.log(`  ^ merged       ${label} (${added} permission rule${added === 1 ? "" : "s"} added, yours kept)`);
-  return sha(out);
 }
 
 function loadManifest() {
@@ -125,10 +84,6 @@ function install() {
   let created = 0, skipped = 0, kept = 0;
 
   for (const rel of rels) {
-    if (rel === SETTINGS_REL) {
-      hashes[rel] = mergeSettings();
-      continue;
-    }
     const src = path.join(TEMPLATES, rel);
     const dst = destFor(rel);
     const content = fs.readFileSync(src);
@@ -152,10 +107,9 @@ function install() {
   console.log(`  ${created} created, ${kept} unchanged, ${skipped} pre-existing (untouched).`);
   console.log(`\nNext steps:`);
   console.log(`  1. Open this project in your agent harness.`);
-  console.log(`  2. Run /ps-sync once — moves product/architecture rules into .squad/PRODUCT.md + .squad/ARCHITECTURE.md, writes AGENTS.md after you confirm.`);
-  console.log(`  3. Run /ps-task "your request" — refines it into .squad/tasks/<yymmdd-hhmm>.prompt.md.`);
-  console.log(`  4. Run /ps-run <id> — worktree on task/<slug>, one commit per step, one PR.`);
-  console.log(`  5. Then /ps-review (fresh eyes, one round).`);
+  console.log(`  2. Run $ps-start once to create PRODUCT.md, ARCHITECTURE.md, PROTOCOLS.md and AGENTS.md.`);
+  console.log(`  3. Ask for a code change normally; $ps-change can activate automatically.`);
+  console.log(`  4. Run $ps-review for an independent review, or $ps-audit to check governance drift.`);
   if (manifest) console.log(`\n(Previous manifest found — this was a re-install. Use "update" to upgrade managed files.)`);
 }
 
@@ -170,10 +124,6 @@ function update() {
   let updated = 0, added = 0, conflicted = 0, unchanged = 0;
 
   for (const rel of rels) {
-    if (rel === SETTINGS_REL) {
-      hashes[rel] = mergeSettings();
-      continue;
-    }
     const src = path.join(TEMPLATES, rel);
     const dst = destFor(rel);
     const content = fs.readFileSync(src);
@@ -219,6 +169,10 @@ function update() {
     const dst = destFor(rel);
     if (!fs.existsSync(dst)) continue;
     if (shippedDests.has(dst)) continue;
+    if (NEVER_DELETE_OBSOLETE.has(rel)) {
+      console.log(`  ! obsolete     ${path.relative(CWD, dst)} (may contain user settings — kept for manual cleanup)`);
+      continue;
+    }
     if (sha(fs.readFileSync(dst)) === oldHash) {
       fs.unlinkSync(dst);
       for (let dir = path.dirname(dst); dir !== CWD; dir = path.dirname(dir)) {
