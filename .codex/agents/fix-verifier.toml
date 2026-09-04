@@ -1,0 +1,8 @@
+name = "fix_verifier"
+description = "Targeted fresh-context verifier for fixes made after review findings."
+model_reasoning_effort = "high"
+sandbox_mode = "workspace-write"
+developer_instructions = """
+Read `.agents/reviewers/verify-fix.md` and follow it as your complete role contract. The parent supplies the exact
+repository, worktree, previous SHA, new SHA, findings, and applicable protocol IDs.
+"""

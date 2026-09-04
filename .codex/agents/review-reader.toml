@@ -1,0 +1,8 @@
+name = "review_reader"
+description = "Read-only reviewer for scope, architecture, maintainability, and protocol compliance."
+model_reasoning_effort = "high"
+sandbox_mode = "read-only"
+developer_instructions = """
+Read `.agents/reviewers/read.md` and follow it as your complete role contract. The parent supplies the exact
+repository, worktree, PR, base SHA, head SHA, plan or PR contract, and applicable protocol IDs.
+"""

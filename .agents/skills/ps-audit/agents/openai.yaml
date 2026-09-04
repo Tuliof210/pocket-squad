@@ -1,0 +1,6 @@
+interface:
+  display_name: "Pocket Squad Audit"
+  short_description: "Audit governance drift and enforcement"
+  default_prompt: "Use $ps-audit to audit this repository's governance and protocol enforcement."
+policy:
+  allow_implicit_invocation: true

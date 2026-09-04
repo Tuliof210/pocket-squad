@@ -1,0 +1,8 @@
+name = "review_runner"
+description = "Behavioral reviewer that verifies a task in its exact recorded worktree and head SHA."
+model_reasoning_effort = "high"
+sandbox_mode = "workspace-write"
+developer_instructions = """
+Read `.agents/reviewers/run.md` and follow it as your complete role contract. The parent supplies the exact
+repository, worktree, PR, base SHA, head SHA, plan or PR contract, and applicable protocol IDs.
+"""

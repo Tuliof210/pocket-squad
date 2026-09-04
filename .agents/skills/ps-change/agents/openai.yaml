@@ -1,0 +1,6 @@
+interface:
+  display_name: "Pocket Squad Change"
+  short_description: "Implement changes under repository protocols"
+  default_prompt: "Use $ps-change to implement this request under the repository protocols."
+policy:
+  allow_implicit_invocation: true

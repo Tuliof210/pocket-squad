@@ -1,0 +1,6 @@
+interface:
+  display_name: "Pocket Squad Teach"
+  short_description: "Explain a governed repository clearly"
+  default_prompt: "Use $ps-teach to explain this part of the repository to a newcomer."
+policy:
+  allow_implicit_invocation: true
